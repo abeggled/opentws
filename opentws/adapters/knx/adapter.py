@@ -92,16 +92,7 @@ class KnxAdapter(AdapterBase):
             local_ip=cfg.local_ip,
         )
 
-        try:
-            from xknx.telegram.address import IndividualAddress
-            own_addr = IndividualAddress(cfg.individual_address)
-        except Exception:
-            own_addr = None
-
-        self._xknx = XKNX(
-            connection_config=conn_cfg,
-            **({"own_address": own_addr} if own_addr is not None else {}),
-        )
+        self._xknx = XKNX(connection_config=conn_cfg)
         self._xknx.telegram_queue.register_telegram_received_cb(self._on_telegram)
 
         try:
