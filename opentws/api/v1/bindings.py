@@ -206,7 +206,7 @@ async def update_binding(
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Binding nicht gefunden")
 
-    updates = body.model_dump(exclude_none=True)
+    updates = body.model_dump(exclude_unset=True)
     now = datetime.now(timezone.utc).isoformat()
 
     direction       = updates.get("direction", row["direction"])
