@@ -83,7 +83,7 @@
 
     <!-- Create / Edit Modal -->
     <Modal v-model="showForm" :title="editTarget ? 'DataPoint bearbeiten' : 'Neuer DataPoint'">
-      <DataPointForm :initial="editTarget" :datatypes="store.datatypes" @save="onSave" @cancel="showForm = false" />
+      <DataPointForm :initial="editTarget" :datatypes="store.datatypes" :save-handler="onSave" @cancel="showForm = false" />
     </Modal>
 
     <!-- Delete confirm -->
@@ -139,7 +139,7 @@ function openEdit(dp) { editTarget.value = dp;   showForm.value = true }
 async function onSave(payload) {
   if (editTarget.value) await store.update(editTarget.value.id, payload)
   else await store.create(payload)
-  showForm.value = false
+  showForm.value = false   // only reached if no error thrown
 }
 
 function confirmDelete(dp) { deleteTarget.value = dp; showConfirm.value = true }

@@ -2,7 +2,7 @@
   <form @submit.prevent="submit" class="flex flex-col gap-4">
     <div class="form-group">
       <label class="label">Name *</label>
-      <input v-model="form.name" type="text" class="input" placeholder="z.B. Wohnzimmer Temperatur" required />
+      <input v-model="form.name" type="text" class="input" placeholder="z.B. Wohnzimmer Temperatur" required autofocus />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
@@ -28,7 +28,9 @@
       <input v-model="form.mqtt_alias" type="text" class="input" placeholder="alias/eg/wohnzimmer/temperatur/value" />
     </div>
 
-    <div v-if="error" class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">{{ error }}</div>
+    <div v-if="error" class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
+      {{ error }}
+    </div>
 
     <div class="flex justify-end gap-3 pt-2">
       <button type="button" @click="$emit('cancel')" class="btn-secondary">Abbrechen</button>
@@ -45,10 +47,11 @@ import { reactive, ref, watch } from 'vue'
 import Spinner from '@/components/ui/Spinner.vue'
 
 const props = defineProps({
-  initial:   { type: Object, default: null },
-  datatypes: { type: Array, default: () => [] },
+  initial:      { type: Object,   default: null },
+  datatypes:    { type: Array,    default: () => [] },
+  saveHandler:  { type: Function, required: true },   // async (payload) => void
 })
-const emit = defineEmits(['save', 'cancel'])
+const emit = defineEmits(['cancel'])
 
 const saving    = ref(false)
 const error     = ref(null)
@@ -58,7 +61,6 @@ const form = reactive({
   name:       '',
   data_type:  'FLOAT',
   unit:       '',
-  tags:       [],
   mqtt_alias: '',
 })
 
@@ -66,10 +68,12 @@ watch(() => props.initial, (val) => {
   if (val) {
     form.name       = val.name
     form.data_type  = val.data_type
-    form.unit       = val.unit ?? ''
-    form.tags       = val.tags ?? []
+    form.unit       = val.unit       ?? ''
     form.mqtt_alias = val.mqtt_alias ?? ''
     tagsInput.value = val.tags?.join(', ') ?? ''
+  } else {
+    form.name = ''; form.data_type = 'FLOAT'; form.unit = ''; form.mqtt_alias = ''
+    tagsInput.value = ''
   }
 }, { immediate: true })
 
@@ -78,15 +82,16 @@ async function submit() {
   saving.value = true
   try {
     const tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean)
-    await emit('save', {
+    await props.saveHandler({
       name:       form.name,
       data_type:  form.data_type,
-      unit:       form.unit || null,
+      unit:       form.unit       || null,
       tags,
       mqtt_alias: form.mqtt_alias || null,
     })
   } catch (e) {
-    error.value = e.response?.data?.detail ?? 'Fehler beim Speichern'
+    error.value = e.response?.data?.detail ?? e.message ?? 'Fehler beim Speichern'
+  } finally {
     saving.value = false
   }
 }

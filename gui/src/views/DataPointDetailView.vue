@@ -88,7 +88,7 @@
 
     <!-- Edit DataPoint Modal -->
     <Modal v-model="showEdit" title="DataPoint bearbeiten">
-      <DataPointForm :initial="dp" :datatypes="dpStore.datatypes" @save="onEditSave" @cancel="showEdit = false" />
+      <DataPointForm :initial="dp" :datatypes="dpStore.datatypes" :save-handler="onEditSave" @cancel="showEdit = false" />
     </Modal>
 
     <!-- Binding form Modal -->
@@ -159,7 +159,7 @@ async function loadBindings() {
 async function onEditSave(payload) {
   const updated = await dpStore.update(props.id, payload)
   dp.value = updated
-  showEdit.value = false
+  showEdit.value = false   // only reached if no error thrown
 }
 
 function openEditBinding(b) { editBinding.value = b; showBindingForm.value = true }
