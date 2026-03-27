@@ -72,8 +72,8 @@ class KnxAdapter(AdapterBase):
     config_schema = KnxAdapterConfig
     binding_config_schema = KnxBindingConfig
 
-    def __init__(self, event_bus: Any, config: dict | None = None) -> None:
-        super().__init__(event_bus, config)
+    def __init__(self, event_bus: Any, config: dict | None = None, **kwargs) -> None:
+        super().__init__(event_bus, config, **kwargs)
         self._xknx: Any = None
         self._sniffer: Any = None
         self._ga_source_map: dict[str, list[tuple[Any, Any]]] = {}

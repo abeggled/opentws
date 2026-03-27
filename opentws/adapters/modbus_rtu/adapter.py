@@ -55,8 +55,8 @@ class ModbusRtuAdapter(AdapterBase):
     config_schema = ModbusRtuAdapterConfig
     binding_config_schema = ModbusBindingConfig
 
-    def __init__(self, event_bus: Any, config: dict | None = None) -> None:
-        super().__init__(event_bus, config)
+    def __init__(self, event_bus: Any, config: dict | None = None, **kwargs) -> None:
+        super().__init__(event_bus, config, **kwargs)
         self._client: Any = None
         self._poll_tasks: list[asyncio.Task] = []
 

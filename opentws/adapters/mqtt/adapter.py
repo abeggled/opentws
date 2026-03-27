@@ -62,8 +62,8 @@ class MqttAdapter(AdapterBase):
     config_schema = MqttAdapterConfig
     binding_config_schema = MqttBindingConfig
 
-    def __init__(self, event_bus: Any, config: dict | None = None) -> None:
-        super().__init__(event_bus, config)
+    def __init__(self, event_bus: Any, config: dict | None = None, **kwargs) -> None:
+        super().__init__(event_bus, config, **kwargs)
         self._cfg: MqttAdapterConfig | None = None
         self._pub_task: asyncio.Task | None = None
         self._sub_task: asyncio.Task | None = None

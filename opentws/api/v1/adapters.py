@@ -284,9 +284,11 @@ async def test_instance(
     if cls is None:
         return TestResult(success=False, detail=f"Adapter-Typ '{row['adapter_type']}' nicht registriert")
 
-    config_dict = json.loads(body.config if body and body.config else row["config"] or "{}")
-    if isinstance(config_dict, str):
-        config_dict = json.loads(config_dict)
+    if body and body.config:
+        config_dict = body.config  # bereits dict durch Pydantic
+    else:
+        raw = row["config"] or "{}"
+        config_dict = json.loads(raw) if isinstance(raw, str) else raw
 
     try:
         cls.config_schema(**config_dict)
