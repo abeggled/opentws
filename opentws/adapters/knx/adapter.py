@@ -92,7 +92,16 @@ class KnxAdapter(AdapterBase):
             local_ip=cfg.local_ip,
         )
 
-        self._xknx = XKNX(connection_config=conn_cfg)
+        try:
+            from xknx.telegram.address import IndividualAddress
+            own_addr = IndividualAddress(cfg.individual_address)
+        except Exception:
+            own_addr = None
+
+        self._xknx = XKNX(
+            connection_config=conn_cfg,
+            **({"own_address": own_addr} if own_addr is not None else {}),
+        )
         self._xknx.telegram_queue.register_telegram_received_cb(self._on_telegram)
 
         try:
@@ -153,11 +162,15 @@ class KnxAdapter(AdapterBase):
             return
 
         ga = str(telegram.destination_address)
+        logger.debug("KNX telegram received: GA=%s payload=%s", ga, telegram.payload)
+
         entries = self._ga_source_map.get(ga)
         if not entries:
+            logger.debug("KNX: GA %s not in source map (registered: %s)", ga, list(self._ga_source_map.keys()))
             return
 
         raw = _telegram_to_bytes(telegram)
+        logger.debug("KNX: GA=%s raw=%s", ga, raw.hex())
 
         for binding, dpt in entries:
             try:
@@ -234,20 +247,27 @@ class KnxAdapter(AdapterBase):
 # ---------------------------------------------------------------------------
 
 def _telegram_to_bytes(telegram: Any) -> bytes:
-    """Extract raw bytes from a KNX telegram payload."""
+    """Extract raw bytes from a KNX telegram payload.
+
+    xknx wraps the payload value in DPTBinary (1-bit, .value is int)
+    or DPTArray (multi-byte, .value is tuple[int, ...]).
+    Both have a .value attribute, so we must check the inner type.
+    """
     try:
         v = telegram.payload.value
-        # DPTBinary → 1 byte
         if hasattr(v, "value"):
-            return bytes([v.value & 0x3F])
-        # DPTArray → byte list
-        if hasattr(v, "value") and isinstance(v.value, (list, tuple)):
-            return bytes(v.value)
-        # xknx 2.x: payload.value may be raw int or list
-        if isinstance(v, int):
-            return bytes([v & 0x3F])
+            inner = v.value
+            # DPTArray: .value is a list/tuple of byte ints
+            if isinstance(inner, (list, tuple)):
+                return bytes(inner)
+            # DPTBinary: .value is a single int (6 usable bits)
+            return bytes([inner & 0x3F])
+        # xknx 2.x may return raw types directly
         if isinstance(v, (list, tuple)):
             return bytes(v)
+        if isinstance(v, int):
+            return bytes([v & 0x3F])
         return bytes(v) if v else b"\x00"
     except Exception:
+        logger.exception("KNX _telegram_to_bytes failed for %s", telegram)
         return b"\x00"
