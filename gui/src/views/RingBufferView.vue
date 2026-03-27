@@ -12,7 +12,7 @@
     <!-- Stats bar -->
     <div v-if="stats" class="grid grid-cols-3 gap-3">
       <div class="card p-4 text-center">
-        <div class="text-2xl font-bold text-slate-100">{{ stats.total_entries }}</div>
+        <div class="text-2xl font-bold text-slate-100">{{ stats.total }}</div>
         <div class="text-xs text-slate-500 mt-1">Einträge</div>
       </div>
       <div class="card p-4 text-center">
@@ -60,7 +60,7 @@
                   {{ e.name ?? e.datapoint_id?.slice(0, 8) }}
                 </RouterLink>
               </td>
-              <td class="font-mono text-sm text-blue-300">{{ e.value }}</td>
+              <td class="font-mono text-sm text-blue-300">{{ e.new_value }}</td>
               <td class="font-mono text-sm text-slate-500">{{ e.old_value ?? '—' }}</td>
               <td><Badge :variant="e.quality === 'good' ? 'success' : 'warning'" size="xs" dot>{{ e.quality }}</Badge></td>
               <td class="text-xs text-slate-500">{{ e.source_adapter ?? '—' }}</td>
