@@ -181,17 +181,28 @@ class ModbusRtuAdapter(AdapterBase):
     # Low-level Modbus operations (identical to TCP, different client)
     # ------------------------------------------------------------------
 
-    async def _modbus_call(self, fn, *args, unit_id: int) -> Any:
-        """Call a pymodbus function with the correct slave/unit kwarg (version-safe).
-        Tries: slave= (3.x), unit= (2.x), positional (fallback).
-        """
-        for kwarg in ({"slave": unit_id}, {"unit": unit_id}):
+    async def _modbus_call(self, fn, *pos_args, unit_id: int, **extra_kwargs) -> Any:
+        """Version-safe pymodbus call across 2.x / 3.x / 3.12+."""
+        slave_variants = [{"slave": unit_id}, {"unit": unit_id}, {}]
+
+        for sk in slave_variants:
             try:
-                return await fn(*args, **kwarg)
+                return await fn(*pos_args, **sk, **extra_kwargs)
             except TypeError:
                 continue
-        # Last resort: pass unit_id as positional argument
-        return await fn(*args, unit_id)
+
+        if len(pos_args) >= 2:
+            param_names = ["address", "count"]
+            kw_fallback = dict(zip(param_names, pos_args))
+            for sk in slave_variants:
+                try:
+                    return await fn(**kw_fallback, **sk, **extra_kwargs)
+                except TypeError:
+                    continue
+
+        raise RuntimeError(
+            f"pymodbus: cannot call {fn.__name__} with any known API variant"
+        )
 
     async def _read_register(self, bc: ModbusBindingConfig) -> Any:
         if not self._client or not self._client.connected:
