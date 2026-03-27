@@ -94,6 +94,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     import opentws.adapters.modbus_tcp.adapter  # noqa: F401
     import opentws.adapters.modbus_rtu.adapter  # noqa: F401
     import opentws.adapters.onewire.adapter     # noqa: F401
+    import opentws.adapters.mqtt.adapter        # noqa: F401
     await adapter_registry.start_all(bus, db)
 
     logger.info(
