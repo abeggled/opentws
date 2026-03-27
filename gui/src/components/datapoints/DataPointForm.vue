@@ -14,7 +14,21 @@
       </div>
       <div class="form-group">
         <label class="label">Einheit</label>
-        <input v-model="form.unit" type="text" class="input" placeholder="°C, %, lx …" />
+        <select v-model="unitSelect" class="input">
+          <option value="">— keine —</option>
+          <optgroup v-for="cat in UNIT_CATEGORIES" :key="cat.label" :label="cat.label">
+            <option v-for="u in cat.units" :key="u" :value="u">{{ u }}</option>
+          </optgroup>
+          <option value="__other__">Andere (Freitext) …</option>
+        </select>
+        <input
+          v-if="unitSelect === '__other__'"
+          v-model="unitCustom"
+          type="text"
+          class="input mt-1"
+          placeholder="Einheit eingeben …"
+          autofocus
+        />
       </div>
     </div>
 
@@ -43,13 +57,69 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, watch, computed } from 'vue'
 import Spinner from '@/components/ui/Spinner.vue'
 
+// ---------------------------------------------------------------------------
+// ISO-Einheiten — kategorisiert
+// ---------------------------------------------------------------------------
+const UNIT_CATEGORIES = [
+  {
+    label: 'Temperatur',
+    units: ['°C', '°F', 'K'],
+  },
+  {
+    label: 'Feuchte & Luftqualität',
+    units: ['%', '%rH', 'ppm', 'ppb', 'g/m³', 'μg/m³', 'mg/m³'],
+  },
+  {
+    label: 'Druck',
+    units: ['Pa', 'hPa', 'kPa', 'bar', 'mbar'],
+  },
+  {
+    label: 'Elektrizität',
+    units: ['V', 'mV', 'A', 'mA', 'W', 'kW', 'MW', 'VA', 'kVA', 'var', 'kvar', 'Wh', 'kWh', 'MWh', 'Ω', 'Hz', 'cos φ'],
+  },
+  {
+    label: 'Licht',
+    units: ['lx', 'lm', 'cd', 'W/m²'],
+  },
+  {
+    label: 'Geschwindigkeit & Beschleunigung',
+    units: ['m/s', 'km/h', 'm/s²'],
+  },
+  {
+    label: 'Volumen & Durchfluss',
+    units: ['m³', 'l', 'dl', 'cl', 'm³/h', 'l/h', 'l/min'],
+  },
+  {
+    label: 'Länge & Fläche',
+    units: ['mm', 'cm', 'm', 'km', 'm²', 'km²'],
+  },
+  {
+    label: 'Masse',
+    units: ['g', 'kg', 't'],
+  },
+  {
+    label: 'Zeit',
+    units: ['ms', 's', 'min', 'h', 'd'],
+  },
+  {
+    label: 'Sonstiges',
+    units: ['1', 'dB', 'dBA', 'pH', 'Bq/m³'],
+  },
+]
+
+// Flat set for fast lookup
+const KNOWN_UNITS = new Set(UNIT_CATEGORIES.flatMap(c => c.units))
+
+// ---------------------------------------------------------------------------
+// Props / emits
+// ---------------------------------------------------------------------------
 const props = defineProps({
   initial:      { type: Object,   default: null },
   datatypes:    { type: Array,    default: () => [] },
-  saveHandler:  { type: Function, required: true },   // async (payload) => void
+  saveHandler:  { type: Function, required: true },
 })
 const emit = defineEmits(['cancel'])
 
@@ -57,23 +127,48 @@ const saving    = ref(false)
 const error     = ref(null)
 const tagsInput = ref('')
 
+// Dropdown selection & free-text fallback
+const unitSelect = ref('')
+const unitCustom = ref('')
+
+// Effective unit value used when submitting
+const effectiveUnit = computed(() => {
+  if (unitSelect.value === '__other__') return unitCustom.value.trim() || null
+  return unitSelect.value || null
+})
+
 const form = reactive({
   name:       '',
   data_type:  'FLOAT',
-  unit:       '',
   mqtt_alias: '',
 })
+
+// Helper: initialise unit controls from a raw string
+function applyUnit(raw) {
+  const val = raw ?? ''
+  if (!val) {
+    unitSelect.value = ''
+    unitCustom.value = ''
+  } else if (KNOWN_UNITS.has(val)) {
+    unitSelect.value = val
+    unitCustom.value = ''
+  } else {
+    unitSelect.value = '__other__'
+    unitCustom.value = val
+  }
+}
 
 watch(() => props.initial, (val) => {
   if (val) {
     form.name       = val.name
     form.data_type  = val.data_type
-    form.unit       = val.unit       ?? ''
     form.mqtt_alias = val.mqtt_alias ?? ''
     tagsInput.value = val.tags?.join(', ') ?? ''
+    applyUnit(val.unit)
   } else {
-    form.name = ''; form.data_type = 'FLOAT'; form.unit = ''; form.mqtt_alias = ''
+    form.name = ''; form.data_type = 'FLOAT'; form.mqtt_alias = ''
     tagsInput.value = ''
+    applyUnit('')
   }
 }, { immediate: true })
 
@@ -85,7 +180,7 @@ async function submit() {
     await props.saveHandler({
       name:       form.name,
       data_type:  form.data_type,
-      unit:       form.unit       || null,
+      unit:       effectiveUnit.value,
       tags,
       mqtt_alias: form.mqtt_alias || null,
     })
