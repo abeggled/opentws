@@ -77,8 +77,8 @@ async def parse_knxproj(file_bytes: bytes, password: str | None = None) -> list[
             tmp.write(file_bytes)
             tmp_path = tmp.name
 
-        knxproject = XKNXProj()
-        await knxproject.parse(tmp_path, password=password)
+        knxproject = XKNXProj(tmp_path, password=password)
+        await knxproject.parse()
 
     except Exception as e:
         msg = str(e)
