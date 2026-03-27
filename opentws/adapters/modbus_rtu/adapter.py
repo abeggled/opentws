@@ -181,20 +181,31 @@ class ModbusRtuAdapter(AdapterBase):
     # Low-level Modbus operations (identical to TCP, different client)
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _slave_kwarg(unit_id: int) -> dict:
+        """Return the correct slave/unit keyword argument for the installed pymodbus version."""
+        try:
+            import pymodbus
+            major = int(pymodbus.__version__.split(".")[0])
+            return {"slave": unit_id} if major >= 3 else {"unit": unit_id}
+        except Exception:
+            return {"slave": unit_id}
+
     async def _read_register(self, bc: ModbusBindingConfig) -> Any:
         if not self._client or not self._client.connected:
             return None
 
         count = register_count(bc.data_format)
+        sk = self._slave_kwarg(bc.unit_id)
 
         if bc.register_type == "holding":
-            r = await self._client.read_holding_registers(bc.address, count, slave=bc.unit_id)
+            r = await self._client.read_holding_registers(bc.address, count, **sk)
         elif bc.register_type == "input":
-            r = await self._client.read_input_registers(bc.address, count, slave=bc.unit_id)
+            r = await self._client.read_input_registers(bc.address, count, **sk)
         elif bc.register_type == "coil":
-            r = await self._client.read_coils(bc.address, count, slave=bc.unit_id)
+            r = await self._client.read_coils(bc.address, count, **sk)
         elif bc.register_type == "discrete_input":
-            r = await self._client.read_discrete_inputs(bc.address, count, slave=bc.unit_id)
+            r = await self._client.read_discrete_inputs(bc.address, count, **sk)
         else:
             return None
 
@@ -209,11 +220,12 @@ class ModbusRtuAdapter(AdapterBase):
         )
 
     async def _write_register(self, bc: ModbusBindingConfig, value: Any) -> None:
+        sk = self._slave_kwarg(bc.unit_id)
         if bc.register_type == "coil":
-            await self._client.write_coil(bc.address, bool(value), slave=bc.unit_id)
+            await self._client.write_coil(bc.address, bool(value), **sk)
         elif bc.register_type == "holding":
             registers = encode_value(value, bc.data_format, bc.byte_order, bc.word_order, bc.scale_factor)
             if len(registers) == 1:
-                await self._client.write_register(bc.address, registers[0], slave=bc.unit_id)
+                await self._client.write_register(bc.address, registers[0], **sk)
             else:
-                await self._client.write_registers(bc.address, registers, slave=bc.unit_id)
+                await self._client.write_registers(bc.address, registers, **sk)
