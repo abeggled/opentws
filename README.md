@@ -3,7 +3,7 @@
 **Open-Source Multiprotocol Server for Building Automation**
 
 OpenTWS is a MIT-licensed replacement for the proprietary Timberwolf Server (TWS).
-It connects KNX, Modbus RTU/TCP and 1-Wire devices through a unified object model and publishes all values via MQTT. The entire system is configured through a REST API — there is no proprietary configuration file format.
+It connects KNX, Modbus RTU/TCP, 1-Wire and external MQTT brokers through a unified object model and publishes all values via MQTT. The entire system is configured through a REST API — there is no proprietary configuration file format.
 
 ---
 
@@ -11,12 +11,14 @@ It connects KNX, Modbus RTU/TCP and 1-Wire devices through a unified object mode
 
 | | |
 |---|---|
-| **Protocols** | KNX/IP (Tunneling + Routing), Modbus TCP, Modbus RTU, 1-Wire |
-| **MQTT** | Hybrid topic strategy: stable UUID topics + human-readable alias topics |
+| **Protocols** | KNX/IP (Tunneling + Routing), Modbus TCP, Modbus RTU, 1-Wire, external MQTT |
+| **Multi-Instance** | Any number of adapter instances per type (e.g. 2× KNX, 3× MQTT, 2× Modbus TCP) |
+| **Cross-Protocol** | SOURCE → DEST propagation: a KNX value automatically writes to a Modbus register and vice versa |
+| **MQTT** | Hybrid topic strategy: stable UUID topics + human-readable alias topics; retain support |
 | **API** | FastAPI REST + WebSocket, JWT Bearer + API Key auth |
 | **Storage** | SQLite (WAL mode), zero external dependencies |
 | **History** | Plugin system — SQLite built-in, extensible (InfluxDB, TimescaleDB, …) |
-| **Debug** | RingBuffer: in-memory or disk, runtime-switchable |
+| **Debug** | RingBuffer: memory or disk (default: disk), searchable by name |
 | **Runtime config** | All changes apply immediately — no restart needed |
 | **Deployment** | Docker Compose (OpenTWS + Mosquitto) or bare-metal Python |
 | **License** | MIT |
@@ -45,6 +47,7 @@ It connects KNX, Modbus RTU/TCP and 1-Wire devices through a unified object mode
    - [Modbus TCP](#modbus-tcp-adapter)
    - [Modbus RTU](#modbus-rtu-adapter)
    - [1-Wire](#1-wire-adapter)
+   - [MQTT (external broker)](#mqtt-adapter-external-broker)
 7. [MQTT Topics](#mqtt-topics)
 8. [Data Types](#data-types)
 9. [Development](#development)
@@ -77,8 +80,8 @@ curl http://localhost:8080/api/v1/system/health
 
 | Service | Port | Protocol |
 |---|---|---|
-| OpenTWS REST API | 8080 | HTTP |
-| Mosquitto MQTT | 1883 | MQTT |
+| OpenTWS REST API + GUI | 8080 | HTTP |
+| Mosquitto MQTT (internal) | 1883 | MQTT |
 | Mosquitto WebSocket | 9001 | MQTT over WS |
 
 ---
@@ -124,7 +127,7 @@ server:
   log_level: INFO             # OPENTWS_SERVER__LOG_LEVEL  (DEBUG|INFO|WARNING|ERROR)
 
 mqtt:
-  host: localhost             # OPENTWS_MQTT__HOST
+  host: localhost             # OPENTWS_MQTT__HOST  (internal Mosquitto)
   port: 1883                  # OPENTWS_MQTT__PORT
   username: null              # OPENTWS_MQTT__USERNAME
   password: null              # OPENTWS_MQTT__PASSWORD
@@ -134,13 +137,15 @@ database:
   history_plugin: sqlite      # OPENTWS_DATABASE__HISTORY_PLUGIN  (sqlite|influxdb|…)
 
 ringbuffer:
-  storage: memory             # OPENTWS_RINGBUFFER__STORAGE  (memory|disk)
+  storage: disk               # OPENTWS_RINGBUFFER__STORAGE  (memory|disk)
   max_entries: 10000          # OPENTWS_RINGBUFFER__MAX_ENTRIES
 
 security:
   jwt_secret: changeme        # OPENTWS_SECURITY__JWT_SECRET  ← change in production!
   jwt_expire_minutes: 1440    # OPENTWS_SECURITY__JWT_EXPIRE_MINUTES
 ```
+
+> **Note:** The `mqtt` section configures the **internal** Mosquitto broker used for the OpenTWS topic bus. External MQTT brokers are configured as separate adapter instances (see [MQTT Adapter](#mqtt-adapter-external-broker)).
 
 ---
 
@@ -150,37 +155,46 @@ security:
 ┌──────────────────────────────────────────────────────────────────────┐
 │                          OpenTWS Process                             │
 │                                                                      │
-│  ┌──────────┐   DataValueEvent   ┌──────────────────────────────┐   │
-│  │ Adapters │ ────────────────▶  │         EventBus             │   │
-│  │  KNX     │                    │  (asyncio.gather fan-out)    │   │
-│  │  ModTCP  │ ◀──── write() ─── │                              │   │
-│  │  ModRTU  │                    └──────┬──────────┬────────────┘   │
-│  │  1-Wire  │                           │          │                │
-│  └──────────┘                    ┌──────▼──┐  ┌────▼──────────┐    │
-│                                  │Registry │  │  RingBuffer   │    │
-│  ┌──────────┐   dp/+/set         │(in-mem) │  │  History      │    │
-│  │   MQTT   │ ──────────────▶   │         │  │  WebSocket    │    │
-│  │  Client  │ ◀── publish ───   │         │  │  Manager      │    │
-│  └──────────┘                    └────┬────┘  └───────────────┘    │
-│                                       │                             │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │                      FastAPI  /api/v1                        │  │
-│  │  auth  datapoints  bindings  adapters  history  ringbuffer   │  │
-│  │  search  system  config  ws                                  │  │
-│  └──────────────────────────────────────────────────────────────┘  │
+│  ┌────────────────────────┐  DataValueEvent   ┌──────────────────┐  │
+│  │   Adapter Instances    │ ────────────────▶ │    EventBus      │  │
+│  │                        │                   │ (fan-out)        │  │
+│  │  KNX "EG"              │ ◀── write() ───   │                  │  │
+│  │  KNX "OG"              │                   └───┬──────┬───────┘  │
+│  │  Modbus TCP "SPS"      │                       │      │          │
+│  │  MQTT "HomeAssistant"  │                 ┌─────▼──┐ ┌─▼───────┐ │
+│  │  …                     │                 │Registry│ │RingBuf  │ │
+│  └────────────────────────┘                 │(in-mem)│ │History  │ │
+│                                             │        │ │WebSocket│ │
+│  ┌────────────────┐  dp/+/set              └────┬───┘ └─────────┘ │
+│  │  Internal MQTT │ ──────────────▶             │                  │
+│  │  Client        │ ◀── publish ──   ┌──────────▼─────────────┐   │
+│  └────────────────┘                  │      WriteRouter        │   │
+│                                      │  MQTT set → write()     │   │
+│                                      │  SOURCE → DEST bridge   │   │
+│                                      └─────────────────────────┘   │
 │                                                                      │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │                   SQLite  (WAL mode)                         │  │
-│  │  datapoints · adapter_bindings · adapter_configs             │  │
-│  │  users · api_keys · history_values · schema_version          │  │
-│  └──────────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                     FastAPI  /api/v1                         │   │
+│  │  auth · datapoints · bindings · adapters · history           │   │
+│  │  ringbuffer · search · system · config · ws                  │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                   SQLite  (WAL mode)                         │   │
+│  │  datapoints · adapter_bindings · adapter_instances           │   │
+│  │  adapter_configs · users · api_keys · history_values         │   │
+│  │  schema_version                                              │   │
+│  └──────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key design principles:**
+- **Multi-Instance Adapters** — each adapter type can run multiple independent instances (e.g. two KNX gateways). Instances are identified by UUID and managed at runtime without restarts.
 - **Registry pattern** throughout — DataTypeRegistry, AdapterRegistry, DPTRegistry are all self-registering; no hardcoding in the core.
 - **EventBus** decouples adapters from the core. Adapters only publish `DataValueEvent`; they have no knowledge of MQTT, history, or WebSocket.
-- **Write routing** is handled by a dedicated `WriteRouter`. MQTT `dp/{uuid}/set` messages are deserialized and dispatched to the correct adapter `write()` method via DB binding lookup.
+- **WriteRouter** handles two write paths:
+  1. External: `dp/{uuid}/set` → MQTT → `adapter.write()`
+  2. Internal: `DataValueEvent` from a SOURCE binding → propagated to all DEST/BOTH bindings of the same DataPoint (cross-protocol bridging)
 - **Graceful degradation** — if a protocol library (xknx, pymodbus, w1thermsensor) is not installed, the adapter logs a warning and disables itself without crashing the server.
 
 ---
@@ -282,7 +296,7 @@ GET    /api/v1/datapoints/{id}/value           # current value only
 | `id` | UUID | Auto-generated |
 | `name` | string | Human-readable name |
 | `data_type` | string | `BOOLEAN`, `INTEGER`, `FLOAT`, `STRING`, `DATE`, `TIME`, `DATETIME`, `UNKNOWN` |
-| `unit` | string? | e.g. `°C`, `%`, `lux` |
+| `unit` | string? | ISO unit, e.g. `°C`, `%rH`, `kWh`, `lx` (dropdown in GUI) |
 | `tags` | string[] | For grouping/filtering |
 | `mqtt_topic` | string | Auto-assigned: `dp/{uuid}/value` |
 | `mqtt_alias` | string? | Optional: `alias/{tag}/{name}/value` |
@@ -293,10 +307,10 @@ curl -X POST http://localhost:8080/api/v1/datapoints \
   -H "Authorization: Bearer {token}" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Living Room Temperature",
+    "name": "Wohnzimmer Temperatur",
     "data_type": "FLOAT",
     "unit": "°C",
-    "tags": ["climate", "living_room"]
+    "tags": ["klima", "wohnzimmer"]
   }'
 ```
 
@@ -304,7 +318,7 @@ curl -X POST http://localhost:8080/api/v1/datapoints \
 
 ### Bindings
 
-A Binding connects a DataPoint to an adapter address.
+A Binding connects a DataPoint to a specific adapter instance and address.
 
 ```
 GET    /api/v1/datapoints/{id}/bindings
@@ -317,10 +331,49 @@ DELETE /api/v1/datapoints/{id}/bindings/{binding_id}
 
 | Field | Type | Description |
 |---|---|---|
-| `adapter_type` | string | `KNX`, `MODBUS_TCP`, `MODBUS_RTU`, `ONEWIRE` |
+| `adapter_instance_id` | UUID | Which adapter instance handles this binding |
+| `adapter_type` | string | Auto-derived from the instance (`KNX`, `MODBUS_TCP`, …) |
 | `direction` | string | `SOURCE` (read), `DEST` (write), `BOTH` |
 | `config` | object | Adapter-specific config (see [Adapter Configuration](#adapter-configuration)) |
 | `enabled` | bool | Enable/disable without deleting |
+
+**Cross-protocol bridging:**
+When a SOURCE binding receives a value, the WriteRouter automatically propagates it to **all** DEST/BOTH bindings of the same DataPoint — regardless of adapter type. A KNX temperature value is written to a Modbus register without any additional configuration.
+
+**Example:** KNX temperature → Modbus register
+
+```bash
+# 1. Create DataPoint
+DP_ID=$(curl -s -X POST http://localhost:8080/api/v1/datapoints \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Wohnzimmer Temperatur","data_type":"FLOAT","unit":"°C","tags":["klima"]}' \
+  | jq -r .id)
+
+# 2. Get adapter instance IDs
+curl http://localhost:8080/api/v1/adapters/instances \
+  -H "Authorization: Bearer {token}"
+
+# 3a. KNX SOURCE binding (reads from GA 1/2/3)
+curl -X POST http://localhost:8080/api/v1/datapoints/$DP_ID/bindings \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adapter_instance_id": "KNX-INSTANCE-UUID",
+    "direction": "SOURCE",
+    "config": {"group_address": "1/2/3", "dpt_id": "DPT9.001"}
+  }'
+
+# 3b. Modbus DEST binding (writes to holding register 100)
+curl -X POST http://localhost:8080/api/v1/datapoints/$DP_ID/bindings \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adapter_instance_id": "MODBUS-INSTANCE-UUID",
+    "direction": "DEST",
+    "config": {"unit_id": 1, "register_type": "holding", "address": 100, "data_format": "float32"}
+  }'
+```
 
 **Important for KNX dimmers:** use two separate bindings — one `DEST` for the write GA, one `SOURCE` for the status GA.
 
@@ -345,13 +398,59 @@ GET /api/v1/search?q=&tag=&type=&adapter=&page=0&size=50
 
 ### Adapters
 
+**Typ-Routen** (schema lookup, legacy config):
+
 ```
 GET    /api/v1/adapters                        # all registered adapter types + status
 GET    /api/v1/adapters/{type}/schema          # adapter config JSON schema
 GET    /api/v1/adapters/{type}/binding-schema  # binding config JSON schema
-POST   /api/v1/adapters/{type}/test            # test connection (no side effects)
-GET    /api/v1/adapters/{type}/config          # current saved config
-PATCH  /api/v1/adapters/{type}/config          # update config (applies immediately)
+POST   /api/v1/adapters/{type}/test            # test connection with given config (no persist)
+```
+
+**Instanz-Routen** (multi-instance management):
+
+```
+GET    /api/v1/adapters/instances              # list all instances with status
+POST   /api/v1/adapters/instances              # create new instance (hot-start)
+GET    /api/v1/adapters/instances/{id}         # get one instance
+PATCH  /api/v1/adapters/instances/{id}         # update config + hot-reload
+DELETE /api/v1/adapters/instances/{id}         # stop + delete (cascades bindings)
+POST   /api/v1/adapters/instances/{id}/test    # test connection (ephemeral, no persist)
+POST   /api/v1/adapters/instances/{id}/restart # stop + reconnect
+```
+
+**Create an adapter instance:**
+
+```bash
+# KNX gateway "Erdgeschoss"
+curl -X POST http://localhost:8080/api/v1/adapters/instances \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adapter_type": "KNX",
+    "name": "KNX Erdgeschoss",
+    "config": {
+      "connection_type": "tunneling",
+      "host": "10.38.114.44",
+      "port": 3674,
+      "individual_address": "1.1.210"
+    }
+  }'
+
+# Second KNX gateway "Obergeschoss"
+curl -X POST http://localhost:8080/api/v1/adapters/instances \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adapter_type": "KNX",
+    "name": "KNX Obergeschoss",
+    "config": {
+      "connection_type": "tunneling",
+      "host": "10.38.114.45",
+      "port": 3674,
+      "individual_address": "1.1.211"
+    }
+  }'
 ```
 
 ---
@@ -372,13 +471,15 @@ Intervals ≥ 1h use SQL-level grouping; sub-hourly intervals use Python-based g
 
 ### RingBuffer
 
-The RingBuffer is a circular debug log of the last N value changes. It can run in memory (default) or on disk and can be switched at runtime without data loss.
+The RingBuffer is a circular debug log of the last N value changes. It runs on disk by default (survives restarts) and can be switched to memory at runtime.
 
 ```
-GET  /api/v1/ringbuffer?q=&adapter=&from=&limit=   # query entries
+GET  /api/v1/ringbuffer?q=&adapter=&from=&limit=   # query entries (search by name or UUID)
 GET  /api/v1/ringbuffer/stats                       # entry count, oldest/newest ts
 POST /api/v1/ringbuffer/config                      # reconfigure (storage, max_entries)
 ```
+
+The `q` parameter accepts both DataPoint names (partial match) and UUIDs.
 
 ---
 
@@ -430,7 +531,7 @@ WS /api/v1/ws?token={jwt}
   "datapoint_id": "550e8400-e29b-41d4-a716-446655440000",
   "value": 21.4,
   "quality": "good",
-  "ts": "2026-03-26T10:23:41.123Z",
+  "ts": "2026-03-27T10:23:41.123Z",
   "source_adapter": "KNX"
 }
 ```
@@ -439,16 +540,18 @@ WS /api/v1/ws?token={jwt}
 
 ## Adapter Configuration
 
+Each adapter type can be instantiated multiple times. All instances are managed via `POST /api/v1/adapters/instances` (or through the GUI under **Adapters → + Neue Instanz**).
+
 ### KNX Adapter
 
-**Adapter config** (via `PATCH /api/v1/adapters/KNX/config`):
+**Adapter config** (`config` field when creating/updating an instance):
 
 ```json
 {
   "connection_type": "tunneling",
-  "host": "192.168.1.100",
-  "port": 3671,
-  "individual_address": "1.1.255",
+  "host": "10.38.114.44",
+  "port": 3674,
+  "individual_address": "1.1.210",
   "local_ip": null
 }
 ```
@@ -457,17 +560,17 @@ WS /api/v1/ws?token={jwt}
 |---|---|---|
 | `connection_type` | `tunneling` \| `routing` | Tunneling = unicast to gateway; Routing = IP multicast |
 | `host` | IP address | KNX/IP gateway IP |
-| `port` | default `3671` | KNX/IP port |
-| `individual_address` | e.g. `1.1.255` | Own KNX individual address |
+| `port` | default `3671` | KNX/IP port (ETS default); some gateways use `3674` |
+| `individual_address` | e.g. `1.1.210` | Own KNX individual address |
 | `local_ip` | IP or null | Required for routing mode |
 
 **Binding config:**
 
 ```json
 {
-  "group_address": "1/2/3",
+  "group_address": "27/6/6",
   "dpt_id": "DPT9.001",
-  "state_group_address": "1/2/4"
+  "state_group_address": null
 }
 ```
 
@@ -475,7 +578,7 @@ WS /api/v1/ws?token={jwt}
 |---|---|
 | `group_address` | KNX group address (3-level notation) |
 | `dpt_id` | DPT identifier — see table below |
-| `state_group_address` | Optional feedback GA for `DEST` bindings |
+| `state_group_address` | Optional feedback GA for `DEST` bindings (reads back the set value) |
 
 **Supported DPTs:**
 
@@ -490,7 +593,7 @@ WS /api/v1/ws?token={jwt}
 | `DPT7.001` | 16 bit unsigned | Pulse count |
 | `DPT8.001` | 16 bit signed | Relative value ±32767 |
 | `DPT9.001` | 2-byte float | Temperature (°C) |
-| `DPT9.002` | 2-byte float | Lux (lx) |
+| `DPT9.002` | 2-byte float | Illuminance (lx) |
 | `DPT9.004` | 2-byte float | Speed (m/s) |
 | `DPT9.007` | 2-byte float | Humidity (%) |
 | `DPT9.010` | 2-byte float | Power (W) |
@@ -511,8 +614,8 @@ DPT9 uses the KNX EIS5 format: `SEEEEMMM MMMMMMMM`, `value = 0.01 × M × 2^E`.
 
 ```json
 {
-  "host": "192.168.1.50",
-  "port": 502,
+  "host": "10.38.115.31",
+  "port": 1502,
   "timeout": 3.0
 }
 ```
@@ -573,29 +676,95 @@ On non-Linux systems the adapter degrades gracefully (logs a warning, no crash).
 }
 ```
 
-Use `GET /api/v1/adapters/ONEWIRE/test` to trigger `scan_sensors()` and list all detected sensor IDs.
+Use `POST /api/v1/adapters/instances/{id}/test` to trigger `scan_sensors()` and list all detected sensor IDs.
+
+---
+
+### MQTT Adapter (external broker)
+
+Connects to an **external** MQTT broker (distinct from the internal OpenTWS Mosquitto). Supports authentication and bidirectional bindings.
+
+**Adapter config:**
+
+```json
+{
+  "host": "10.38.114.44",
+  "port": 1883,
+  "username": "twsmqtt",
+  "password": "twsmqtt"
+}
+```
+
+| Field | Description |
+|---|---|
+| `host` | External broker IP or hostname |
+| `port` | Default `1883` |
+| `username` | Optional authentication username |
+| `password` | Optional authentication password |
+
+**Binding config:**
+
+```json
+{
+  "topic": "sensors/living_room/temperature",
+  "publish_topic": "actuators/living_room/setpoint",
+  "retain": false
+}
+```
+
+| Field | Description |
+|---|---|
+| `topic` | Topic to **subscribe** to (for `SOURCE` / `BOTH` bindings) |
+| `publish_topic` | Topic to **publish** to (for `DEST` / `BOTH` bindings). Defaults to `topic` if omitted |
+| `retain` | Set MQTT retain flag on published messages |
+
+**Example — bridge Home Assistant temperature to KNX:**
+
+```bash
+# 1. Create MQTT adapter instance
+curl -X POST http://localhost:8080/api/v1/adapters/instances \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adapter_type": "MQTT",
+    "name": "Home Assistant",
+    "config": {"host": "10.38.114.44", "port": 1883, "username": "twsmqtt", "password": "twsmqtt"}
+  }'
+
+# 2. Add SOURCE binding on the DataPoint (subscribe to HA topic)
+curl -X POST http://localhost:8080/api/v1/datapoints/{DP_ID}/bindings \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adapter_instance_id": "MQTT-INSTANCE-UUID",
+    "direction": "SOURCE",
+    "config": {"topic": "homeassistant/sensor/living_room_temp/state"}
+  }'
+```
+
+When a value arrives on the MQTT topic, the WriteRouter automatically propagates it to all DEST bindings of the same DataPoint (e.g. a KNX group address).
 
 ---
 
 ## MQTT Topics
 
-OpenTWS uses a **hybrid topic strategy**:
+OpenTWS uses a **hybrid topic strategy** on the internal Mosquitto:
 
 | Topic | Description |
 |---|---|
-| `dp/{uuid}/value` | Stable — never changes, safe for automations |
+| `dp/{uuid}/value` | Stable — never changes, safe for automations. Published with `retain=true` |
 | `dp/{uuid}/raw` | Raw value without unit/quality wrapper |
 | `dp/{uuid}/set` | Write to this topic to trigger `adapter.write()` |
-| `dp/{uuid}/status` | Adapter connection status |
+| `dp/{uuid}/status` | Adapter connection status (retain=true) |
 | `alias/{tag}/{name}/value` | Human-readable, browsable (optional, requires `mqtt_alias`) |
 
-**Payload format:**
+**Payload format (`dp/{uuid}/value`):**
 
 ```json
 {
   "v": 21.4,
   "u": "°C",
-  "t": "2026-03-26T10:23:41.123Z",
+  "t": "2026-03-27T10:23:41.123Z",
   "q": "good"
 }
 ```
@@ -610,8 +779,13 @@ OpenTWS uses a **hybrid topic strategy**:
 **Writing a value via MQTT:**
 ```bash
 mosquitto_pub -t "dp/550e8400-e29b-41d4-a716-446655440000/set" \
-  -m '{"v": true}'
+  -m '{"v": 22.5}'
 ```
+
+**Writing with MQTT Explorer:**
+- Topic: `dp/{uuid}/set`
+- Payload: `{"v": true}` (boolean) or `{"v": 21.5}` (float) or `{"v": "text"}` (string)
+- QoS: 0 or 1
 
 ---
 
@@ -666,50 +840,52 @@ opentws/
 ├── __main__.py                 # python -m opentws entry point
 │
 ├── db/
-│   └── database.py             # aiosqlite wrapper, migration system (V1–V4)
+│   └── database.py             # aiosqlite wrapper, migration system (V1–V5)
 │
 ├── models/
 │   ├── types.py                # DataTypeRegistry, 8 built-in types
 │   ├── datapoint.py            # DataPoint, DataPointCreate, DataPointUpdate
-│   └── binding.py              # AdapterBinding
+│   └── binding.py              # AdapterBinding (with adapter_instance_id)
 │
 ├── core/
 │   ├── converter.py            # Type conversion with ConversionResult
 │   ├── event_bus.py            # Async EventBus, DataValueEvent, AdapterStatusEvent
-│   ├── mqtt_client.py          # aiomqtt wrapper, topic helpers, payload builder
+│   ├── mqtt_client.py          # aiomqtt wrapper (split pub/sub), topic helpers
 │   ├── registry.py             # DataPointRegistry, in-memory ValueState
-│   └── write_router.py         # dp/+/set → adapter.write() dispatcher
+│   └── write_router.py         # dp/+/set → write() + SOURCE→DEST bridge
 │
 ├── adapters/
-│   ├── base.py                 # AdapterBase ABC
-│   ├── registry.py             # @register decorator, start_all / stop_all
+│   ├── base.py                 # AdapterBase ABC (instance_id, name support)
+│   ├── registry.py             # @register, start_all/stop_all, multi-instance mgmt
 │   ├── modbus_base.py          # Shared Modbus binding config + codec
 │   ├── knx/
-│   │   ├── adapter.py          # KnxAdapter
+│   │   ├── adapter.py          # KnxAdapter (xknx 3.x)
 │   │   └── dpt_registry.py     # DPTRegistry (37 DPTs)
 │   ├── modbus_tcp/
 │   │   └── adapter.py          # ModbusTcpAdapter
 │   ├── modbus_rtu/
 │   │   └── adapter.py          # ModbusRtuAdapter
-│   └── onewire/
-│       └── adapter.py          # OneWireAdapter
+│   ├── onewire/
+│   │   └── adapter.py          # OneWireAdapter
+│   └── mqtt/
+│       └── adapter.py          # MqttAdapter (external broker, split pub/sub loops)
 │
 ├── api/
 │   ├── auth.py                 # JWT + API Key auth, user management endpoints
 │   ├── router.py               # Aggregates all sub-routers
 │   └── v1/
 │       ├── datapoints.py       # CRUD + pagination
-│       ├── bindings.py         # Binding CRUD, live adapter reload
+│       ├── bindings.py         # Binding CRUD (adapter_instance_id), live reload
 │       ├── search.py           # Server-side filtered search
-│       ├── adapters.py         # Adapter status, schema, test, config
+│       ├── adapters.py         # Instance CRUD + type schema + connection test
 │       ├── system.py           # Health, adapter status, datatypes
 │       ├── websocket.py        # WebSocketManager, selective subscribe
-│       ├── ringbuffer.py       # RingBuffer query + config
+│       ├── ringbuffer.py       # RingBuffer query (name search) + config
 │       ├── history.py          # History query + aggregate
 │       └── config.py           # Import / Export
 │
 ├── ringbuffer/
-│   └── ringbuffer.py           # SQLite-backed circular buffer (memory/disk)
+│   └── ringbuffer.py           # SQLite-backed circular buffer (disk default)
 │
 └── history/
     ├── sqlite_plugin.py        # History writer + query + aggregate (SQLite)
@@ -718,17 +894,20 @@ opentws/
 
 ### Database schema
 
-The database uses a version-based migration system. Current version: **V4**.
+The database uses a version-based migration system. Current version: **V5**.
 
 | Table | Description |
 |---|---|
 | `datapoints` | All DataPoints |
-| `adapter_bindings` | Bindings between DataPoints and adapters |
-| `adapter_configs` | Per-adapter JSON configuration |
+| `adapter_bindings` | Bindings between DataPoints and adapter instances (includes `adapter_instance_id`) |
+| `adapter_instances` | **New V5** — one row per adapter instance (UUID PK, N instances per type) |
+| `adapter_configs` | Legacy flat config (migrated to `adapter_instances` on V5 upgrade) |
 | `users` | User accounts (username, PBKDF2 password hash, is_admin) |
 | `api_keys` | API key names + SHA-256 hashes |
 | `history_values` | Time-series value log |
 | `schema_version` | Applied migration versions |
+
+> **Upgrade note:** When upgrading from a pre-V5 installation, Migration V5 automatically creates one `adapter_instances` entry per existing `adapter_configs` row and links all bindings to the new instance IDs.
 
 ### Adding a new adapter
 
@@ -738,7 +917,7 @@ The database uses a version-based migration system. Current version: **V4**.
 4. Implement `connect()`, `disconnect()`, `read()`, `write()`
 5. Import the module in `main.py` startup (one line)
 
-No changes to the core, the API, or the database are needed.
+No changes to the core, the API, or the database are needed. The new adapter type immediately appears in the GUI under **Adapters → + Neue Instanz**.
 
 ### Adding a new DPT
 
