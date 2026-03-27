@@ -79,9 +79,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     ws_manager = init_ws_manager()
     bus.subscribe(DataValueEvent, ws_manager.handle_value_event)
 
-    # 6. Write Router (MQTT dp/{uuid}/set → adapters)
+    # 6. Write Router
+    #    Path A: MQTT dp/{uuid}/set → adapters (external commands)
+    #    Path B: DataValueEvent → DEST/BOTH bindings (cross-protocol propagation)
     write_router = init_write_router(db, registry)
     mqtt.on_write_request(write_router.handle)
+    bus.subscribe(DataValueEvent, write_router.handle_value_event)
 
     # 7. MQTT connect
     await mqtt.start()

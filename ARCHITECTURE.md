@@ -271,6 +271,14 @@ class AdapterBinding(BaseModel):
 
 Ein DataPoint kann mehrere Bindings haben (z.B. Wert von 1-Wire lesen, auf Modbus schreiben).
 
+**Wert-Propagation (WriteRouter):**
+Wenn ein SOURCE- oder BOTH-Binding einen Wert empfängt (DataValueEvent), passiert folgendes:
+1. MQTT `dp/{uuid}/value` wird aktualisiert (retain=true)
+2. Alle DEST- und BOTH-Bindings desselben DataPoints werden automatisch beschrieben
+   (das auslösende Binding wird übersprungen um Loopbacks zu vermeiden)
+
+Beispiel: KNX GA 27/6/6 (SOURCE) → DataPoint → KNX GA 6/7/15 (DEST)
+
 ### MQTT Payload
 
 ```json
