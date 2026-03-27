@@ -181,6 +181,72 @@ def _dpt16_encode(v: Any) -> bytes:
     return s.ljust(14, b"\x00")
 
 
+# --- DPT 18.x — Scene Control (1 byte) ---------------------------------------
+# Bit 7: 0=Activate, 1=Learn  |  Bits 5..0: Scene number (0..63)
+# Wert = Szenennummer (0-63); negativ = Lern-Modus (z.B. -1 → Szene 0 lernen)
+def _dpt18_decode(b: bytes) -> int:
+    learn  = bool(b[0] & 0x80)
+    scene  = b[0] & 0x3F
+    return -(scene + 1) if learn else scene   # negativ = Lern-Modus
+
+def _dpt18_encode(v: Any) -> bytes:
+    iv = int(v)
+    if iv < 0:                                # Lern-Modus
+        return bytes([0x80 | ((-iv - 1) & 0x3F)])
+    return bytes([iv & 0x3F])                 # Aktivieren
+
+
+# --- DPT 19.x — Date and Time (8 bytes) --------------------------------------
+# Byte0: Jahr-1900  Byte1: Monat  Byte2: Tag
+# Byte3: DoW(7..5) | Stunde(4..0)  Byte4: Minute  Byte5: Sekunde
+# Bytes 6-7: Qualitäts-/Status-Flags
+def _dpt19_decode(b: bytes) -> str:
+    import datetime
+    try:
+        year   = 1900 + b[0]
+        month  = b[1] & 0x0F
+        day    = b[2] & 0x1F
+        hour   = b[3] & 0x1F
+        minute = b[4] & 0x3F
+        second = b[5] & 0x3F
+        return datetime.datetime(year, month, day, hour, minute, second).isoformat()
+    except Exception:
+        return ""
+
+def _dpt19_encode(v: Any) -> bytes:
+    import datetime
+    try:
+        if isinstance(v, str):
+            dt = datetime.datetime.fromisoformat(v)
+        elif isinstance(v, (int, float)):
+            dt = datetime.datetime.fromtimestamp(float(v))
+        else:
+            dt = datetime.datetime.now()
+        dow = dt.isoweekday()   # 1=Mo … 7=So
+        return bytes([
+            dt.year - 1900,
+            dt.month,
+            dt.day,
+            (dow << 5) | (dt.hour & 0x1F),
+            dt.minute & 0x3F,
+            dt.second & 0x3F,
+            0x00,
+            0x00,
+        ])
+    except Exception:
+        return bytes(8)
+
+
+# --- DPT 219.x — Status with Mode (2 bytes) -----------------------------------
+# Byte 0 (High): Mode-Bits  |  Byte 1 (Low): Status-Bits
+# Rohwert als Integer (0-65535); Interpretation abhängig vom Gerät
+def _dpt219_decode(b: bytes) -> int:
+    return struct.unpack(">H", b[:2])[0]
+
+def _dpt219_encode(v: Any) -> bytes:
+    return struct.pack(">H", max(0, min(0xFFFF, int(v))))
+
+
 # ---------------------------------------------------------------------------
 # UNKNOWN fallback
 # ---------------------------------------------------------------------------
@@ -258,6 +324,15 @@ def _register_builtin_dpts() -> None:
         # DPT 16 — 14-byte string
         DPTDefinition("DPT16.000", "ASCII String",        "STRING", "",     14, _dpt16_encode, _dpt16_decode),
         DPTDefinition("DPT16.001", "ISO 8859-1 String",   "STRING", "",     14, _dpt16_encode, _dpt16_decode),
+
+        # DPT 18 — Scene Control (1 byte)
+        DPTDefinition("DPT18.001", "Scene Control",       "INTEGER", "",     1, _dpt18_encode, _dpt18_decode),
+
+        # DPT 19 — Date and Time (8 bytes)
+        DPTDefinition("DPT19.001", "Date Time",           "STRING", "",      8, _dpt19_encode, _dpt19_decode),
+
+        # DPT 219 — Status with Mode (2 bytes)
+        DPTDefinition("DPT219.001", "Status with Mode",  "INTEGER", "",     2, _dpt219_encode, _dpt219_decode),
     ]
     for d in defs:
         DPTRegistry.register(d)
