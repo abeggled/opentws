@@ -328,10 +328,13 @@ def _build_sniffer(xknx_instance: Any, ga_source_map: dict, adapter: KnxAdapter)
         def _iter_remote_values(self):  # type: ignore[override]
             return iter(self._remote_values)
 
-        async def process(self, telegram: Any) -> bool:
+        def process(self, telegram: Any) -> bool:
+            # xknx 3.x calls device.process() WITHOUT await (devices.py:108),
+            # so this must be synchronous. Schedule the async handler as a task.
+            import asyncio
             ga = str(telegram.destination_address)
             logger.info("KNX sniffer.process: GA=%s", ga)
-            await adapter._on_telegram(telegram)
+            asyncio.ensure_future(adapter._on_telegram(telegram))
             return True
 
     return _TelegramSniffer()
