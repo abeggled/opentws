@@ -31,7 +31,7 @@ _ALLOWED_NODES = (
     ast.Name,                          # für 'x' und math-Funktionen
     ast.Attribute,                     # für math.sqrt etc.
     ast.Call,                          # für abs(), round() etc.
-    ast.Add, ast.Sub, ast.Mul, ast.Div,
+    ast.Add, ast.Sub, ast.Mult, ast.Div,
     ast.FloorDiv, ast.Mod, ast.Pow,
     ast.UAdd, ast.USub,
     ast.Load,
