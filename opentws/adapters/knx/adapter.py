@@ -118,16 +118,9 @@ class KnxAdapter(AdapterBase):
         n = len(self._xknx.telegram_queue.telegram_received_cbs)
         logger.error("KNX: callback registered after start(), total callbacks: %d", n)
 
-        # Belt-and-suspenders: also monkey-patch process_telegram_received so
-        # we can see if xknx calls it even when our registered cb is skipped.
-        _original_ptr = self._xknx.telegram_queue.process_telegram_received
-
-        async def _patched_ptr(telegram: Any) -> None:
-            logger.error("KNX process_telegram_received CALLED: %s", telegram)
-            await _original_ptr(telegram)
-
-        self._xknx.telegram_queue.process_telegram_received = _patched_ptr
-        logger.error("KNX: process_telegram_received monkey-patched")
+        # Log available TelegramQueue attributes for diagnostics
+        tq_methods = [m for m in dir(self._xknx.telegram_queue) if not m.startswith("__")]
+        logger.error("KNX TelegramQueue attrs: %s", tq_methods)
 
     async def disconnect(self) -> None:
         if self._xknx:
