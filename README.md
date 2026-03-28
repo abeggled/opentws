@@ -151,40 +151,41 @@ security:
 ## Architecture Overview
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                          OpenTWS Process                             │
-│                                                                      │
-│  ┌────────────────────────┐  DataValueEvent    ┌──────────────────┐  │
-│  │   Adapter Instances    │ ────────────────▶ │    EventBus      │  │
-│  │                        │                    │ (fan-out)        │  │
-│  │  KNX "IP Router"       │ ◀── write() ───   │                  │  │
-│  │  KNX "IP Interface     │                   └───┬──────┬───────┘  │
-│  │  Modbus TCP "SPS"      │                       │      │          │
-│  │  MQTT "HomeAssistant"  │                 ┌─────▼──┐ ┌─▼───────┐ │
-│  │  …                     │                 │Registry│ │RingBuf  │ │
-│  └────────────────────────┘                 │(in-mem)│ │History  │ │
-│                                             │        │ │WebSocket│ │
-│  ┌────────────────┐  dp/+/set              └────┬───┘ └─────────┘ │
-│  │  Internal MQTT │ ──────────────▶             │                  │
-│  │  Client        │ ◀── publish ──   ┌──────────▼─────────────┐   │
-│  └────────────────┘                  │      WriteRouter        │   │
-│                                      │  MQTT set → write()     │   │
-│                                      │  SOURCE → DEST bridge   │   │
-│                                      └─────────────────────────┘   │
-│                                                                      │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │                     FastAPI  /api/v1                         │   │
-│  │  auth · datapoints · bindings · adapters · history           │   │
-│  │  ringbuffer · search · system · config · ws                  │   │
-│  └──────────────────────────────────────────────────────────────┘   │
-│                                                                      │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │                   SQLite  (WAL mode)                         │   │
-│  │  datapoints · adapter_bindings · adapter_instances           │   │
-│  │  adapter_configs · users · api_keys · history_values         │   │
-│  │  schema_version                                              │   │
-│  └──────────────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            OpenTWS Process                              │
+│                                                                         │
+│  ┌──────────────────────────┐  DataValueEvent  ┌────────────────────┐  │
+│  │    Adapter Instances     │ ───────────────▶ │     EventBus       │  │
+│  │                          │                  │    (fan-out)       │  │
+│  │  KNX "IP Router"         │ ◀── write() ──── │                    │  │
+│  │  KNX "IP Interface"      │                  └──┬─────────┬───────┘  │
+│  │  Modbus TCP "SPS"        │                     │         │          │
+│  │  MQTT "HomeAssistant"    │              ┌──────▼───┐ ┌───▼──────┐  │
+│  │  1-Wire "Keller"  …      │              │ Registry │ │ RingBuf  │  │
+│  └──────────────────────────┘              │ (in-mem) │ │ History  │  │
+│                                            │          │ │ WebSocket│  │
+│  ┌──────────────────┐  dp/+/set            └────┬─────┘ └──────────┘  │
+│  │  Internal MQTT   │ ─────────────▶            │                     │
+│  │  Client          │ ◀── publish ──  ┌──────────▼──────────────┐     │
+│  └──────────────────┘                 │       WriteRouter        │     │
+│                                       │  value_formula  filters  │     │
+│                                       │  MQTT set → write()      │     │
+│                                       │  SOURCE → DEST bridge    │     │
+│                                       └─────────────────────────┘     │
+│                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────┐ │
+│  │                       FastAPI  /api/v1                            │ │
+│  │  auth · datapoints · bindings · adapters · history               │ │
+│  │  ringbuffer · search · system · config · websocket               │ │
+│  └───────────────────────────────────────────────────────────────────┘ │
+│                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────┐ │
+│  │                     SQLite  (WAL mode)                            │ │
+│  │  datapoints · adapter_bindings · adapter_instances               │ │
+│  │  adapter_configs · users · api_keys · history_values             │ │
+│  │  schema_version                                                   │ │
+│  └───────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key design principles:**
@@ -679,7 +680,32 @@ DPT10/11 encode/decode as ISO strings; `x` in formulas is the numeric timestamp 
 | `register_type` | `holding` \| `input` \| `coil` \| `discrete_input` | Modbus function code |
 | `data_format` | `uint16` \| `int16` \| `uint32` \| `int32` \| `float32` \| `uint64` \| `int64` | Register interpretation |
 | `scale_factor` | float | `raw × scale_factor = engineering value` |
+| `byte_order` | `big` \| `little` | Byte order within each 16-bit register |
+| `word_order` | `big` \| `little` | Word order for multi-register values (32/64-bit) |
 | `poll_interval` | float (seconds) | For `SOURCE` / `BOTH` bindings |
+
+**`byte_order` — Byte-Reihenfolge innerhalb eines Registers (16 bit):**
+
+Ein Modbus-Register enthält 2 Bytes. Bei `big` (Standard, Motorola) steht das höherwertige Byte zuerst:
+
+```
+big endian:    Register = [ High-Byte | Low-Byte ]   → 0x0A0B = 2571
+little endian: Register = [ Low-Byte  | High-Byte ]  → 0x0A0B = 2826
+```
+
+**`word_order` — Word-Reihenfolge bei Multi-Register-Typen (32/64 bit):**
+
+`float32`, `uint32`, `int32` belegen **2 aufeinanderfolgende Register**. `word_order` bestimmt, ob das höherwertige Register zuerst oder zuletzt kommt:
+
+```
+big (Standard):  Register[0] = High-Word,  Register[1] = Low-Word
+                 → 0x44F6_0000 = 1971.0 (IEEE 754)
+
+little:          Register[0] = Low-Word,   Register[1] = High-Word
+                 → gleiche Bytes, andere Reihenfolge
+```
+
+> **Faustregel:** Die meisten SPS (Siemens, Beckhoff, …) verwenden `big`/`big`. Einige ältere Geräte (bestimmte Wechselrichter, Energiezähler) verwenden `big`/`little` (CDAB-Format). Wenn der gelesene Wert völlig falsch erscheint, zuerst `word_order` auf `little` wechseln.
 
 ---
 
@@ -812,7 +838,17 @@ OpenTWS uses a **hybrid topic strategy** on the internal Mosquitto:
 | `v` | any | Value (type-dependent serialization) |
 | `u` | string \| null | Unit from DataPoint |
 | `t` | string | ISO 8601 timestamp with milliseconds |
-| `q` | string | `good` \| `bad` \| `uncertain` |
+| `q` | string | `good` \| `bad` \| `uncertain` — see below |
+
+**Quality labels (`q`):**
+
+| Value | Meaning |
+|---|---|
+| `good` | Value was received/read successfully. The adapter is connected and the data is fresh. |
+| `bad` | Adapter is disconnected or the read/receive failed (timeout, CRC error, exception code, …). The value field may contain the last known value or null. |
+| `uncertain` | Value exists but freshness or accuracy is questionable — e.g. adapter is reconnecting, value is stale beyond a threshold, or the source flagged it as approximate. |
+
+> Automations should check `q === "good"` before acting on a value.
 
 **Writing a value via MQTT:**
 ```bash
