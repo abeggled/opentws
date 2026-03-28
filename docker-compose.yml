@@ -18,6 +18,7 @@ services:
     # "exec" replaces the shell → Mosquitto becomes PID 1 (needed for SIGHUP reload).
     command: >
       sh -c "
+      rm -f /mosquitto/passwd/passwd &&
       mosquitto_passwd -c -b /mosquitto/passwd/passwd $$MQTT_SVC_USER $$MQTT_SVC_PASS &&
       exec mosquitto -c /mosquitto/config/mosquitto.conf
       "
