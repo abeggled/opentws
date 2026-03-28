@@ -107,6 +107,29 @@ class GraphExecutor:
 
         return order
 
+    # ── Type coercion helpers ─────────────────────────────────────────────
+
+    @staticmethod
+    def _to_num(v: Any, default: float = 0.0) -> float:
+        """Coerce any value to float. bool→1/0, str→float, None→default."""
+        if v is None:
+            return default
+        if isinstance(v, bool):
+            return 1.0 if v else 0.0
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return default
+
+    @staticmethod
+    def _to_bool(v: Any) -> bool:
+        """Coerce any value to bool. Strings '0'/'false'/'off' → False."""
+        if v is None:
+            return False
+        if isinstance(v, str):
+            return v.strip().lower() not in ("0", "false", "no", "off", "")
+        return bool(v)
+
     # ── Node Evaluators ───────────────────────────────────────────────────
 
     def _eval_node(self, node: LogicNode, inputs: dict[str, Any]) -> dict[str, Any]:
@@ -114,21 +137,36 @@ class GraphExecutor:
         d = node.data
 
         match t:
+            case "const_value":
+                raw   = d.get("value", "0")
+                dtype = d.get("data_type", "number")
+                if dtype == "bool":
+                    val: Any = self._to_bool(raw)
+                elif dtype == "number":
+                    val = self._to_num(raw)
+                else:
+                    val = str(raw)
+                return {"value": val}
+
             case "and":
-                return {"out": bool(inputs.get("a")) and bool(inputs.get("b"))}
+                return {"out": self._to_bool(inputs.get("a")) and self._to_bool(inputs.get("b"))}
             case "or":
-                return {"out": bool(inputs.get("a")) or bool(inputs.get("b"))}
+                return {"out": self._to_bool(inputs.get("a")) or self._to_bool(inputs.get("b"))}
             case "not":
-                return {"out": not bool(inputs.get("in"))}
+                return {"out": not self._to_bool(inputs.get("in"))}
             case "xor":
-                return {"out": bool(inputs.get("a")) ^ bool(inputs.get("b"))}
+                return {"out": self._to_bool(inputs.get("a")) ^ self._to_bool(inputs.get("b"))}
 
             case "compare":
-                op = _COMPARE_OPS.get(d.get("operator", ">"), operator.gt)
+                op  = _COMPARE_OPS.get(d.get("operator", ">"), operator.gt)
                 a, b = inputs.get("a"), inputs.get("b")
                 if a is None or b is None:
                     return {"out": False}
-                return {"out": op(a, b)}
+                # Auto-coerce to number when both values look numeric
+                try:
+                    return {"out": op(self._to_num(a), self._to_num(b))}
+                except TypeError:
+                    return {"out": op(str(a), str(b))}
 
             case "hysteresis":
                 val = inputs.get("value")
@@ -137,9 +175,10 @@ class GraphExecutor:
                 prev = self.hysteresis_state.get(node.id, False)
                 if val is None:
                     return {"out": prev}
-                if val >= on_thr:
+                fval = self._to_num(val)
+                if fval >= on_thr:
                     state = True
-                elif val <= off_thr:
+                elif fval <= off_thr:
                     state = False
                 else:
                     state = prev
@@ -148,14 +187,13 @@ class GraphExecutor:
 
             case "math_formula":
                 formula = d.get("formula", "a + b")
-                a = inputs.get("a", 0)
-                b = inputs.get("b", 0)
-                c = inputs.get("c", 0)
-                result = self._safe_eval(formula, {"a": a, "b": b, "c": c})
+                a = self._to_num(inputs.get("a"))
+                b = self._to_num(inputs.get("b"))
+                result = self._safe_eval(formula, {"a": a, "b": b})
                 return {"result": result}
 
             case "math_map":
-                val    = float(inputs.get("value") or 0)
+                val     = self._to_num(inputs.get("value"))
                 in_min  = float(d.get("in_min", 0))
                 in_max  = float(d.get("in_max", 100))
                 out_min = float(d.get("out_min", 0))

@@ -30,7 +30,7 @@
       <!-- Generic config fields from schema -->
       <template v-if="nodeDef?.config_schema">
         <div v-for="(schema, key) in configFields" :key="key" class="form-group">
-          <label class="label">{{ key }}</label>
+          <label class="label">{{ schema.label ?? key }}</label>
           <textarea v-if="schema.type === 'string' && key === 'script'"
             v-model="localData[key]" rows="6"
             class="input text-xs font-mono resize-y" @change="emitUpdate" />

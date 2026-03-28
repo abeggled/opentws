@@ -17,6 +17,22 @@ def _port(id_: str, label: str, type_: str = "value") -> NodeTypePort:
 
 BUILTIN_NODE_TYPES: list[NodeTypeDef] = [
 
+    # ── Constant ─────────────────────────────────────────────────────────
+    NodeTypeDef(
+        type="const_value",
+        label="Festwert",
+        category="logic",
+        description="Gibt einen festen Wert aus — Zahl, Bool oder Text. Nützlich als Schwellwert oder Referenz.",
+        inputs=[],
+        outputs=[_port("value", "Wert")],
+        config_schema={
+            "value":     {"type": "string", "default": "0",      "label": "Wert"},
+            "data_type": {"type": "string", "enum": ["number", "bool", "string"],
+                          "default": "number", "label": "Datentyp"},
+        },
+        color="#475569",
+    ),
+
     # ── Logic ────────────────────────────────────────────────────────────
     NodeTypeDef(
         type="and",
@@ -115,8 +131,8 @@ BUILTIN_NODE_TYPES: list[NodeTypeDef] = [
         type="math_formula",
         label="Formel",
         category="math",
-        description="Berechnet einen Ausdruck. Variablen: a, b, c",
-        inputs=[_port("a", "A"), _port("b", "B"), _port("c", "C")],
+        description="Berechnet einen Ausdruck. Variablen: a, b",
+        inputs=[_port("a", "A"), _port("b", "B")],
         outputs=[_port("result", "Ergebnis")],
         config_schema={"formula": {"type": "string", "default": "a + b"}},
         color="#7c3aed",

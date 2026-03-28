@@ -142,6 +142,8 @@ const _datapoint    = markRaw(DatapointNode)
 const _pythonScript = markRaw(PythonScriptNode)
 
 const nodeTypeComponents = {
+  // Constant
+  const_value: _generic,
   // Logic
   and: _generic, or: _generic, not: _generic, xor: _generic,
   compare: _generic, hysteresis: _generic,

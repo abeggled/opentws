@@ -60,6 +60,7 @@ const props = defineProps({
 
 // ── Node definitions ───────────────────────────────────────────────────────
 const NODE_DEFS = {
+  const_value:  { label: 'Festwert',    color: '#475569', inputs: [],                                                outputs: [{id:'value', label:'Wert'}]       },
   and:          { label: 'AND',         color: '#1d4ed8', inputs: [{id:'a',label:'A'},{id:'b',label:'B'}],           outputs: [{id:'out',   label:'Out'}]       },
   or:           { label: 'OR',          color: '#1d4ed8', inputs: [{id:'a',label:'A'},{id:'b',label:'B'}],           outputs: [{id:'out',   label:'Out'}]       },
   not:          { label: 'NOT',         color: '#1d4ed8', inputs: [{id:'in',label:'In'}],                            outputs: [{id:'out',   label:'Out'}]       },
@@ -79,6 +80,7 @@ const def = computed(() => NODE_DEFS[props.type] ?? { label: props.type, color: 
 // ── Config summary ─────────────────────────────────────────────────────────
 const summary = computed(() => {
   const d = props.data
+  if (props.type === 'const_value')  return `${d.data_type ?? 'number'} = ${d.value ?? '0'}`
   if (props.type === 'compare')      return `A ${d.operator ?? '>'} B`
   if (props.type === 'hysteresis')   return `ON≥${d.threshold_on ?? 25}  OFF≤${d.threshold_off ?? 20}`
   if (props.type === 'math_formula') return d.formula || 'a + b'
