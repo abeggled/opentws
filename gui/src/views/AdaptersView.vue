@@ -128,7 +128,8 @@
               <Spinner v-if="busy[a.id] === 'restart'" size="xs" color="slate" />
               Neu verbinden
             </button>
-            <button @click="confirmDelete(a)" class="ml-auto btn-danger btn-sm">
+            <button @click="confirmDelete(a)" class="ml-auto btn-danger btn-sm" :disabled="busy[a.id] === 'delete'">
+              <Spinner v-if="busy[a.id] === 'delete'" size="xs" color="white" />
               Löschen
             </button>
           </div>
@@ -300,14 +301,16 @@ async function executeDelete() {
   const a = deleteTarget.value
   deleteTarget.value = null
   if (!a) return
+  busy[a.id] = 'delete'
   try {
     await store.deleteInstance(a.id)
     delete expanded[a.id]
     delete drafts[a.id]
     delete feedback[a.id]
   } catch (e) {
-    // Fehler still ignorieren — Instanz bleibt in Liste
-    console.error('Delete failed:', e)
+    feedback[a.id] = { success: false, detail: e.response?.data?.detail ?? 'Löschen fehlgeschlagen' }
+  } finally {
+    busy[a.id] = null
   }
 }
 </script>
