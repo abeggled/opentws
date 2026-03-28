@@ -32,6 +32,9 @@
           </div>
         </div>
       </div>
+
+      <!-- Debug value strip -->
+      <div v-if="data._dbg" class="gn-debug">{{ data._dbg }}</div>
     </div>
 
     <!-- Output handles (RIGHT) -->
@@ -91,10 +94,12 @@ const summary = computed(() => {
 const HEADER_H = 28   // px  header height
 const SUMMARY_H = 20  // px  summary line height (only when present)
 const PORT_H   = 22   // px  per port row height
+const DEBUG_H  = 18   // px  debug value strip height (only when present)
 
 const rowCount  = computed(() => Math.max(def.value.inputs.length, def.value.outputs.length, 1))
 const summaryPx = computed(() => summary.value ? SUMMARY_H : 0)
-const cardH     = computed(() => HEADER_H + summaryPx.value + rowCount.value * PORT_H + 8)
+const debugPx   = computed(() => props.data._dbg   ? DEBUG_H  : 0)
+const cardH     = computed(() => HEADER_H + summaryPx.value + rowCount.value * PORT_H + debugPx.value + 8)
 
 // port row indices (0..rowCount-1)
 const portRows  = computed(() => Array.from({ length: rowCount.value }, (_, i) => i))
@@ -165,6 +170,20 @@ function remove() { removeNodes([props.id]) }
 }
 .gn-port-left  { font-size: 9px; color: #64748b; }
 .gn-port-right { font-size: 9px; color: #64748b; }
+
+.gn-debug {
+  font-size: 9px;
+  color: #fbbf24;
+  font-family: ui-monospace, monospace;
+  padding: 2px 10px 4px;
+  border-top: 1px solid #1e3a2f;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 0 0 6px 6px;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* Output handles are blue — applied via class on Handle */
 .gn-root :deep(.vue-flow__handle.gn-out) {

@@ -18,6 +18,11 @@
       <button v-if="activeGraphId" @click="runGraph" class="btn-secondary btn-sm text-green-400">
         &#9654; Ausführen
       </button>
+      <button v-if="activeGraphId" @click="toggleDebug"
+        :class="['btn-secondary btn-sm', debugMode ? 'text-amber-400 ring-1 ring-amber-400/50' : 'text-slate-400']"
+        title="Debug-Modus: zeigt Werte nach Ausführen">
+        &#128270; Debug
+      </button>
       <button v-if="activeGraphId" @click="confirmDeleteGraph" class="btn-icon text-red-400">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -172,6 +177,8 @@ async function loadGraph() {
   }))
   edges.value = data.flow_data.edges || []
   selectedNode.value = null
+  // Clear any leftover debug values when switching graphs
+  if (debugMode.value) clearDebugValues()
 }
 
 async function saveGraph() {
@@ -196,10 +203,48 @@ async function saveGraph() {
   }
 }
 
+// ── Debug mode ─────────────────────────────────────────────────────────────
+const debugMode = ref(false)
+
+function fmtDebugVal(nodeOut) {
+  if (!nodeOut || typeof nodeOut !== 'object') return null
+  const pairs = Object.entries(nodeOut)
+    .filter(([k]) => !k.startsWith('_'))
+    .map(([k, v]) => {
+      if (v === null || v === undefined) return `${k}=—`
+      if (typeof v === 'boolean') return `${k}=${v ? '✓' : '✗'}`
+      if (typeof v === 'number') return `${k}=${parseFloat(v.toPrecision(5))}`
+      return `${k}=${String(v).slice(0, 18)}`
+    })
+  return pairs.length ? pairs.join('   ') : null
+}
+
+function applyDebugValues(outputs) {
+  nodes.value = nodes.value.map(n => ({
+    ...n,
+    data: { ...n.data, _dbg: fmtDebugVal(outputs[n.id]) ?? undefined }
+  }))
+}
+
+function clearDebugValues() {
+  nodes.value = nodes.value.map(n => {
+    // eslint-disable-next-line no-unused-vars
+    const { _dbg, ...rest } = n.data
+    return { ...n, data: rest }
+  })
+}
+
+function toggleDebug() {
+  debugMode.value = !debugMode.value
+  if (!debugMode.value) clearDebugValues()
+}
+
 async function runGraph() {
   try {
     const { data } = await logicApi.runGraph(activeGraphId.value)
-    showStatus(true, `Graph ausgeführt — ${Object.keys(data.outputs || {}).length} Nodes evaluiert`)
+    const evalCount = Object.keys(data.outputs || {}).length
+    showStatus(true, `Graph ausgeführt — ${evalCount} Nodes evaluiert`)
+    if (debugMode.value) applyDebugValues(data.outputs || {})
   } catch (err) {
     showStatus(false, err.response?.data?.detail ?? 'Fehler')
   }

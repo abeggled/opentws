@@ -27,6 +27,7 @@
           <span class="gn-port-label">Geändert</span>
         </div>
       </div>
+      <div v-if="data._dbg" class="gn-debug">{{ data._dbg }}</div>
     </div>
 
     <template v-if="!isWrite">
@@ -100,4 +101,16 @@ function remove() { removeNodes([props.id]) }
 .gn-ports  { padding: 2px 10px 6px; display:flex; }
 .gn-port-col { display:flex; flex-direction:column; gap:2px; }
 .gn-port-label { font-size:9px; color:#64748b; }
+.gn-debug {
+  font-size: 9px;
+  color: #fbbf24;
+  font-family: ui-monospace, monospace;
+  padding: 2px 10px 5px;
+  border-top: 1px solid #1e3a2f;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 0 0 6px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
