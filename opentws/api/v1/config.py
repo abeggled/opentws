@@ -1,7 +1,7 @@
 """
-Config Export / Import — Phase 5 (Multi-Instance)
+Config Backup / Restore — Phase 5 (Multi-Instance)
 
-GET  /api/v1/config/export   → JSON dump aller DataPoints + Bindings + AdapterInstances
+GET  /api/v1/config/export   → JSON-Sicherung: DataPoints + Bindings + AdapterInstances + KNX-GAs
 POST /api/v1/config/import   ← JSON, upsert-Semantik (existierende IDs werden aktualisiert)
 
 Rückwärtskompatibel: Alter Export mit adapter_configs wird beim Import erkannt und migriert.
@@ -24,7 +24,7 @@ from opentws.models.binding import AdapterBinding
 
 router = APIRouter(tags=["config"])
 
-_EXPORT_VERSION = "2"
+_EXPORT_VERSION = "3"
 
 
 # ---------------------------------------------------------------------------
@@ -48,6 +48,11 @@ class ExportedBinding(BaseModel):
     direction: str
     config: dict
     enabled: bool
+    value_formula: str | None = None
+    send_throttle_ms: int | None = None
+    send_on_change: bool = False
+    send_min_delta: float | None = None
+    send_min_delta_pct: float | None = None
 
 
 class ExportedAdapterInstance(BaseModel):
@@ -56,6 +61,13 @@ class ExportedAdapterInstance(BaseModel):
     name: str
     config: dict
     enabled: bool
+
+
+class ExportedKnxGroupAddress(BaseModel):
+    address: str
+    name: str
+    description: str
+    dpt: str | None
 
 
 # Legacy (v1 export format)
@@ -71,6 +83,7 @@ class ConfigExport(BaseModel):
     datapoints: list[ExportedDataPoint]
     bindings: list[ExportedBinding]
     adapter_instances: list[ExportedAdapterInstance] = []
+    knx_group_addresses: list[ExportedKnxGroupAddress] = []
     # Legacy field (v1) — ignoriert beim Import wenn adapter_instances vorhanden
     adapter_configs: list[ExportedAdapterConfig] = []
 
@@ -81,6 +94,7 @@ class ImportResult(BaseModel):
     bindings_created: int
     bindings_updated: int
     adapter_instances_upserted: int
+    knx_group_addresses_upserted: int
     adapters_restarted: int
     errors: list[str]
 
@@ -121,6 +135,11 @@ async def export_config(
             direction=r["direction"],
             config=json.loads(r["config"]),
             enabled=bool(r["enabled"]),
+            value_formula=r["value_formula"],
+            send_throttle_ms=r["send_throttle_ms"],
+            send_on_change=bool(r["send_on_change"]),
+            send_min_delta=r["send_min_delta"],
+            send_min_delta_pct=r["send_min_delta_pct"],
         )
         for r in binding_rows
     ]
@@ -137,12 +156,26 @@ async def export_config(
         for r in instance_rows
     ]
 
+    ga_rows = await db.fetchall(
+        "SELECT address, name, description, dpt FROM knx_group_addresses ORDER BY address"
+    )
+    knx_group_addresses = [
+        ExportedKnxGroupAddress(
+            address=r["address"],
+            name=r["name"],
+            description=r["description"],
+            dpt=r["dpt"],
+        )
+        for r in ga_rows
+    ]
+
     return ConfigExport(
         opentws_version=_EXPORT_VERSION,
         exported_at=datetime.now(timezone.utc).isoformat(),
         datapoints=datapoints,
         bindings=bindings,
         adapter_instances=adapter_instances,
+        knx_group_addresses=knx_group_addresses,
     )
 
 
@@ -158,6 +191,7 @@ async def import_config(
         bindings_created=0,
         bindings_updated=0,
         adapter_instances_upserted=0,
+        knx_group_addresses_upserted=0,
         adapters_restarted=0,
         errors=[],
     )
@@ -242,24 +276,50 @@ async def import_config(
             if row:
                 await db.execute_and_commit(
                     """UPDATE adapter_bindings
-                       SET direction=?, config=?, enabled=?, updated_at=?
+                       SET direction=?, config=?, enabled=?,
+                           value_formula=?, send_throttle_ms=?, send_on_change=?,
+                           send_min_delta=?, send_min_delta_pct=?,
+                           updated_at=?
                        WHERE id=?""",
-                    (b_data.direction, json.dumps(b_data.config), int(b_data.enabled), now, b_id),
+                    (b_data.direction, json.dumps(b_data.config), int(b_data.enabled),
+                     b_data.value_formula, b_data.send_throttle_ms, int(b_data.send_on_change),
+                     b_data.send_min_delta, b_data.send_min_delta_pct,
+                     now, b_id),
                 )
                 result.bindings_updated += 1
             else:
                 await db.execute_and_commit(
                     """INSERT INTO adapter_bindings
                        (id, datapoint_id, adapter_type, adapter_instance_id,
-                        direction, config, enabled, created_at, updated_at)
-                       VALUES (?,?,?,?,?,?,?,?,?)""",
+                        direction, config, enabled,
+                        value_formula, send_throttle_ms, send_on_change,
+                        send_min_delta, send_min_delta_pct,
+                        created_at, updated_at)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (b_id, b_data.datapoint_id, b_data.adapter_type,
                      b_data.adapter_instance_id, b_data.direction,
-                     json.dumps(b_data.config), int(b_data.enabled), now, now),
+                     json.dumps(b_data.config), int(b_data.enabled),
+                     b_data.value_formula, b_data.send_throttle_ms, int(b_data.send_on_change),
+                     b_data.send_min_delta, b_data.send_min_delta_pct,
+                     now, now),
                 )
                 result.bindings_created += 1
         except Exception as exc:
             result.errors.append(f"Binding {b_data.id}: {exc}")
+
+    # --- KNX Group Addresses ---
+    for ga in body.knx_group_addresses:
+        try:
+            await db.execute_and_commit(
+                """INSERT INTO knx_group_addresses (address, name, description, dpt)
+                   VALUES (?,?,?,?)
+                   ON CONFLICT(address) DO UPDATE
+                   SET name=excluded.name, description=excluded.description, dpt=excluded.dpt""",
+                (ga.address, ga.name, ga.description, ga.dpt),
+            )
+            result.knx_group_addresses_upserted += 1
+        except Exception as exc:
+            result.errors.append(f"KNX GA {ga.address}: {exc}")
 
     # Restart all adapter instances so they pick up new configs and bindings
     try:
