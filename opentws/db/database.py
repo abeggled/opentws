@@ -197,6 +197,15 @@ _MIGRATION_V9 = """
 ALTER TABLE adapter_bindings ADD COLUMN value_formula TEXT;
 """
 
+_MIGRATION_V10 = """
+ALTER TABLE users ADD COLUMN mqtt_enabled      INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN mqtt_password_hash TEXT;
+"""
+
+_MIGRATION_V11 = """
+ALTER TABLE api_keys ADD COLUMN owner TEXT NOT NULL DEFAULT '';
+"""
+
 # List of (version, sql_or_callable) tuples — append new migrations here
 MIGRATIONS: list[tuple[int, str | Callable]] = [
     (1, _MIGRATION_V1),
@@ -208,6 +217,8 @@ MIGRATIONS: list[tuple[int, str | Callable]] = [
     (7, _MIGRATION_V7),
     (8, _MIGRATION_V8),
     (9, _MIGRATION_V9),
+    (10, _MIGRATION_V10),
+    (11, _MIGRATION_V11),
 ]
 
 

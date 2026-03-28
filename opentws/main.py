@@ -18,6 +18,9 @@ from typing import AsyncGenerator
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +50,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # 1. Database
     db = await init_db(settings.database.path)
     await ensure_default_user(db)
+
+    # Rebuild Mosquitto passwd file from DB on every startup (keeps it in sync).
+    # SIGHUP is sent after MQTT connects (see below) so Mosquitto reloads cleanly.
+    from opentws.core.mqtt_passwd import rebuild_passwd_file, reload_mosquitto as _reload_mqtt
+    _m = settings.mosquitto
+    await rebuild_passwd_file(db, _m.passwd_file, _m.service_username, _m.service_password)
 
     # 2. EventBus
     bus = init_event_bus()
@@ -88,6 +97,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # 7. MQTT connect
     await mqtt.start()
+    # Reload Mosquitto after connecting so user accounts take effect immediately.
+    await _reload_mqtt(_m.reload_command, _m.reload_pid)
 
     # 8. Adapters — import triggers @register, then start_all loads DB configs + bindings
     import opentws.adapters.knx.adapter        # noqa: F401
@@ -118,6 +129,10 @@ def create_app() -> FastAPI:
     from fastapi.staticfiles import StaticFiles
     from fastapi.responses import FileResponse
     from opentws.api.router import router
+    from opentws.api.auth import limiter as auth_limiter
+    from opentws.config import get_settings
+
+    settings = get_settings()
 
     app = FastAPI(
         title="openTWS",
@@ -126,6 +141,20 @@ def create_app() -> FastAPI:
         license_info={"name": "MIT"},
         lifespan=lifespan,
     )
+
+    # Rate limiter state (used by @limiter.limit decorators in auth.py)
+    app.state.limiter = auth_limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # CORS — configure allowed origins via config.yaml or OPENTWS_CORS__ORIGINS env var
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors.origins,
+        allow_credentials=settings.cors.allow_credentials,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "X-API-Key", "Content-Type"],
+    )
+
     app.include_router(router, prefix="/api/v1")
 
     # ── Serve Vue GUI (built files in /app/gui_dist) ───────────────────────

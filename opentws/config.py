@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 
@@ -45,13 +45,44 @@ class DatabaseSettings(BaseModel):
 
 
 class RingBufferSettings(BaseModel):
-    storage: str = "memory"  # memory | disk
+    storage: str = "disk"    # memory | disk
     max_entries: int = 10000
 
 
 class SecuritySettings(BaseModel):
     jwt_secret: str = "changeme"
     jwt_expire_minutes: int = 1440
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def _check_secret_strength(cls, v: str) -> str:
+        import logging
+        if len(v) < 32:
+            logging.getLogger(__name__).warning(
+                "⚠️  JWT secret is too short (%d chars) — use at least 32 random characters. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
+                len(v),
+            )
+        return v
+
+
+class CorsSettings(BaseModel):
+    origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    allow_credentials: bool = True
+
+
+class MosquittoSettings(BaseModel):
+    """Settings for managing the internal Mosquitto passwd file."""
+    passwd_file: str = "/mosquitto/passwd/passwd"
+    # PID to send SIGHUP to after passwd file changes.
+    # In Docker Compose with pid: "container:mosquitto", Mosquitto runs as PID 1.
+    reload_pid: Optional[int] = None
+    # Shell command to trigger Mosquitto reload (takes precedence over reload_pid).
+    # Example bare-metal: "kill -HUP $(cat /var/run/mosquitto/mosquitto.pid)"
+    reload_command: Optional[str] = None
+    # Credentials openTWS uses to connect to Mosquitto (must match OPENTWS_MQTT__*).
+    service_username: str = "opentws"
+    service_password: str = "changeme"
 
 
 # ---------------------------------------------------------------------------
@@ -97,6 +128,8 @@ class Settings(BaseSettings):
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     ringbuffer: RingBufferSettings = Field(default_factory=RingBufferSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
+    mosquitto: MosquittoSettings = Field(default_factory=MosquittoSettings)
+    cors: CorsSettings = Field(default_factory=CorsSettings)
 
     @classmethod
     def settings_customise_sources(

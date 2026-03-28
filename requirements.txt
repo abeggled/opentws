@@ -24,6 +24,9 @@ w1thermsensor>=2.3.0
 python-jose[cryptography]>=3.3.0
 # passlib removed — password hashing via stdlib hashlib.pbkdf2_hmac
 
+# Rate limiting
+slowapi>=0.1.9
+
 # Config
 pyyaml>=6.0.1
 python-multipart>=0.0.9

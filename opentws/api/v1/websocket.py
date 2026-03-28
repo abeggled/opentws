@@ -1,7 +1,8 @@
 """
 WebSocket API — Phase 4
 
-WS /api/v1/ws?token={jwt}
+Preferred auth: Authorization: Bearer {jwt}   (header — token not logged)
+Legacy fallback: WS /api/v1/ws?token={jwt}    (query param — avoid in production)
 
 Client → Server:
   {"action": "subscribe",   "ids": ["uuid1", "uuid2"]}
@@ -135,29 +136,26 @@ def init_ws_manager() -> WebSocketManager:
 @router.websocket("/ws")
 async def websocket_endpoint(
     ws: WebSocket,
-    token: str | None = Query(None, description="JWT access token"),
+    token: str | None = Query(None, description="JWT access token (legacy — prefer Authorization header)"),
 ) -> None:
-    # Auth: validate token before accepting
-    if token:
-        try:
-            from opentws.api.auth import decode_token
-            decode_token(token)
-        except Exception:
-            await ws.close(code=4001, reason="Invalid token")
-            return
+    # Auth: Authorization header takes priority; query param is legacy fallback
+    # (tokens in query params are logged by proxies and appear in browser history)
+    from opentws.api.auth import decode_token
+    auth_header = ws.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        resolved_token: str | None = auth_header[7:]
+    elif token:
+        logger.debug("WS auth via query param — prefer Authorization header in production")
+        resolved_token = token
     else:
-        # Also accept bearer from header (some WS clients send it)
-        auth_header = ws.headers.get("authorization", "")
-        if auth_header.startswith("Bearer "):
-            try:
-                from opentws.api.auth import decode_token
-                decode_token(auth_header[7:])
-            except Exception:
-                await ws.close(code=4001, reason="Invalid token")
-                return
-        else:
-            await ws.close(code=4001, reason="Authentication required")
-            return
+        await ws.close(code=4001, reason="Authentication required")
+        return
+
+    try:
+        decode_token(resolved_token)
+    except Exception:
+        await ws.close(code=4001, reason="Invalid token")
+        return
 
     manager = get_ws_manager()
     conn_id = await manager.connect(ws)
