@@ -139,13 +139,11 @@
 
     <!-- Löschen bestätigen -->
     <ConfirmDialog
-      v-if="deleteTarget"
-      :title="`Instanz '${deleteTarget.name}' löschen?`"
+      v-model="showDeleteConfirm"
+      :title="deleteTarget ? `Instanz '${deleteTarget.name}' löschen?` : ''"
       message="Alle Bindings dieser Instanz werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
       confirm-label="Löschen"
-      confirm-variant="danger"
       @confirm="executeDelete"
-      @cancel="deleteTarget = null"
     />
   </div>
 </template>
@@ -171,7 +169,8 @@ const newForm        = reactive({ adapter_type: '', name: '', configJson: '{}' }
 const createError    = ref(null)
 
 // Löschen
-const deleteTarget   = ref(null)
+const deleteTarget      = ref(null)
+const showDeleteConfirm = ref(false)
 
 // ------------------------------------------------------------------
 
@@ -295,10 +294,12 @@ async function restartInstance(a) {
 
 function confirmDelete(a) {
   deleteTarget.value = a
+  showDeleteConfirm.value = true
 }
 
 async function executeDelete() {
   const a = deleteTarget.value
+  showDeleteConfirm.value = false
   deleteTarget.value = null
   if (!a) return
   busy[a.id] = 'delete'
