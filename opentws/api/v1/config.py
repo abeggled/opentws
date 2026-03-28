@@ -81,6 +81,7 @@ class ImportResult(BaseModel):
     bindings_created: int
     bindings_updated: int
     adapter_instances_upserted: int
+    adapters_restarted: int
     errors: list[str]
 
 
@@ -157,6 +158,7 @@ async def import_config(
         bindings_created=0,
         bindings_updated=0,
         adapter_instances_upserted=0,
+        adapters_restarted=0,
         errors=[],
     )
     reg = get_registry()
@@ -258,5 +260,16 @@ async def import_config(
                 result.bindings_created += 1
         except Exception as exc:
             result.errors.append(f"Binding {b_data.id}: {exc}")
+
+    # Restart all adapter instances so they pick up new configs and bindings
+    try:
+        from opentws.core.event_bus import get_event_bus
+        from opentws.adapters import registry as adapter_registry
+        event_bus = get_event_bus()
+        await adapter_registry.stop_all()
+        await adapter_registry.start_all(event_bus, db)
+        result.adapters_restarted = len(adapter_registry.get_all_instances())
+    except Exception as exc:
+        result.errors.append(f"Adapter restart failed: {exc}")
 
     return result
