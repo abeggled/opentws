@@ -1,0 +1,272 @@
+<template>
+  <div class="flex flex-col h-full" style="height: calc(100vh - 4rem)">
+    <!-- Toolbar -->
+    <div class="flex items-center gap-3 px-4 py-2 bg-slate-900 border-b border-slate-700/60 flex-shrink-0">
+      <h2 class="text-sm font-bold text-slate-100">Logic Engine</h2>
+      <div class="flex-1" />
+      <!-- Graph selector -->
+      <select v-model="activeGraphId" @change="loadGraph"
+        class="input text-xs py-1 px-2 max-w-[200px]">
+        <option value="">— Graph wählen —</option>
+        <option v-for="g in store.graphs" :key="g.id" :value="g.id">{{ g.name }}</option>
+      </select>
+      <button @click="newGraph" class="btn-primary btn-sm">+ Neu</button>
+      <button v-if="activeGraphId" @click="saveGraph" class="btn-secondary btn-sm" :disabled="saving">
+        <Spinner v-if="saving" size="sm" color="white" />
+        Speichern
+      </button>
+      <button v-if="activeGraphId" @click="runGraph" class="btn-secondary btn-sm text-green-400">
+        &#9654; Ausführen
+      </button>
+      <button v-if="activeGraphId" @click="confirmDeleteGraph" class="btn-icon text-red-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Status bar -->
+    <div v-if="statusMsg" :class="['px-4 py-1.5 text-xs flex-shrink-0', statusMsg.ok ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400']">
+      {{ statusMsg.text }}
+    </div>
+
+    <!-- Main area -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Node Palette -->
+      <NodePalette :node-types="store.nodeTypes" />
+
+      <!-- Canvas -->
+      <div class="flex-1 relative" ref="canvasWrapper"
+           @dragover.prevent @drop="onDrop">
+        <VueFlow
+          v-if="activeGraphId"
+          v-model:nodes="nodes"
+          v-model:edges="edges"
+          :node-types="nodeTypeComponents"
+          :default-edge-options="{ type: 'smoothstep', animated: true, style: { stroke: '#475569', strokeWidth: 2 } }"
+          fit-view-on-init
+          class="logic-canvas"
+          @node-click="onNodeClick"
+        >
+          <Background pattern-color="#334155" :gap="20" />
+          <Controls class="logic-controls" />
+          <MiniMap class="logic-minimap" node-color="#475569" />
+        </VueFlow>
+
+        <div v-else class="absolute inset-0 flex items-center justify-center text-slate-600 flex-col gap-3">
+          <svg class="w-16 h-16 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <p class="text-sm">Graph wählen oder neu erstellen</p>
+        </div>
+      </div>
+
+      <!-- Config Panel -->
+      <NodeConfigPanel
+        v-if="selectedNode"
+        :node="selectedNode"
+        :node-types="store.nodeTypes"
+        @update="onNodeDataUpdate"
+        @close="selectedNode = null"
+      />
+    </div>
+
+    <!-- New Graph Modal -->
+    <Modal v-model="showNewGraph" title="Neuer Logic Graph" max-width="sm">
+      <form @submit.prevent="doCreateGraph" class="flex flex-col gap-4">
+        <div class="form-group">
+          <label class="label">Name</label>
+          <input v-model="newGraphName" type="text" class="input" required placeholder="z.B. Licht Erdgeschoss" />
+        </div>
+        <div class="form-group">
+          <label class="label">Beschreibung <span class="text-slate-600 font-normal">(optional)</span></label>
+          <input v-model="newGraphDesc" type="text" class="input" />
+        </div>
+        <div class="flex justify-end gap-3">
+          <button type="button" @click="showNewGraph = false" class="btn-secondary">Abbrechen</button>
+          <button type="submit" class="btn-primary">Erstellen</button>
+        </div>
+      </form>
+    </Modal>
+
+    <ConfirmDialog v-model="showDeleteConfirm"
+      title="Logic Graph löschen"
+      message="Dieser Graph wird unwiderruflich gelöscht."
+      confirm-label="Löschen"
+      @confirm="doDeleteGraph" />
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed, onMounted, markRaw, shallowRef } from 'vue'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { Background }           from '@vue-flow/background'
+import { Controls }             from '@vue-flow/controls'
+import { MiniMap }              from '@vue-flow/minimap'
+import '@vue-flow/core/dist/style.css'
+import '@vue-flow/core/dist/theme-default.css'
+import '@vue-flow/controls/dist/style.css'
+import '@vue-flow/minimap/dist/style.css'
+
+import { useLogicStore }   from '@/stores/logic'
+import { logicApi }        from '@/api/client'
+import NodePalette         from '@/components/logic/NodePalette.vue'
+import NodeConfigPanel     from '@/components/logic/NodeConfigPanel.vue'
+import Modal               from '@/components/ui/Modal.vue'
+import ConfirmDialog       from '@/components/ui/ConfirmDialog.vue'
+import Spinner             from '@/components/ui/Spinner.vue'
+
+// Node components (lazy registered)
+import LogicGateNode   from '@/components/logic/nodes/LogicGateNode.vue'
+import DatapointNode   from '@/components/logic/nodes/DatapointNode.vue'
+import PythonScriptNode from '@/components/logic/nodes/PythonScriptNode.vue'
+
+// ── Store ──────────────────────────────────────────────────────────────────
+const store = useLogicStore()
+
+// ── Vue Flow state ─────────────────────────────────────────────────────────
+const nodes = ref([])
+const edges = ref([])
+
+// ── Node type → component mapping ─────────────────────────────────────────
+const nodeTypeComponents = computed(() => {
+  const map = {}
+  // Logic gates
+  for (const t of ['and', 'or', 'not', 'xor', 'compare', 'hysteresis']) {
+    map[t] = markRaw({
+      ...LogicGateNode,
+      props: { ...LogicGateNode.props },
+    })
+  }
+  map['datapoint_read']  = markRaw(DatapointNode)
+  map['datapoint_write'] = markRaw(DatapointNode)
+  map['python_script']   = markRaw(PythonScriptNode)
+  return map
+})
+
+// ── Active graph ───────────────────────────────────────────────────────────
+const activeGraphId = ref('')
+const saving        = ref(false)
+const statusMsg     = ref(null)
+const canvasWrapper = ref(null)
+
+function showStatus(ok, text, ms = 3000) {
+  statusMsg.value = { ok, text }
+  setTimeout(() => { statusMsg.value = null }, ms)
+}
+
+async function loadGraph() {
+  if (!activeGraphId.value) { nodes.value = []; edges.value = []; return }
+  const { data } = await logicApi.getGraph(activeGraphId.value)
+  nodes.value = (data.flow_data.nodes || []).map(n => ({
+    ...n,
+    position: n.position || { x: 100, y: 100 },
+  }))
+  edges.value = data.flow_data.edges || []
+  selectedNode.value = null
+}
+
+async function saveGraph() {
+  if (!activeGraphId.value) return
+  saving.value = true
+  try {
+    const graph = store.graphs.find(g => g.id === activeGraphId.value)
+    await store.saveGraph(activeGraphId.value, graph.name, graph.description, graph.enabled, {
+      nodes: nodes.value.map(n => ({
+        id: n.id, type: n.type, position: n.position, data: n.data
+      })),
+      edges: edges.value.map(e => ({
+        id: e.id, source: e.source, target: e.target,
+        sourceHandle: e.sourceHandle, targetHandle: e.targetHandle
+      })),
+    })
+    showStatus(true, 'Graph gespeichert')
+  } catch (err) {
+    showStatus(false, err.response?.data?.detail ?? 'Fehler beim Speichern')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function runGraph() {
+  try {
+    const { data } = await logicApi.runGraph(activeGraphId.value)
+    showStatus(true, `Graph ausgeführt — ${Object.keys(data.outputs || {}).length} Nodes evaluiert`)
+  } catch (err) {
+    showStatus(false, err.response?.data?.detail ?? 'Fehler')
+  }
+}
+
+// ── New graph ──────────────────────────────────────────────────────────────
+const showNewGraph  = ref(false)
+const newGraphName  = ref('')
+const newGraphDesc  = ref('')
+
+function newGraph() { newGraphName.value = ''; newGraphDesc.value = ''; showNewGraph.value = true }
+async function doCreateGraph() {
+  const g = await store.createGraph(newGraphName.value, newGraphDesc.value)
+  showNewGraph.value = false
+  activeGraphId.value = g.id
+  nodes.value = []; edges.value = []
+}
+
+// ── Delete graph ───────────────────────────────────────────────────────────
+const showDeleteConfirm = ref(false)
+function confirmDeleteGraph() { showDeleteConfirm.value = true }
+async function doDeleteGraph() {
+  await store.deleteGraph(activeGraphId.value)
+  activeGraphId.value = ''
+  nodes.value = []; edges.value = []
+}
+
+// ── Drop node from palette ─────────────────────────────────────────────────
+function onDrop(event) {
+  const type = event.dataTransfer.getData('application/vueflow-node-type')
+  if (!type || !activeGraphId.value) return
+  const rect  = canvasWrapper.value.getBoundingClientRect()
+  const nt    = store.nodeTypes.find(t => t.type === type)
+  const newNode = {
+    id:       `${type}-${Date.now()}`,
+    type,
+    position: { x: event.clientX - rect.left - 70, y: event.clientY - rect.top - 20 },
+    data:     {
+      label: nt?.label ?? type,
+      ...(nt?.config_schema
+        ? Object.fromEntries(
+            Object.entries(nt.config_schema).map(([k, v]) => [k, v.default ?? ''])
+          )
+        : {})
+    },
+  }
+  nodes.value = [...nodes.value, newNode]
+}
+
+// ── Node selection & config ────────────────────────────────────────────────
+const selectedNode = ref(null)
+
+function onNodeClick({ node }) {
+  selectedNode.value = { ...node }
+}
+
+function onNodeDataUpdate(newData) {
+  if (!selectedNode.value) return
+  nodes.value = nodes.value.map(n =>
+    n.id === selectedNode.value.id ? { ...n, data: { ...n.data, ...newData } } : n
+  )
+  selectedNode.value = { ...selectedNode.value, data: { ...selectedNode.value.data, ...newData } }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+onMounted(async () => {
+  await store.fetchNodeTypes()
+  await store.fetchGraphs()
+})
+</script>
+
+<style>
+.logic-canvas { background: #0f172a; }
+.logic-canvas .vue-flow__edge-path { stroke: #475569; }
+.logic-canvas .vue-flow__handle { width: 10px; height: 10px; border-radius: 50%; }
+.logic-controls { bottom: 1rem; left: 1rem; }
+.logic-minimap { bottom: 1rem; right: 1rem; background: #1e293b; border: 1px solid #334155; border-radius: 6px; }
+</style>

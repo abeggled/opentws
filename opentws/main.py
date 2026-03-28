@@ -108,6 +108,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     import opentws.adapters.mqtt.adapter        # noqa: F401
     await adapter_registry.start_all(bus, db)
 
+    # 9. Logic Engine
+    from opentws.logic.manager import init_logic_manager
+    logic_mgr = init_logic_manager(db=db, event_bus=bus, registry=registry)
+    await logic_mgr.start()
+
     logger.info(
         "openTWS ready — %d datapoints, %d adapters registered",
         registry.count(),
@@ -117,6 +122,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield  # ← application running
 
     # Shutdown (reverse order)
+    await logic_mgr.stop()
     await adapter_registry.stop_all()
     await mqtt.stop()
     await rb.stop()

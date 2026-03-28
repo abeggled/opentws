@@ -92,6 +92,7 @@ const navItems = [
   { to: '/adapters',   label: 'Adapter',     icon: '&#9741;' },
   { to: '/history',    label: 'History',     icon: '&#9685;' },
   { to: '/ringbuffer', label: 'RingBuffer',  icon: '&#9706;' },
+  { to: '/logic',      label: 'Logic',       icon: '&#9889;' },
   { to: '/settings',   label: 'Einstellungen', icon: '&#9881;' },
 ]
 

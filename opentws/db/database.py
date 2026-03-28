@@ -206,6 +206,18 @@ _MIGRATION_V11 = """
 ALTER TABLE api_keys ADD COLUMN owner TEXT NOT NULL DEFAULT '';
 """
 
+_MIGRATION_V12 = """
+CREATE TABLE IF NOT EXISTS logic_graphs (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    enabled     INTEGER NOT NULL DEFAULT 1,
+    flow_data   TEXT NOT NULL DEFAULT '{"nodes":[],"edges":[]}',
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+);
+"""
+
 # List of (version, sql_or_callable) tuples — append new migrations here
 MIGRATIONS: list[tuple[int, str | Callable]] = [
     (1, _MIGRATION_V1),
@@ -219,6 +231,7 @@ MIGRATIONS: list[tuple[int, str | Callable]] = [
     (9, _MIGRATION_V9),
     (10, _MIGRATION_V10),
     (11, _MIGRATION_V11),
+    (12, _MIGRATION_V12),
 ]
 
 
