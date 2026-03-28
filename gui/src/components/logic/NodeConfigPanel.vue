@@ -27,6 +27,10 @@
         </div>
       </template>
 
+      <!-- Filter & Transformation divider for DataPoint nodes -->
+      <div v-if="isDatapointNode && hasConfigFields"
+           class="section-divider">Filter &amp; Transformation</div>
+
       <!-- Generic config fields from schema -->
       <template v-if="nodeDef?.config_schema">
         <div v-for="(schema, key) in configFields" :key="key" class="form-group">
@@ -67,13 +71,19 @@ const dpResults  = ref([])
 
 const nodeDef = computed(() => props.nodeTypes.find(nt => nt.type === props.node?.type))
 
+const isDatapointNode = computed(() =>
+  props.node?.type === 'datapoint_read' || props.node?.type === 'datapoint_write'
+)
+
 const configFields = computed(() => {
   const schema = nodeDef.value?.config_schema ?? {}
-  // exclude datapoint fields — handled separately
+  // exclude datapoint_id / datapoint_name — handled by the picker above
   return Object.fromEntries(
     Object.entries(schema).filter(([k]) => !k.startsWith('datapoint_'))
   )
 })
+
+const hasConfigFields = computed(() => Object.keys(configFields.value).length > 0)
 
 watch(() => props.node, (n) => {
   if (n) {
@@ -105,3 +115,16 @@ function emitUpdate() {
   emit('update', { ...localData.value })
 }
 </script>
+
+<style scoped>
+.section-divider {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #475569;
+  border-top: 1px solid #1e293b;
+  padding-top: 10px;
+  margin-top: 2px;
+}
+</style>

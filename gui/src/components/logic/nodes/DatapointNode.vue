@@ -9,6 +9,7 @@
     <div class="gn-card">
       <div class="gn-header">
         <span class="gn-label">{{ isWrite ? 'DP Schreiben' : 'DP Lesen' }}</span>
+        <span v-if="hasFilter" class="gn-filter-badge" title="Filter / Transformation aktiv">⊘</span>
         <button v-show="hovered" class="gn-delete nodrag" @click.stop="remove" title="Block löschen">✕</button>
       </div>
       <div class="gn-body">
@@ -48,10 +49,22 @@ const props = defineProps({
   data: { type: Object, default: () => ({}) },
 })
 
-const isWrite = computed(() => props.type === 'datapoint_write')
-const hovered = ref(false)
+const isWrite   = computed(() => props.type === 'datapoint_write')
+const hovered   = ref(false)
 const { removeNodes } = useVueFlow()
 function remove() { removeNodes([props.id]) }
+
+const hasFilter = computed(() => {
+  const d = props.data
+  return !!(
+    (d.value_formula     && d.value_formula.trim())    ||
+    d.trigger_on_change === 'true'                     ||
+    d.only_on_change    === 'true'                     ||
+    (d.min_delta        && d.min_delta    !== '')       ||
+    (d.min_delta_pct    && d.min_delta_pct !== '')      ||
+    (d.throttle_ms      && d.throttle_ms  !== '')
+  )
+})
 </script>
 
 <style scoped>
@@ -90,8 +103,9 @@ function remove() { removeNodes([props.id]) }
   background: rgba(15,118,110,.18);
   border-radius: 5px 5px 0 0;
 }
-.gn-label  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#f1f5f9; }
-.gn-delete { font-size:11px; color:#64748b; background:none; border:none; cursor:pointer; padding:0 2px; line-height:1; transition:color .15s; }
+.gn-label        { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#f1f5f9; }
+.gn-filter-badge { font-size:9px; color:#fbbf24; margin-left:4px; opacity:.85; flex-shrink:0; }
+.gn-delete       { font-size:11px; color:#64748b; background:none; border:none; cursor:pointer; padding:0 2px; line-height:1; transition:color .15s; margin-left:auto; }
 .gn-delete:hover { color:#f87171; }
 .gn-body   { padding: 6px 10px 2px; }
 .gn-sublabel { font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px; }

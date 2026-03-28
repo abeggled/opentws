@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from opentws.logic.executor import GraphExecutor
@@ -39,8 +40,11 @@ class LogicManager:
         self._registry = registry
         # hysteresis state per graph per node
         self._hysteresis: dict[str, dict[str, bool]] = {}
-        # graph cache: id → FlowData
-        self._graphs: dict[str, tuple[str, bool, FlowData]] = {}  # id → (name, enabled, flow)
+        # graph cache: id → (name, enabled, FlowData)
+        self._graphs: dict[str, tuple[str, bool, FlowData]] = {}
+        # per-node runtime state for filter/throttle
+        # {graph_id: {node_id: {last_value, last_ts, last_write_val, last_write_ts}}}
+        self._node_state: dict[str, dict[str, dict[str, Any]]] = {}
 
     async def start(self) -> None:
         """Subscribe to EventBus and load all graphs into cache."""
@@ -61,20 +65,69 @@ class LogicManager:
 
     async def _on_value_event(self, event: Any) -> None:
         dp_id = str(event.datapoint_id)
+        now   = datetime.now(timezone.utc)
+
         for graph_id, (name, enabled, flow) in self._graphs.items():
             if not enabled:
                 continue
-            # Check if any datapoint_read node watches this dp
             trigger_nodes = [
                 n for n in flow.nodes
                 if n.type == "datapoint_read" and n.data.get("datapoint_id") == dp_id
             ]
             if not trigger_nodes:
                 continue
-            # Build input overrides
+
+            graph_state = self._node_state.setdefault(graph_id, {})
             overrides: dict[str, dict[str, Any]] = {}
+
             for tn in trigger_nodes:
-                overrides[tn.id] = {"value": event.value, "changed": True}
+                ns  = graph_state.setdefault(tn.id, {})
+                d   = tn.data
+                new_val  = event.value
+                last_val = ns.get("last_value")
+                last_ts  = ns.get("last_ts")
+
+                # ── Filter: trigger_on_change ────────────────────────────
+                if d.get("trigger_on_change") == "true":
+                    if new_val == last_val:
+                        continue
+
+                # ── Filter: min_delta ────────────────────────────────────
+                raw_delta = d.get("min_delta")
+                if raw_delta not in (None, "", 0) and last_val is not None:
+                    try:
+                        if abs(float(new_val) - float(last_val)) < float(raw_delta):
+                            continue
+                    except (TypeError, ValueError):
+                        pass
+
+                # ── Filter: min_delta_pct ────────────────────────────────
+                raw_pct = d.get("min_delta_pct")
+                if raw_pct not in (None, "", 0) and last_val is not None:
+                    try:
+                        base = abs(float(last_val)) or 1.0
+                        if abs(float(new_val) - float(last_val)) / base * 100 < float(raw_pct):
+                            continue
+                    except (TypeError, ValueError):
+                        pass
+
+                # ── Filter: throttle_ms ──────────────────────────────────
+                raw_throttle = d.get("throttle_ms")
+                if raw_throttle not in (None, "", 0) and last_ts is not None:
+                    elapsed_ms = (now - last_ts).total_seconds() * 1000
+                    try:
+                        if elapsed_ms < float(raw_throttle):
+                            continue
+                    except (TypeError, ValueError):
+                        pass
+
+                # All filters passed — update state and add override
+                ns["last_value"] = new_val
+                ns["last_ts"]    = now
+                overrides[tn.id] = {"value": new_val, "changed": True}
+
+            if not overrides:
+                continue
             await self._execute_graph(graph_id, name, flow, overrides)
 
     # ── Execution ─────────────────────────────────────────────────────────
@@ -123,19 +176,55 @@ class LogicManager:
             logger.error("Graph %s (%s) execution error: %s", graph_id, name, exc)
             return {}
 
-        # Process datapoint_write outputs — publish DataValueEvent so that
-        # the registry, ring-buffer, MQTT and WebSocket all get notified.
+        # Process datapoint_write outputs — apply write-side filters, then
+        # publish DataValueEvent so registry, ring-buffer, MQTT and WS all get notified.
         from opentws.core.event_bus import DataValueEvent
+        graph_state = self._node_state.setdefault(graph_id, {})
+        write_now   = datetime.now(timezone.utc)
+
         for node in flow.nodes:
             if node.type != "datapoint_write":
                 continue
-            node_out = outputs.get(node.id, {})
+            node_out  = outputs.get(node.id, {})
             write_val = node_out.get("_write_value")
             if write_val is None:
                 continue
             dp_id_str = node.data.get("datapoint_id")
             if not dp_id_str:
                 continue
+
+            d  = node.data
+            ns = graph_state.setdefault(node.id, {})
+            last_wr = ns.get("last_write_val")
+            last_ts = ns.get("last_write_ts")
+
+            # ── Filter: only_on_change ───────────────────────────────────
+            if d.get("only_on_change") == "true":
+                if write_val == last_wr:
+                    continue
+
+            # ── Filter: min_delta (write side) ───────────────────────────
+            raw_delta = d.get("min_delta")
+            if raw_delta not in (None, "", 0) and last_wr is not None:
+                try:
+                    if abs(float(write_val) - float(last_wr)) < float(raw_delta):
+                        continue
+                except (TypeError, ValueError):
+                    pass
+
+            # ── Filter: throttle_ms (write side) ─────────────────────────
+            raw_throttle = d.get("throttle_ms")
+            if raw_throttle not in (None, "", 0) and last_ts is not None:
+                elapsed_ms = (write_now - last_ts).total_seconds() * 1000
+                try:
+                    if elapsed_ms < float(raw_throttle):
+                        continue
+                except (TypeError, ValueError):
+                    pass
+
+            # All filters passed — update state and publish
+            ns["last_write_val"] = write_val
+            ns["last_write_ts"]  = write_now
             try:
                 dp_id = uuid.UUID(dp_id_str)
                 event = DataValueEvent(
@@ -169,3 +258,4 @@ class LogicManager:
     def invalidate_cache(self, graph_id: str) -> None:
         self._graphs.pop(graph_id, None)
         self._hysteresis.pop(graph_id, None)
+        self._node_state.pop(graph_id, None)

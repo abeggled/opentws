@@ -204,12 +204,29 @@ class GraphExecutor:
                 return {"result": mapped}
 
             case "datapoint_read":
-                # Value is injected via input_overrides from the manager
-                return {"value": inputs.get("value"), "changed": inputs.get("changed", False)}
+                # Value is injected via input_overrides from the manager.
+                # Apply optional value_formula transform before passing downstream.
+                raw = inputs.get("value")
+                formula = (d.get("value_formula") or "").strip()
+                if formula and raw is not None:
+                    try:
+                        raw = self._safe_eval(formula, {"value": self._to_num(raw), "v": self._to_num(raw)})
+                    except Exception as exc:
+                        logger.debug("datapoint_read formula error: %s", exc)
+                return {"value": raw, "changed": inputs.get("changed", False)}
 
             case "datapoint_write":
-                # The manager reads outputs and writes to the registry
-                return {"_write_value": inputs.get("value"), "_triggered": inputs.get("trigger")}
+                # Apply optional value_formula transform before the manager writes the value.
+                write_val = inputs.get("value")
+                formula = (d.get("value_formula") or "").strip()
+                if formula and write_val is not None:
+                    try:
+                        write_val = self._safe_eval(
+                            formula, {"value": self._to_num(write_val), "v": self._to_num(write_val)}
+                        )
+                    except Exception as exc:
+                        logger.debug("datapoint_write formula error: %s", exc)
+                return {"_write_value": write_val, "_triggered": inputs.get("trigger")}
 
             case "python_script":
                 script = d.get("script", "result = 0")
