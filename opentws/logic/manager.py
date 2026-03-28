@@ -7,15 +7,13 @@ LogicManager — manages all logic graphs and integrates with the EventBus.
 """
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
 from typing import Any
 
 from opentws.logic.executor import GraphExecutor
-from opentws.logic.models import FlowData, LogicGraphOut
+from opentws.logic.models import FlowData
 
 logger = logging.getLogger(__name__)
 
@@ -82,12 +80,33 @@ class LogicManager:
     # ── Execution ─────────────────────────────────────────────────────────
 
     async def execute_graph(self, graph_id: str) -> dict[str, Any]:
-        """Manually trigger a graph (e.g. from API)."""
+        """Manually trigger a graph (e.g. from API).
+
+        Reads current registry values for all datapoint_read nodes so that
+        a manual run shows real values — not None.
+        """
         entry = self._graphs.get(graph_id)
         if not entry:
             raise KeyError(f"Graph {graph_id} not in cache")
         name, enabled, flow = entry
-        return await self._execute_graph(graph_id, name, flow, {})
+
+        # Seed overrides from current registry values
+        overrides: dict[str, dict[str, Any]] = {}
+        for node in flow.nodes:
+            if node.type != "datapoint_read":
+                continue
+            dp_id_str = node.data.get("datapoint_id")
+            if not dp_id_str:
+                continue
+            try:
+                dp_id = uuid.UUID(dp_id_str)
+                vs = self._registry.get_value(dp_id)
+                if vs is not None:
+                    overrides[node.id] = {"value": vs.value, "changed": False}
+            except Exception:
+                pass
+
+        return await self._execute_graph(graph_id, name, flow, overrides)
 
     async def _execute_graph(
         self,
@@ -104,7 +123,9 @@ class LogicManager:
             logger.error("Graph %s (%s) execution error: %s", graph_id, name, exc)
             return {}
 
-        # Process datapoint_write outputs
+        # Process datapoint_write outputs — publish DataValueEvent so that
+        # the registry, ring-buffer, MQTT and WebSocket all get notified.
+        from opentws.core.event_bus import DataValueEvent
         for node in flow.nodes:
             if node.type != "datapoint_write":
                 continue
@@ -117,7 +138,14 @@ class LogicManager:
                 continue
             try:
                 dp_id = uuid.UUID(dp_id_str)
-                await self._registry.update_value(dp_id, write_val, source="logic")
+                event = DataValueEvent(
+                    datapoint_id=dp_id,
+                    value=write_val,
+                    quality="good",
+                    source_adapter="logic",
+                )
+                await self._event_bus.publish(event)
+                logger.debug("Graph %s: wrote dp %s = %s", graph_id, dp_id_str, write_val)
             except Exception as exc:
                 logger.warning("Graph %s: failed to write dp %s: %s", graph_id, dp_id_str, exc)
 
