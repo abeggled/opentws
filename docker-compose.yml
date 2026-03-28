@@ -1,14 +1,11 @@
-# OpenTWS — Docker Compose Stack
+# openTWS — Docker Compose Stack
 # Services: opentws + mosquitto (MQTT broker)
 #
 # Quick start:
-#   cp config.example.yaml data/config.yaml   # adjust jwt_secret!
+#   cp .env.example .env          # adjust secrets!
 #   docker compose up -d
 #
-# Override any setting via environment variables:
-#   OPENTWS_SECURITY__JWT_SECRET=<random>
-#   OPENTWS_MQTT__USERNAME=user
-#   OPENTWS_MQTT__PASSWORD=pass
+# Override any setting via environment variables (see .env.example).
 
 services:
 
@@ -16,42 +13,72 @@ services:
   mosquitto:
     image: eclipse-mosquitto:2
     restart: unless-stopped
+    # Init: always (re)create passwd file with current service credentials, then run Mosquitto.
+    # This ensures a changed service password takes effect even when the volume already exists.
+    # "exec" replaces the shell → Mosquitto becomes PID 1 (needed for SIGHUP reload).
+    command: >
+      sh -c "
+      mosquitto_passwd -c -b /mosquitto/passwd/passwd $$MQTT_SVC_USER $$MQTT_SVC_PASS &&
+      exec mosquitto -c /mosquitto/config/mosquitto.conf
+      "
+    environment:
+      # Must match OPENTWS_MQTT__USERNAME / PASSWORD below
+      MQTT_SVC_USER: ${OPENTWS_MQTT_USERNAME:-opentws}
+      MQTT_SVC_PASS: ${OPENTWS_MQTT_PASSWORD:-changeme}
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_passwd:/mosquitto/passwd   # shared with opentws for passwd file
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     ports:
       - "1883:1883"     # MQTT plain
-      - "9001:9001"     # MQTT over WebSocket (optional GUI use)
+      - "9001:9001"     # MQTT over WebSocket
     healthcheck:
-      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck",
+             "-u", "${OPENTWS_MQTT_USERNAME:-opentws}", "-P", "${OPENTWS_MQTT_PASSWORD:-changeme}",
+             "-W", "3"]
       interval: 10s
       timeout: 5s
       retries: 3
 
-  # ── OpenTWS Server ───────────────────────────────────────────────────────
+  # ── openTWS Server ───────────────────────────────────────────────────────
   opentws:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    # Share Mosquitto's PID namespace → openTWS can send SIGHUP to PID 1 (Mosquitto).
+    pid: "container:mosquitto"
     depends_on:
       mosquitto:
         condition: service_healthy
     volumes:
       - opentws_data:/data
+      - mosquitto_passwd:/mosquitto/passwd   # same shared volume → write passwd file
       # Optional: mount a host config.yaml (overrides the one inside /data)
       # - ./config.yaml:/data/config.yaml:ro
     ports:
       - "8080:8080"
     environment:
-      # Point to the mosquitto service by container name
+      # ── MQTT service account (must match MQTT_SVC_USER/PASS above) ──────
       OPENTWS_MQTT__HOST: mosquitto
       OPENTWS_MQTT__PORT: "1883"
-      # Override for production — do not leave as 'changeme'!
+      OPENTWS_MQTT__USERNAME: ${OPENTWS_MQTT_USERNAME:-opentws}
+      OPENTWS_MQTT__PASSWORD: ${OPENTWS_MQTT_PASSWORD:-changeme}
+
+      # ── Mosquitto passwd management ─────────────────────────────────────
+      OPENTWS_MOSQUITTO__PASSWD_FILE: /mosquitto/passwd/passwd
+      OPENTWS_MOSQUITTO__SERVICE_USERNAME: ${OPENTWS_MQTT_USERNAME:-opentws}
+      OPENTWS_MOSQUITTO__SERVICE_PASSWORD: ${OPENTWS_MQTT_PASSWORD:-changeme}
+      # PID 1 = Mosquitto (shared PID namespace) → send SIGHUP to reload passwd
+      OPENTWS_MOSQUITTO__RELOAD_PID: "1"
+
+      # ── Security ────────────────────────────────────────────────────────
       OPENTWS_SECURITY__JWT_SECRET: ${OPENTWS_JWT_SECRET:-changeme}
-      # Log level: DEBUG | INFO | WARNING | ERROR
+
+      # ── Logging ─────────────────────────────────────────────────────────
       OPENTWS_SERVER__LOG_LEVEL: ${OPENTWS_LOG_LEVEL:-INFO}
+
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/v1/system/health')"]
@@ -63,5 +90,6 @@ services:
 
 volumes:
   opentws_data:
-  mosquitto_data:
+  mosquitto_passwd:    # shared between mosquitto + opentws for passwd file management
+  mosquitto_data:      # Mosquitto persistence (retained messages, QoS queues)
   mosquitto_log:
