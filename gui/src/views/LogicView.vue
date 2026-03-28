@@ -40,6 +40,7 @@
            @dragover.prevent @drop="onDrop">
         <VueFlow
           v-if="activeGraphId"
+          id="logic-canvas"
           v-model:nodes="nodes"
           v-model:edges="edges"
           :node-types="nodeTypeComponents"
@@ -47,6 +48,7 @@
           :delete-key-code="['Backspace', 'Delete']"
           fit-view-on-init
           class="logic-canvas"
+          @connect="onConnect"
           @node-click="onNodeClick"
         >
           <Background pattern-color="#334155" :gap="20" />
@@ -100,7 +102,7 @@
 
 <script setup>
 import { ref, onMounted, markRaw } from 'vue'
-import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { VueFlow, useVueFlow, addEdge } from '@vue-flow/core'
 import { Background }           from '@vue-flow/background'
 import { Controls }             from '@vue-flow/controls'
 import { MiniMap }              from '@vue-flow/minimap'
@@ -225,23 +227,39 @@ async function doDeleteGraph() {
   nodes.value = []; edges.value = []
 }
 
+// ── Connect handler — REQUIRED to actually create edges ────────────────────
+function onConnect(params) {
+  edges.value = addEdge({
+    ...params,
+    type: 'smoothstep',
+    animated: true,
+    style: { stroke: '#475569', strokeWidth: 2 },
+  }, edges.value)
+}
+
 // ── Drop node from palette ─────────────────────────────────────────────────
 function onDrop(event) {
   const type = event.dataTransfer.getData('application/vueflow-node-type')
   if (!type || !activeGraphId.value) return
-  const rect  = canvasWrapper.value.getBoundingClientRect()
-  const nt    = store.nodeTypes.find(t => t.type === type)
+
+  const nt   = store.nodeTypes.find(t => t.type === type)
+  const rect = canvasWrapper.value.getBoundingClientRect()
+
+  // Convert screen coordinates → flow coordinates (accounts for pan/zoom)
+  const { project } = useVueFlow('logic-canvas')
+  const pos = project({ x: event.clientX - rect.left, y: event.clientY - rect.top })
+
   const newNode = {
     id:       `${type}-${Date.now()}`,
     type,
-    position: { x: event.clientX - rect.left - 70, y: event.clientY - rect.top - 20 },
-    data:     {
+    position: pos,
+    data: {
       label: nt?.label ?? type,
       ...(nt?.config_schema
         ? Object.fromEntries(
             Object.entries(nt.config_schema).map(([k, v]) => [k, v.default ?? ''])
           )
-        : {})
+        : {}),
     },
   }
   nodes.value = [...nodes.value, newNode]
