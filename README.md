@@ -728,8 +728,8 @@ Connects to an **external** MQTT broker (distinct from the internal OpenTWS Mosq
 {
   "host": "10.38.114.44",
   "port": 1883,
-  "username": "twsmqtt",
-  "password": "twsmqtt"
+  "username": "username",
+  "password": "password"
 }
 ```
 
