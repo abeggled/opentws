@@ -52,7 +52,6 @@
           <div class="section-label">Wert-Transformation</div>
           <div class="form-group">
             <label class="label">Formel <span class="text-slate-500 font-normal">— Variable: <code class="text-teal-400">x</code></span></label>
-            <!-- Preset dropdown + formula input side by side -->
             <div class="flex gap-2">
               <select v-model="formulaPreset" @change="onPresetChange" class="input text-xs flex-1 min-w-0">
                 <option value="">— Preset wählen —</option>
@@ -84,7 +83,6 @@
         <!-- Filter -->
         <div v-show="activeTab === 'filter'" class="p-4 flex flex-col gap-4">
 
-          <!-- Zeitlicher Filter -->
           <div>
             <div class="section-label">Zeitlicher Filter</div>
             <label class="label mt-2">Min. Zeitabstand zwischen zwei {{ isWrite ? 'Schreibvorgängen' : 'Auslösungen' }}</label>
@@ -94,7 +92,7 @@
                 @change="emitUpdate"
                 type="number" min="0"
                 class="input text-sm flex-1"
-                :placeholder="isWrite ? 'z.B. 1' : 'z.B. 1'" />
+                placeholder="z.B. 1" />
               <select v-model="localData.throttle_unit" @change="emitUpdate" class="input text-sm w-20 shrink-0">
                 <option value="ms">ms</option>
                 <option value="s">s</option>
@@ -107,11 +105,9 @@
             </p>
           </div>
 
-          <!-- Wert-Filter -->
           <div>
             <div class="section-label">Wert-Filter</div>
 
-            <!-- Checkbox: on_change -->
             <label class="flex items-start gap-2 mt-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -125,7 +121,6 @@
               </span>
             </label>
 
-            <!-- min_delta -->
             <label class="label mt-3">Nur {{ isWrite ? 'schreiben' : 'auslösen' }} bei Mindest-Abweichung</label>
             <div class="flex gap-2 mt-1">
               <div class="flex-1">
@@ -153,7 +148,75 @@
           </div>
         </div>
 
-      </div><!-- /scroll area -->
+      </div>
+    </template>
+
+    <!-- ── CronTrigger node: cron builder ─────────────────────────────── -->
+    <template v-else-if="isCronNode">
+      <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        <p class="text-xs text-slate-500">{{ nodeDef?.description }}</p>
+
+        <!-- Presets -->
+        <div class="form-group">
+          <label class="label">Vorgefertigte Zeitpläne</label>
+          <select :value="cronPresetValue" @change="onCronPresetChange" class="input text-sm">
+            <option value="">— Preset wählen —</option>
+            <optgroup label="Minuten-Intervalle">
+              <option v-for="p in CRON_PRESETS_INTERVAL" :key="p.expr" :value="p.expr">{{ p.label }}</option>
+            </optgroup>
+            <optgroup label="Stunden-Intervalle">
+              <option v-for="p in CRON_PRESETS_HOURLY" :key="p.expr" :value="p.expr">{{ p.label }}</option>
+            </optgroup>
+            <optgroup label="Täglich">
+              <option v-for="p in CRON_PRESETS_DAILY" :key="p.expr" :value="p.expr">{{ p.label }}</option>
+            </optgroup>
+            <optgroup label="Wöchentlich / Monatlich">
+              <option v-for="p in CRON_PRESETS_OTHER" :key="p.expr" :value="p.expr">{{ p.label }}</option>
+            </optgroup>
+          </select>
+          <p v-if="cronDescription" class="text-xs text-amber-400 mt-1">▶ {{ cronDescription }}</p>
+        </div>
+
+        <!-- Visual field builder -->
+        <div class="form-group">
+          <label class="label">Zeitplan anpassen</label>
+          <div class="cron-grid mt-1">
+            <div v-for="f in cronFields" :key="f.key" class="cron-field">
+              <input
+                v-model="f.value"
+                @input="onCronFieldChange"
+                class="input text-sm text-center font-mono px-1"
+                :placeholder="f.placeholder"
+                :title="f.label + ' (' + f.hint + ')'"
+              />
+              <span class="cron-field-label">{{ f.label }}</span>
+              <span class="cron-field-hint">{{ f.hint }}</span>
+            </div>
+          </div>
+          <div class="cron-legend mt-2">
+            <span><code>*</code> jeden</span>
+            <span><code>*/5</code> alle 5</span>
+            <span><code>1-5</code> Bereich</span>
+            <span><code>1,3</code> Liste</span>
+          </div>
+        </div>
+
+        <!-- Raw expression -->
+        <div class="form-group">
+          <label class="label">Ausdruck (direkt bearbeiten)</label>
+          <input
+            v-model="localData.cron"
+            @change="onCronExprChange"
+            class="input text-sm font-mono"
+            placeholder="0 7 * * *"
+          />
+          <p class="text-xs text-slate-500 mt-1">
+            Felder: <code class="text-slate-400">Minute · Stunde · Tag · Monat · Wochentag</code>
+            — <a href="https://crontab.guru" target="_blank" rel="noopener"
+               class="text-amber-400 hover:underline">crontab.guru ↗</a>
+          </p>
+        </div>
+      </div>
     </template>
 
     <!-- ── All other node types: generic rendering ─────────────────────── -->
@@ -203,7 +266,7 @@ const dpSearch   = ref('')
 const dpResults  = ref([])
 const activeTab  = ref('connection')
 
-// ── Presets ────────────────────────────────────────────────────────────────
+// ── Formula Presets ────────────────────────────────────────────────────────
 const MULTIPLY_PRESETS = [
   { f: 'x * 86400',  label: '× 86.400 (Tage → Sekunden)'    },
   { f: 'x * 3600',   label: '× 3.600 (Stunden → Sekunden)'  },
@@ -224,13 +287,116 @@ const DIVIDE_PRESETS = [
 ]
 const ALL_PRESETS = [...MULTIPLY_PRESETS, ...DIVIDE_PRESETS]
 
+// ── Cron Presets ───────────────────────────────────────────────────────────
+const CRON_PRESETS_INTERVAL = [
+  { expr: '* * * * *',      label: 'Jede Minute'     },
+  { expr: '*/5 * * * *',    label: 'Alle 5 Minuten'  },
+  { expr: '*/10 * * * *',   label: 'Alle 10 Minuten' },
+  { expr: '*/15 * * * *',   label: 'Alle 15 Minuten' },
+  { expr: '*/30 * * * *',   label: 'Alle 30 Minuten' },
+]
+const CRON_PRESETS_HOURLY = [
+  { expr: '0 * * * *',     label: 'Jede Stunde'     },
+  { expr: '0 */2 * * *',   label: 'Alle 2 Stunden'  },
+  { expr: '0 */4 * * *',   label: 'Alle 4 Stunden'  },
+  { expr: '0 */6 * * *',   label: 'Alle 6 Stunden'  },
+  { expr: '0 */12 * * *',  label: 'Alle 12 Stunden' },
+]
+const CRON_PRESETS_DAILY = [
+  { expr: '0 0 * * *',       label: 'Täglich um 00:00 (Mitternacht)' },
+  { expr: '0 6 * * *',       label: 'Täglich um 06:00'               },
+  { expr: '0 7 * * *',       label: 'Täglich um 07:00'               },
+  { expr: '0 8 * * *',       label: 'Täglich um 08:00'               },
+  { expr: '0 9 * * *',       label: 'Täglich um 09:00'               },
+  { expr: '0 12 * * *',      label: 'Täglich um 12:00'               },
+  { expr: '0 17 * * *',      label: 'Täglich um 17:00'               },
+  { expr: '0 18 * * *',      label: 'Täglich um 18:00'               },
+  { expr: '0 22 * * *',      label: 'Täglich um 22:00'               },
+  { expr: '0 6,18 * * *',    label: 'Täglich um 06:00 und 18:00'     },
+  { expr: '0 8,12,18 * * *', label: 'Täglich um 08:00, 12:00, 18:00' },
+  { expr: '0 6 * * 1-5',     label: 'Werktags (Mo–Fr) um 06:00'      },
+  { expr: '0 7 * * 1-5',     label: 'Werktags (Mo–Fr) um 07:00'      },
+  { expr: '0 9 * * 1-5',     label: 'Werktags (Mo–Fr) um 09:00'      },
+  { expr: '0 8-17 * * 1-5',  label: 'Werktags, stündlich 08–17 Uhr'  },
+]
+const CRON_PRESETS_OTHER = [
+  { expr: '0 9 * * 1',    label: 'Jeden Montag um 09:00'           },
+  { expr: '0 0 * * 0',    label: 'Jeden Sonntag um Mitternacht'    },
+  { expr: '0 0 * * 1',    label: 'Jeden Montag um Mitternacht'     },
+  { expr: '0 0 1 * *',    label: 'Ersten Tag des Monats (00:00)'   },
+  { expr: '0 0 15 * *',   label: '15. des Monats (00:00)'          },
+  { expr: '0 0 1 1 *',    label: 'Einmal jährlich (1. Januar)'     },
+  { expr: '0 0 1 4 *',    label: 'Einmal jährlich (1. April)'      },
+  { expr: '0 0 1 10 *',   label: 'Einmal jährlich (1. Oktober)'    },
+]
+const ALL_CRON_PRESETS = [
+  ...CRON_PRESETS_INTERVAL,
+  ...CRON_PRESETS_HOURLY,
+  ...CRON_PRESETS_DAILY,
+  ...CRON_PRESETS_OTHER,
+]
+
+// ── Cron field state ───────────────────────────────────────────────────────
+const cronFields = ref([
+  { key: 'min',     value: '0', label: 'Min', placeholder: '0', hint: '0–59'        },
+  { key: 'hour',    value: '7', label: 'Std', placeholder: '*', hint: '0–23'        },
+  { key: 'day',     value: '*', label: 'Tag', placeholder: '*', hint: '1–31'        },
+  { key: 'month',   value: '*', label: 'Mon', placeholder: '*', hint: '1–12'        },
+  { key: 'weekday', value: '*', label: 'WT',  placeholder: '*', hint: '0–6 (0=So)'  },
+])
+
+function parseCronToFields(expr) {
+  const parts = (expr || '0 7 * * *').trim().split(/\s+/)
+  if (parts.length === 5) {
+    cronFields.value[0].value = parts[0]
+    cronFields.value[1].value = parts[1]
+    cronFields.value[2].value = parts[2]
+    cronFields.value[3].value = parts[3]
+    cronFields.value[4].value = parts[4]
+  }
+}
+
+function cronFieldsToExpr() {
+  return cronFields.value.map(f => f.value || '*').join(' ')
+}
+
+function onCronFieldChange() {
+  localData.value.cron = cronFieldsToExpr()
+  emitUpdate()
+}
+
+function onCronExprChange() {
+  parseCronToFields(localData.value.cron)
+  emitUpdate()
+}
+
+const cronPresetValue = computed(() => {
+  const expr = (localData.value.cron || '').trim()
+  return ALL_CRON_PRESETS.find(p => p.expr === expr)?.expr ?? ''
+})
+
+function onCronPresetChange(e) {
+  const expr = e.target.value
+  if (expr) {
+    localData.value.cron = expr
+    parseCronToFields(expr)
+    emitUpdate()
+  }
+}
+
+const cronDescription = computed(() => {
+  const expr = (localData.value.cron || '').trim()
+  return ALL_CRON_PRESETS.find(p => p.expr === expr)?.label ?? ''
+})
+
 // ── Computed ───────────────────────────────────────────────────────────────
 const nodeDef = computed(() => props.nodeTypes.find(nt => nt.type === props.node?.type))
 
 const isDatapointNode = computed(() =>
   props.node?.type === 'datapoint_read' || props.node?.type === 'datapoint_write'
 )
-const isWrite = computed(() => props.node?.type === 'datapoint_write')
+const isWrite    = computed(() => props.node?.type === 'datapoint_write')
+const isCronNode = computed(() => props.node?.type === 'timer_cron')
 
 const configFields = computed(() => {
   const schema = nodeDef.value?.config_schema ?? {}
@@ -245,7 +411,7 @@ const formulaPreset = computed({
     if (!f) return ''
     return ALL_PRESETS.find(p => p.f === f)?.f ?? '__custom__'
   },
-  set(v) { /* handled by onPresetChange */ void v },
+  set(v) { void v },
 })
 
 const hasTransform = computed(() => !!(localData.value.value_formula || '').trim())
@@ -256,7 +422,7 @@ const hasFilter    = computed(() => {
 })
 
 const tabs = computed(() => [
-  { id: 'connection', label: 'Verbindung', dot: false },
+  { id: 'connection', label: 'Verbindung',     dot: false              },
   { id: 'transform',  label: 'Transformation', dot: hasTransform.value },
   { id: 'filter',     label: 'Filter',         dot: hasFilter.value    },
 ])
@@ -267,7 +433,7 @@ function boolVal(key) {
   return v === true || v === 'true'
 }
 function setBool(key, val) {
-  localData.value[key] = val  // store as native boolean
+  localData.value[key] = val
 }
 
 // ── Watchers ───────────────────────────────────────────────────────────────
@@ -277,6 +443,9 @@ watch(() => props.node, (n) => {
     dpSearch.value  = n.data.datapoint_name || ''
     dpResults.value = []
     activeTab.value = 'connection'
+    if (n.type === 'timer_cron') {
+      parseCronToFields(n.data.cron || '0 7 * * *')
+    }
   }
 }, { immediate: true })
 
@@ -288,11 +457,7 @@ function onPresetChange(e) {
     emitUpdate()
   }
 }
-
-function onFormulaInput() {
-  // When user types manually, we don't need to do anything special —
-  // formulaPreset computed will switch to '__custom__' automatically.
-}
+function onFormulaInput() { /* formulaPreset computed switches to __custom__ */ }
 
 // ── DataPoint picker ───────────────────────────────────────────────────────
 async function searchDps() {
@@ -351,4 +516,46 @@ function emitUpdate() {
 }
 .form-group { display: flex; flex-direction: column; gap: 4px; }
 .label      { font-size: 11px; font-weight: 500; color: #94a3b8; }
+
+/* ── Cron builder ─────────────────────────────────────────────────────── */
+.cron-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+.cron-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.cron-field .input {
+  width: 100%;
+  min-width: 0;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.cron-field-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #64748b;
+}
+.cron-field-hint {
+  font-size: 8px;
+  color: #475569;
+  white-space: nowrap;
+}
+.cron-legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 9px;
+  color: #475569;
+}
+.cron-legend code {
+  color: #94a3b8;
+  font-size: 9px;
+}
 </style>

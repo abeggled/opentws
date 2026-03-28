@@ -191,9 +191,9 @@ BUILTIN_NODE_TYPES: list[NodeTypeDef] = [
     ),
     NodeTypeDef(
         type="timer_cron",
-        label="Zeitplan",
+        label="CronTrigger",
         category="timer",
-        description="Löst nach einem Cron-Ausdruck aus",
+        description="Löst automatisch nach einem Cron-Zeitplan aus (Minute Stunde Tag Monat Wochentag).",
         inputs=[],
         outputs=[_port("trigger", "Trigger", "trigger")],
         config_schema={"cron": {"type": "string", "default": "0 7 * * *"}},
