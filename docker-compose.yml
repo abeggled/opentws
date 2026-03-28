@@ -48,7 +48,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     # Share Mosquitto's PID namespace → openTWS can send SIGHUP to PID 1 (Mosquitto).
-    pid: "container:mosquitto"
+    pid: "service:mosquitto"
     depends_on:
       mosquitto:
         condition: service_healthy
