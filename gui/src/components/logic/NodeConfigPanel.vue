@@ -151,7 +151,7 @@
       </div>
     </template>
 
-    <!-- ── CronTrigger node: cron builder ─────────────────────────────── -->
+    <!-- ── Trigger node: cron builder ──────────────────────────────────── -->
     <template v-else-if="isCronNode">
       <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         <p class="text-xs text-slate-500">{{ nodeDef?.description }}</p>

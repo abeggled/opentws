@@ -222,7 +222,7 @@ BUILTIN_NODE_TYPES: list[NodeTypeDef] = [
     ),
     NodeTypeDef(
         type="timer_cron",
-        label="CronTrigger",
+        label="Trigger",
         category="timer",
         description="Löst automatisch nach einem Cron-Zeitplan aus (Minute Stunde Tag Monat Wochentag).",
         inputs=[],
