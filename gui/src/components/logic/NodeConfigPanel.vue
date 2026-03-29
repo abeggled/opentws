@@ -219,6 +219,58 @@
       </div>
     </template>
 
+    <!-- ── math_formula: Formel + Ausgangs-Transformation ──────────────── -->
+    <template v-else-if="isMathFormulaNode">
+      <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        <p class="text-xs text-slate-500">{{ nodeDef?.description }}</p>
+
+        <!-- Hauptformel -->
+        <div class="form-group">
+          <div class="section-label">Hauptformel</div>
+          <label class="label">Formel <span class="text-slate-500 font-normal">— Variablen: <code class="text-teal-400">a</code>, <code class="text-teal-400">b</code></span></label>
+          <input
+            v-model="localData.formula"
+            @change="emitUpdate"
+            class="input text-sm font-mono"
+            placeholder="a + b" />
+          <p class="text-xs text-slate-500 mt-1">
+            Verfügbar: <code class="text-slate-400">abs round min max sqrt floor ceil</code>
+            und alle <code class="text-slate-400">math.*</code>-Funktionen.
+          </p>
+        </div>
+
+        <!-- Ausgangs-Transformation -->
+        <div class="form-group">
+          <div class="section-label">Ausgangs-Transformation</div>
+          <label class="label">Formel <span class="text-slate-500 font-normal">— Variable: <code class="text-teal-400">x</code> (= Ergebnis)</span></label>
+          <div class="flex gap-2">
+            <select :value="outputFormulaPreset" @change="onOutputPresetChange" class="input text-xs flex-1 min-w-0">
+              <option value="">— Preset wählen —</option>
+              <optgroup label="Multiplizieren">
+                <option v-for="p in MULTIPLY_PRESETS" :key="p.f" :value="p.f">{{ p.label }}</option>
+              </optgroup>
+              <optgroup label="Dividieren">
+                <option v-for="p in DIVIDE_PRESETS" :key="p.f" :value="p.f">{{ p.label }}</option>
+              </optgroup>
+              <optgroup label="Benutzerdefiniert">
+                <option value="__custom__">Eigene Formel …</option>
+              </optgroup>
+            </select>
+            <input
+              v-model="localData.output_formula"
+              @change="emitUpdate"
+              class="input text-xs font-mono w-28 shrink-0"
+              placeholder="x * 100" />
+          </div>
+          <p class="text-xs text-slate-500 mt-1">
+            Verfügbar: <code class="text-slate-400">abs round min max sqrt floor ceil</code>
+            und alle <code class="text-slate-400">math.*</code>-Funktionen.
+            Leer = keine Transformation.
+          </p>
+        </div>
+      </div>
+    </template>
+
     <!-- ── All other node types: generic rendering ─────────────────────── -->
     <template v-else>
       <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
@@ -395,8 +447,9 @@ const nodeDef = computed(() => props.nodeTypes.find(nt => nt.type === props.node
 const isDatapointNode = computed(() =>
   props.node?.type === 'datapoint_read' || props.node?.type === 'datapoint_write'
 )
-const isWrite    = computed(() => props.node?.type === 'datapoint_write')
-const isCronNode = computed(() => props.node?.type === 'timer_cron')
+const isWrite          = computed(() => props.node?.type === 'datapoint_write')
+const isCronNode       = computed(() => props.node?.type === 'timer_cron')
+const isMathFormulaNode = computed(() => props.node?.type === 'math_formula')
 
 const configFields = computed(() => {
   const schema = nodeDef.value?.config_schema ?? {}
@@ -412,6 +465,12 @@ const formulaPreset = computed({
     return ALL_PRESETS.find(p => p.f === f)?.f ?? '__custom__'
   },
   set(v) { void v },
+})
+
+const outputFormulaPreset = computed(() => {
+  const f = localData.value.output_formula || ''
+  if (!f) return ''
+  return ALL_PRESETS.find(p => p.f === f)?.f ?? '__custom__'
 })
 
 const hasTransform = computed(() => !!(localData.value.value_formula || '').trim())
@@ -458,6 +517,14 @@ function onPresetChange(e) {
   }
 }
 function onFormulaInput() { /* formulaPreset computed switches to __custom__ */ }
+
+function onOutputPresetChange(e) {
+  const val = e.target.value
+  if (val && val !== '__custom__') {
+    localData.value.output_formula = val
+    emitUpdate()
+  }
+}
 
 // ── DataPoint picker ───────────────────────────────────────────────────────
 async function searchDps() {

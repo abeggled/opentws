@@ -150,8 +150,8 @@ BUILTIN_NODE_TYPES: list[NodeTypeDef] = [
         inputs=[_port("a", "A"), _port("b", "B")],
         outputs=[_port("result", "Ergebnis")],
         config_schema={
-            "formula":        {"type": "string", "default": "a + b",   "label": "Formel"},
-            "output_formula": {"type": "string", "default": "",        "label": "Ausgangs-Transformation (x = Ergebnis)"},
+            "formula":        {"type": "string", "default": "a + b"},
+            "output_formula": {"type": "string", "default": ""},
         },
         color="#7c3aed",
     ),
