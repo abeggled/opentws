@@ -9,6 +9,47 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Added
 
+**Logic Engine — 7 neue Blocktypen (Erweiterung)**
+
+- `node_types.py` / `executor.py` / `manager.py`: 7 neue Blocktypen in 5 neuen bzw. erweiterten Kategorien:
+
+  | Blocktyp | Kategorie | Beschreibung |
+  |---|---|---|
+  | `astro_sun` | **Astro** | Berechnet Sonnenauf- und -untergang per `astral`-Bibliothek. Ausgänge: Aufgang, Untergang, Tagsüber (Bool). Config: Breitengrad / Längengrad. |
+  | `clamp` | **Mathematik** | Begrenzt den Eingangswert auf [Min, Max]. |
+  | `statistics` | **Mathematik** | Laufende Statistik: Min / Max / Mittelwert / Anzahl über alle empfangenen Werte. Reset-Eingang setzt zurück. |
+  | `operating_hours` | **Timer** | Zählt Betriebsstunden solange Eingang `Aktiv` wahr ist. Reset-Eingang setzt den Zähler zurück. Zustand wird zwischen Ausführungen gespeichert. |
+  | `notify_pushover` | **Benachrichtigung** | Push-Benachrichtigung via [Pushover API](https://pushover.net). Trigger-Eingang, Nachricht-Eingang. Config: App-Token, User-Key, Titel, Priorität (-1/0/1). |
+  | `notify_sms` | **Benachrichtigung** | SMS via [seven.io](https://seven.io) Gateway. Trigger-Eingang, Nachricht-Eingang. Config: API-Key, Empfänger, Absender. |
+  | `api_client` | **Integration** | HTTP-Anfragen (GET / POST / PUT / PATCH / DELETE) an externe APIs. Trigger-Eingang steuert Ausführung. Config: URL, Methode, Content-Type, Response-Typ (JSON/text), SSL-Prüfung, Header, Timeout. Ausgänge: Antwort, Status-Code, Erfolg (Trigger). |
+
+- `requirements.txt`: neue Abhängigkeiten
+  - `astral>=3.0` — für `astro_sun`-Block
+  - `httpx>=0.27.0` — für `notify_pushover`, `notify_sms`, `api_client`
+
+- `NodePalette.vue`: 3 neue Kategorien `astro`, `notification`, `integration` in `CATEGORY_ORDER`
+
+**Logic Engine — CronTrigger-UI**
+
+- `timer_cron`-Block umbenannt: „Zeitplan" → **„CronTrigger"**
+- `NodeConfigPanel.vue`: neues Cron-Konfigurations-Widget:
+  - **Presets-Dropdown** mit 30+ Einträgen in 4 Gruppen (Täglich, Wöchentlich, Monatlich, Sonderfälle)
+  - **5-Feld-Editor** (Min / Std / Tag / Mon / WT) — ändert automatisch den rohen Cron-Ausdruck
+  - **Rohausdruck-Eingabe** — wird in die 5 Felder zurückgeparst
+  - Link zu crontab.guru für Validierung
+- `manager.py`: echter Cron-Scheduler mit `croniter` — `asyncio`-Tasks pro `timer_cron`-Node, automatische Neuplanung beim Speichern/Laden von Graphen
+
+**Logic Engine — WebSocket Live-Debug**
+
+- `websocket.py`: `WebSocketManager.broadcast()` — sendet Nachricht an **alle** verbundenen Clients
+- `manager.py`: nach jeder Graph-Ausführung wird `{"action": "logic_run", "graph_id": …, "outputs": {…}}` an alle WS-Clients gesendet
+- `LogicView.vue`: WS-Verbindung auf Mount; `logic_run`-Ereignisse lösen `applyDebugValues()` aus — Debug-Wertebänder aktualisieren sich automatisch ohne manuellen „▶ Ausführen"-Klick
+
+**Logic Engine — Sidebar & Navigation**
+
+- Sidebar-Icon für Logic Engine durch SVG-Node-Graph-Icon ersetzt (konsistent mit anderen Navigations-Icons)
+- Label geändert: „Logic" → „Logic Engine"
+
 **Logic Engine (Phase 7 — visu branch)**
 
 - `opentws/logic/` — vollständiges Backend-Modul:
@@ -18,7 +59,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
     - **Logik:** `and`, `or`, `not`, `xor`, `compare` (Vergleich mit Operator-Config), `hysteresis` (Schwellwert-Schalter mit persistentem Zustand)
     - **DataPoint:** `datapoint_read`, `datapoint_write` (mit Filter & Transformation)
     - **Mathematik:** `math_formula` (Formel mit Variablen a, b), `math_map` (lineares Skalieren)
-    - **Timer:** `timer_delay` (Verzögerung), `timer_pulse` (Impuls), `timer_cron` (Zeitplan)
+    - **Timer:** `timer_delay` (Verzögerung), `timer_pulse` (Impuls), `timer_cron` (CronTrigger)
     - **Skript:** `python_script` (eingeschränkte Python-Sandbox)
     - **MCP:** `mcp_tool`
   - `executor.py`: `GraphExecutor` — topologische Sortierung (Kahn), alle Node-Evaluatoren, `_safe_eval` für Formeln, `_run_script` für Python-Sandbox
@@ -79,6 +120,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - `logic/executor._safe_eval()`: `abs`, `round`, `min`, `max` waren nicht verfügbar (nur `math.*`). Jetzt explizit als Builtins hinzugefügt
 - `logic/executor`: Variable `value`/`v` → **`x`** (konsistent mit Binding-Formeln)
 - `logic/manager`: `throttle_ms` (rohes ms-Feld) → `throttle_value` + `throttle_unit` (Zahl + Einheit getrennt gespeichert, bei Laufzeit konvertiert)
+- **Handle-Hover-Shift:** Vue Flow überschreibt Handle-Position mit `translate(+50%, -50%) scale(1.3)` beim Hover → Handle verschob sich seitwärts. Fix in allen Node-Komponenten: `transform`-Scale durch `box-shadow`-Glow ersetzt
+- **⊘-Badge-Shift im DatapointNode:** `justify-content: space-between` im Header reflowte beim Einblenden des Löschen-Buttons. Fix: `gap: 4px` + `margin-left: auto; flex-shrink: 0` am Delete-Button
+- **DP SCHREIBEN — kein Debug-Output:** Executor gibt `{"_write_value": …, "_triggered": …}` zurück — `fmtDebugVal` filterte alle `_`-Keys. Fix: Sonderfall für `_write_value` in `fmtDebugVal`
+- **DP SCHREIBEN — schreibt immer:** Trigger-Eingang wurde berechnet, aber nie ausgewertet. Fix: `wired_inputs`-Set aus Kanten aufgebaut; Schreibvorgang nur wenn Trigger-Handle nicht verdrahtet ist oder `_triggered` truthy
+- **Kanten nicht anklickbar:** 2 px Pfad zu dünn. Fix: `interactionWidth: 20` in Vue Flow Edge-Options + CSS `stroke-width: 20` auf `.vue-flow__edge-interaction` + Hover/Selektiert-Stile
 
 ---
 

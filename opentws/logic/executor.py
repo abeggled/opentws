@@ -41,7 +41,10 @@ class GraphExecutor:
 
     def __init__(self, flow: FlowData, hysteresis_state: dict[str, Any] | None = None):
         self.flow = flow
-        self.hysteresis_state = hysteresis_state or {}
+        # NOTE: use `is not None` instead of `or {}` — an empty dict {} is falsy,
+        # so `hysteresis_state or {}` would silently create a *new* dict instead of
+        # using the passed-in reference, breaking state persistence between runs.
+        self.hysteresis_state = hysteresis_state if hysteresis_state is not None else {}
 
     def execute(self, input_overrides: dict[str, dict[str, Any]] | None = None) -> dict[str, dict[str, Any]]:
         """Run the graph. Returns output values for every node."""

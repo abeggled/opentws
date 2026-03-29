@@ -42,8 +42,8 @@ class LogicManager:
         self._db = db
         self._event_bus = event_bus
         self._registry = registry
-        # hysteresis state per graph per node
-        self._hysteresis: dict[str, dict[str, bool]] = {}
+        # persistent state per graph per node (hysteresis bool, statistics accumulators, …)
+        self._hysteresis: dict[str, dict[str, Any]] = {}
         # graph cache: id → (name, enabled, FlowData)
         self._graphs: dict[str, tuple[str, bool, FlowData]] = {}
         # per-node runtime state for filter/throttle

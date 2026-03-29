@@ -15,7 +15,7 @@ It connects KNX, Modbus RTU/TCP, 1-Wire and external MQTT brokers through a unif
 | **Protocols** | KNX/IP (Tunneling + Routing), Modbus TCP, Modbus RTU, 1-Wire, external MQTT |
 | **Multi-Instance** | Any number of adapter instances per type (e.g. 2× KNX, 3× MQTT, 2× Modbus TCP) |
 | **Cross-Protocol** | SOURCE → DEST propagation: a KNX value automatically writes to a Modbus register and vice versa |
-| **Logic Engine** | Visual canvas (Vue Flow) — 15 built-in block types: logic gates, comparators, formulas, timers, Python scripts, MCP; automatic type coercion; per-block filter & transformation |
+| **Logic Engine** | Visual canvas (Vue Flow) — 22 built-in block types in 9 categories: logic gates, comparators, formulas, timers (incl. cron), Python scripts, MCP, astro (sunrise/sunset), notifications (Pushover, SMS), HTTP API client; automatic type coercion; per-block filter & transformation; live debug via WebSocket |
 | **MQTT** | Hybrid topic strategy: stable UUID topics + human-readable alias topics; retain support |
 | **API** | FastAPI REST + WebSocket, JWT Bearer + API Key auth |
 | **Storage** | SQLite (WAL mode), zero external dependencies |
@@ -48,6 +48,7 @@ It connects KNX, Modbus RTU/TCP, 1-Wire and external MQTT brokers through a unif
    - [Übersicht](#übersicht)
    - [Blocktypen](#blocktypen)
    - [DataPoint-Blöcke: Filter & Transformation](#datapoint-blöcke-filter--transformation)
+   - [CronTrigger-Konfiguration](#crontrigger-konfiguration)
    - [Formel-Referenz](#formel-referenz)
    - [Typ-Koercion](#typ-koercion)
    - [Debug-Modus](#debug-modus)
@@ -693,6 +694,8 @@ Der Graph wird **auch manuell** über den „▶ Ausführen"-Button oder die API
 |---|---|---|---|
 | **Formel** | a, b | Ergebnis | Berechnet einen Ausdruck. Variablen `a` und `b` entsprechen den Eingängen. Beispiel: `a * 2 + b`. Alle Formelfunktionen sind verfügbar (siehe [Formel-Referenz](#formel-referenz)). |
 | **Skalieren** | Wert | Ergebnis | Lineares Mapping: `[in_min … in_max]` → `[out_min … out_max]`. |
+| **Begrenzer** | Wert | Ergebnis | Begrenzt den Eingangswert auf `[Min, Max]`. Werte unterhalb/oberhalb werden auf den Grenzwert gesetzt. Config: `Minimum`, `Maximum`. |
+| **Statistik** | Wert, Reset | Min, Max, Mittelwert, Anzahl | Laufende Statistik über alle empfangenen Werte. Reset-Eingang (Trigger) setzt Min/Max/Summe/Anzahl zurück. Zustand wird graph-seitig gespeichert. |
 
 #### Kategorie: Timer
 
@@ -700,7 +703,8 @@ Der Graph wird **auch manuell** über den „▶ Ausführen"-Button oder die API
 |---|---|---|---|
 | **Verzögerung** | Trigger | Trigger | Verzögert ein Signal um N Sekunden (async, wird vom LogicManager verwaltet). |
 | **Impuls** | Trigger | Out | Gibt `true` für N Sekunden aus, dann `false` (async). |
-| **Zeitplan** | — | Trigger | Löst nach einem Cron-Ausdruck aus, z. B. `0 7 * * *` = täglich 07:00. |
+| **CronTrigger** | — | Trigger | Löst automatisch nach einem Cron-Zeitplan aus. Config über visuellen Editor (5 Felder Min/Std/Tag/Mon/WT), Presets-Dropdown oder Rohausdruck. Beispiel: `0 7 * * *` = täglich 07:00. |
+| **Betriebsstunden** | Aktiv (Trigger), Reset (Trigger) | Stunden | Zählt Betriebsstunden solange `Aktiv` wahr ist. Reset setzt den Zähler zurück. Zustand wird graph-seitig gespeichert (überlebt Neustarts). |
 
 #### Kategorie: Skript
 
@@ -713,6 +717,29 @@ Der Graph wird **auch manuell** über den „▶ Ausführen"-Button oder die API
 | Block | Eingänge | Ausgänge | Beschreibung |
 |---|---|---|---|
 | **MCP Tool** | Trigger, Input | Ergebnis, Fertig | Ruft ein MCP-Tool auf einem externen MCP-Server auf. Config: `server_url`, `tool_name`. |
+
+#### Kategorie: Astro
+
+> **Voraussetzung:** `pip install astral` (in `requirements.txt` enthalten)
+
+| Block | Eingänge | Ausgänge | Beschreibung |
+|---|---|---|---|
+| **Astro Sonne** | — | Aufgang (Zeit), Untergang (Zeit), Tagsüber (Bool) | Berechnet Sonnenauf- und -untergang für den konfigurierten Standort. Config: `Breitengrad`, `Längengrad`. Beispiel: 47.37° N / 8.54° E (Zürich). |
+
+#### Kategorie: Benachrichtigung
+
+> **Voraussetzung:** `pip install httpx` (in `requirements.txt` enthalten)
+
+| Block | Eingänge | Ausgänge | Beschreibung |
+|---|---|---|---|
+| **Pushover** | Trigger, Nachricht | Gesendet (Trigger) | Sendet eine Push-Benachrichtigung via [Pushover API](https://pushover.net). Config: `App-Token`, `User-Key`, `Titel`, `Priorität` (-1=leise / 0=normal / 1=hoch). Der Nachricht-Eingang überschreibt die konfigurierte Fallback-Nachricht. |
+| **SMS (seven.io)** | Trigger, Nachricht | Gesendet (Trigger) | Sendet eine SMS via [seven.io](https://seven.io) Gateway. Config: `API-Key`, `Empfänger` (z. B. `+41791234567`), `Absender` (alphanumerisch). Der Nachricht-Eingang überschreibt die Fallback-Nachricht. |
+
+#### Kategorie: Integration
+
+| Block | Eingänge | Ausgänge | Beschreibung |
+|---|---|---|---|
+| **API Client** | Trigger, Body | Antwort, Status-Code, Erfolg (Trigger) | Sendet HTTP-Anfragen an externe APIs. Der Trigger-Eingang steuert die Ausführung. Config: `URL`, `Methode` (GET/POST/PUT/PATCH/DELETE), `Request Content-Type` (JSON / text / x-www-form-urlencoded), `Response-Typ` (json / text), `SSL-Zertifikat prüfen` (ja/nein), `Header` (JSON-Objekt), `Timeout (s)`. Der Body-Eingang liefert den Request-Body für POST/PUT/PATCH. |
 
 ---
 
@@ -773,6 +800,46 @@ Das Filter-Tab zeigt einen Punkt (•) sobald ein Filter aktiv ist.
 | **Mindeständerung (absolut)** | Nur schreiben wenn `|neu − letzter Schreibwert| ≥ Schwelle`. |
 
 **Blockbadge:** Wenn Filter oder Formel konfiguriert sind, erscheint ein amber ⊘-Symbol im Block-Header.
+
+---
+
+### CronTrigger-Konfiguration
+
+Der **CronTrigger**-Block (`timer_cron`) löst Graphen nach einem Zeitplan aus. Die Konfiguration erfolgt über drei synchronisierte Eingabemöglichkeiten:
+
+**1. Presets-Dropdown** — 30+ vordefinierte Zeitpläne in 4 Gruppen:
+
+| Gruppe | Beispiele |
+|---|---|
+| Täglich | Täglich 00:00, Täglich 07:00, Alle 15 Min, Stündlich, … |
+| Wöchentlich | Jeden Montag 07:00, Jeden Freitag 18:00, Wochenende 10:00, … |
+| Monatlich | 1. des Monats 00:00, Letzter Tag des Monats, … |
+| Sonderfälle | Jede Minute, Täglich Mitternacht, Werktags 08:00, … |
+
+**2. Visueller 5-Feld-Editor**
+
+```
+Min   Std   Tag   Mon   WT
+ 0     7     *     *     *
+```
+
+Jedes Feld kann direkt bearbeitet werden. Änderungen aktualisieren sofort den Rohausdruck und umgekehrt.
+
+**3. Rohausdruck**
+
+Standard Unix-Cron-Syntax: `Minute Stunde Tag Monat Wochentag`
+
+```
+0 7 * * *         → täglich 07:00
+*/15 * * * *      → alle 15 Minuten
+0 8 * * 1-5       → werktags 08:00
+0 6,18 * * *      → täglich 06:00 und 18:00
+0 0 1 * *         → 1. des Monats um Mitternacht
+```
+
+> Zum Validieren: [crontab.guru](https://crontab.guru) (Link im Konfigurations-Panel)
+
+**Ausführung:** Der LogicManager startet pro aktivem `timer_cron`-Node einen `asyncio`-Task. Die Tasks werden beim Laden, Speichern und Deaktivieren von Graphen automatisch neu gestartet bzw. gestoppt. Benötigt: `croniter>=1.4.0` (in `requirements.txt` enthalten).
 
 ---
 
@@ -852,13 +919,15 @@ Verbindungen zwischen unterschiedlichen Blocktypen funktionieren damit **immer**
 
 ### Debug-Modus
 
-Der Debug-Modus zeigt nach einer Graph-Ausführung die berechneten Zwischenwerte direkt auf den Blöcken an.
+Der Debug-Modus zeigt die berechneten Zwischenwerte direkt auf den Blöcken an — **live und automatisch**.
 
 **Bedienung:**
 1. Graph öffnen
 2. **🔍 Debug**-Button in der Toolbar klicken → Button leuchtet amber
-3. **▶ Ausführen** klicken
+3. Wertebänder erscheinen sofort nach der nächsten Ausführung — **automatisch** bei DataValueEvents (z. B. DataPoint-Änderung oder CronTrigger) und bei manuellem **▶ Ausführen**
 4. Jeder Block zeigt unten ein gelbes Werteband mit seinen Ausgangswerten
+
+**Automatische Aktualisierung:** Nach jeder Graph-Ausführung sendet der LogicManager ein `logic_run`-Ereignis via WebSocket an alle verbundenen Clients. Die GUI aktualisiert die Debug-Wertebänder sofort — ohne manuellen Klick.
 
 **Anzeigeformat:**
 
@@ -868,6 +937,7 @@ Der Debug-Modus zeigt nach einer Graph-Ausführung die berechneten Zwischenwerte
 | Boolean `false` | `out=✗` |
 | Zahl | `value=230.45` (max. 5 signifikante Stellen) |
 | Text | `value=Hallo` (max. 18 Zeichen) |
+| DP SCHREIBEN | `→ 21.5` (geschriebener Wert) |
 | Kein Wert | `value=—` |
 
 Debug deaktivieren → alle Wertebänder verschwinden.
