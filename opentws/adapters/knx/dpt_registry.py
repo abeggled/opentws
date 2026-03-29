@@ -22,6 +22,7 @@ Implementierte DPTs:
   DPT16.x  — 14-Byte String (STRING)
   DPT18.x  — Scene Control (INTEGER)
   DPT19.x  — Date and Time (STRING ISO)
+  DPT20.x  — 1-Byte Enum/Mode (INTEGER) ← HVAC-Betriebsmodi, etc.
   DPT219.x — AlarmInfo (INTEGER)
 """
 from __future__ import annotations
@@ -301,6 +302,18 @@ def _dpt19_encode(v: Any) -> bytes:
         return bytes(8)
 
 
+# --- DPT 20.x — 1-Byte Enum/Mode ------------------------------------------------
+# DPT20.102 HVACMode: 0=Auto, 1=Comfort, 2=Standby, 3=Economy, 4=BuildingProtection
+_DPT20_102_VALID_RANGE = (0, 4)
+
+def _dpt20_102_decode(b: bytes) -> int:
+    return b[0] & 0xFF
+
+def _dpt20_102_encode(v: Any) -> bytes:
+    lo, hi = _DPT20_102_VALID_RANGE
+    return bytes([max(lo, min(hi, int(v)))])
+
+
 # --- DPT 219.x — AlarmInfo (2 bytes) ------------------------------------------
 # Byte 0 (High): Mode-Bits  |  Byte 1 (Low): Status-Bits
 # Rohwert als Integer (0-65535); Interpretation abhängig vom Gerät
@@ -400,6 +413,10 @@ def _register_builtin_dpts() -> None:
 
         # DPT 19 — Date and Time (8 bytes)
         DPTDefinition("DPT19.001", "Date Time",           "STRING", "",      8, _dpt19_encode, _dpt19_decode),
+
+        # DPT 20 — 1-Byte Enum/Mode
+        # DPT20.102: 0=Auto, 1=Comfort, 2=Standby, 3=Economy, 4=BuildingProtection
+        DPTDefinition("DPT20.102", "HVAC Operating Mode", "INTEGER", "",     1, _dpt20_102_encode, _dpt20_102_decode),
 
         # DPT 219 — AlarmInfo (2 bytes)
         DPTDefinition("DPT219.001", "AlarmInfo",          "INTEGER", "",     2, _dpt219_encode, _dpt219_decode),
