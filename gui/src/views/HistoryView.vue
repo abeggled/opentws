@@ -97,14 +97,14 @@ import Spinner from '@/components/ui/Spinner.vue'
 import { Chart, LineController, LineElement, PointElement, LinearScale, TimeScale, Tooltip, Legend } from 'chart.js'
 import 'chart.js/auto'
 
-const { fmtDateTime, fmtChartLabel } = useTz()
+const { fmtDateTime, fmtChartLabel, toDatetimeLocal, fromDatetimeLocal } = useTz()
 
 const route   = useRoute()
 const dpStore = useDatapointStore()
 
 const selectedDp  = ref(route.query.dp ?? '')
-const fromTs      = ref(defaultFrom())
-const toTs        = ref(new Date().toISOString().slice(0, 16))
+const fromTs      = ref(toDatetimeLocal(new Date(Date.now() - 24 * 3600 * 1000)))
+const toTs        = ref(toDatetimeLocal(new Date()))
 const mode        = ref('aggregate')
 const aggFn       = ref('avg')
 const aggInterval = ref('1h')
@@ -125,9 +125,7 @@ const chartTitle = computed(() => {
   return dp ? `${dp.name} ${mode.value === 'aggregate' ? `(${aggFn.value} / ${aggInterval.value})` : '(raw)'}` : 'Verlauf'
 })
 
-function defaultFrom() {
-  const d = new Date(); d.setHours(d.getHours() - 24); return d.toISOString().slice(0, 16)
-}
+// defaultFrom is no longer needed — fromTs is initialized via toDatetimeLocal()
 
 onMounted(async () => {
   if (!dpStore.items.length) await dpStore.fetchPage(0, 200)
@@ -139,8 +137,8 @@ async function load() {
   loading.value = true
   points.value  = []
   try {
-    const from = fromTs.value ? new Date(fromTs.value).toISOString() : undefined
-    const to   = toTs.value   ? new Date(toTs.value).toISOString()   : undefined
+    const from = fromDatetimeLocal(fromTs.value)
+    const to   = fromDatetimeLocal(toTs.value)
 
     if (mode.value === 'raw') {
       const { data } = await historyApi.query(selectedDp.value, { from, to, limit: 1000 })
