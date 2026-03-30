@@ -304,7 +304,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { dpApi } from '@/api/client'
+import { dpApi, searchApi } from '@/api/client'
 
 const props = defineProps({
   node:      { type: Object, default: null },
@@ -505,6 +505,9 @@ watch(() => props.node, (n) => {
     if (n.type === 'timer_cron') {
       parseCronToFields(n.data.cron || '0 7 * * *')
     }
+    if (n.type === 'datapoint_read' || n.type === 'datapoint_write') {
+      searchDps()
+    }
   }
 }, { immediate: true })
 
@@ -528,12 +531,14 @@ function onOutputPresetChange(e) {
 
 // ── DataPoint picker ───────────────────────────────────────────────────────
 async function searchDps() {
-  if (dpSearch.value.length < 1) { dpResults.value = []; return }
   try {
-    const { data } = await dpApi.list(0, 20)
-    dpResults.value = (data.items || data).filter(dp =>
-      dp.name.toLowerCase().includes(dpSearch.value.toLowerCase())
-    )
+    if (dpSearch.value.length < 1) {
+      const { data } = await dpApi.list(0, 50)
+      dpResults.value = data.items || data
+    } else {
+      const { data } = await searchApi.search({ q: dpSearch.value, size: 50 })
+      dpResults.value = data.items || data
+    }
   } catch { dpResults.value = [] }
 }
 
