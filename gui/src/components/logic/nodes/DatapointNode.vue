@@ -2,11 +2,11 @@
   <div class="gn-wrap" @mouseenter="hovered = true" @mouseleave="hovered = false">
 
     <template v-if="isWrite">
-      <Handle type="target" id="value"   :position="Position.Left" :style="{ top: '45%' }" />
-      <Handle type="target" id="trigger" :position="Position.Left" :style="{ top: '68%' }" />
+      <Handle type="target" id="value"   :position="Position.Left" :style="{ top: port1Top }" />
+      <Handle type="target" id="trigger" :position="Position.Left" :style="{ top: port2Top }" />
     </template>
 
-    <div class="gn-card">
+    <div class="gn-card" ref="cardRef">
       <div class="gn-header">
         <span class="gn-label">{{ isWrite ? 'DP Schreiben' : 'DP Lesen' }}</span>
         <span v-if="hasFilter" class="gn-filter-badge" title="Filter / Transformation aktiv">⊘</span>
@@ -20,27 +20,27 @@
       </div>
       <div class="gn-ports">
         <div v-if="isWrite" class="gn-port-col">
-          <span class="gn-port-label">Wert</span>
-          <span class="gn-port-label">Trigger</span>
+          <span ref="portRef1" class="gn-port-label">Wert</span>
+          <span ref="portRef2" class="gn-port-label">Trigger</span>
         </div>
         <div v-else class="gn-port-col" style="margin-left:auto;align-items:flex-end;">
-          <span class="gn-port-label">Wert</span>
-          <span class="gn-port-label">Geändert</span>
+          <span ref="portRef1" class="gn-port-label">Wert</span>
+          <span ref="portRef2" class="gn-port-label">Geändert</span>
         </div>
       </div>
       <div v-if="data._dbg" class="gn-debug">{{ data._dbg }}</div>
     </div>
 
     <template v-if="!isWrite">
-      <Handle type="source" id="value"   :position="Position.Right" class="gn-handle-out" :style="{ top: '45%' }" />
-      <Handle type="source" id="changed" :position="Position.Right" class="gn-handle-out" :style="{ top: '68%' }" />
+      <Handle type="source" id="value"   :position="Position.Right" class="gn-handle-out" :style="{ top: port1Top }" />
+      <Handle type="source" id="changed" :position="Position.Right" class="gn-handle-out" :style="{ top: port2Top }" />
     </template>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 
 const props = defineProps({
@@ -53,6 +53,27 @@ const isWrite   = computed(() => props.type === 'datapoint_write')
 const hovered   = ref(false)
 const { removeNodes } = useVueFlow()
 function remove() { removeNodes([props.id]) }
+
+// ── Handle positioning: align with port labels ────────────────────────────
+// Use offsetTop (relative to offsetParent) instead of getBoundingClientRect()
+// to avoid viewport-dependent values that break when VueFlow re-renders nodes.
+const cardRef  = ref(null)
+const portRef1 = ref(null)
+const portRef2 = ref(null)
+const port1Top = ref('50%')
+const port2Top = ref('75%')
+
+function updateHandlePositions() {
+  nextTick(() => {
+    if (!cardRef.value || !portRef1.value || !portRef2.value) return
+    const cardTop = cardRef.value.offsetTop
+    port1Top.value = `${cardTop + portRef1.value.offsetTop + portRef1.value.offsetHeight / 2}px`
+    port2Top.value = `${cardTop + portRef2.value.offsetTop + portRef2.value.offsetHeight / 2}px`
+  })
+}
+
+onMounted(updateHandlePositions)
+watch(() => props.data._dbg, updateHandlePositions)
 
 const hasFilter = computed(() => {
   const d = props.data
