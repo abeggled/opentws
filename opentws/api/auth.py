@@ -152,6 +152,18 @@ async def get_current_user(
     )
 
 
+async def optional_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    api_key: str | None = Depends(_api_key_header),
+    db: Database = Depends(lambda: get_db()),
+) -> str | None:
+    """FastAPI dependency — returns username if authenticated, None otherwise."""
+    try:
+        return await get_current_user(credentials, api_key, db)
+    except HTTPException:
+        return None
+
+
 async def get_admin_user(
     current_user: str = Depends(get_current_user),
     db: Database = Depends(lambda: get_db()),
