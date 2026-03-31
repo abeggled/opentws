@@ -669,7 +669,7 @@ async function loadKnxGaCount() {
 async function loadKnxAdapterInstances() {
   try {
     const { data } = await adapterApi.listInstances()
-    knxAdapterInstances.value = (data || []).filter(i => i.adapter_type === 'knx')
+    knxAdapterInstances.value = (data || []).filter(i => i.adapter_type?.toUpperCase() === 'KNX')
     if (knxAdapterInstances.value.length === 1) {
       knxAdapterName.value = knxAdapterInstances.value[0].name
     }
