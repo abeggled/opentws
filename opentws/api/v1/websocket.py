@@ -71,8 +71,10 @@ class WebSocketManager:
     async def _send(self, conn_id: str, msg: dict) -> bool:
         """Send *msg* to one connection, serialised via its per-connection lock.
 
-        Returns True on success, False if the send failed (caller should
-        disconnect the client so it can reconnect cleanly).
+        Returns True on success, False if the WebSocket itself is broken (caller
+        should disconnect so the client can reconnect cleanly).
+        Serialisation errors (e.g. non-JSON-serialisable value) are logged and
+        the message is dropped — they do NOT close the connection.
         """
         entry = self._connections.get(conn_id)
         if entry is None:
@@ -82,7 +84,13 @@ class WebSocketManager:
             try:
                 await ws.send_json(msg)
                 return True
+            except (TypeError, ValueError) as exc:
+                # The message itself cannot be serialised — log and drop it,
+                # but keep the WebSocket open.
+                logger.error("WS send skipped — message not JSON-serialisable: %s", exc)
+                return True
             except Exception:
+                # Actual transport error — signal caller to close the connection.
                 return False
 
     async def broadcast(self, msg: dict) -> None:

@@ -335,7 +335,7 @@ _UNKNOWN_DPT = DPTDefinition(
     unit="",
     size_bytes=0,
     encoder=lambda v: v if isinstance(v, bytes) else str(v).encode(),
-    decoder=lambda b: b,
+    decoder=lambda b: b.hex(),  # hex string is JSON-serialisable; raw bytes are not
 )
 
 
