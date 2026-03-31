@@ -30,8 +30,9 @@
     Verknüpfungsrichtung: SOURCE (Standard), DEST oder BOTH.
 
 .PARAMETER Encoding
-    Zeichenkodierung der CSV-Datei: UTF8 (Standard) oder Default (ANSI/Windows-1252).
-    ETS 5 exportiert standardmässig ANSI, ETS 6 UTF-8.
+    Zeichenkodierung der CSV-Datei: Auto (Standard), UTF8 oder Default (ANSI/Windows-1252).
+    Auto erkennt anhand des BOM automatisch ob UTF-8 oder Windows-1252 vorliegt.
+    ETS 5 exportiert standardmässig ANSI (kein BOM), ETS 6 UTF-8 mit BOM.
 
 .EXAMPLE
     .\Import-EtsGaCsv.ps1 `
@@ -67,8 +68,8 @@ param(
     [string] $LogFile,
     [ValidateSet("SOURCE","DEST","BOTH")]
     [string] $Direction = "SOURCE",
-    [ValidateSet("UTF8","Default")]
-    [string] $Encoding = "UTF8"
+    [ValidateSet("Auto","UTF8","Default")]
+    [string] $Encoding = "Auto"
 )
 
 Set-StrictMode -Version Latest
@@ -194,6 +195,21 @@ function Find-AdapterByName {
     throw "KNX-Adapter-Instanz '$Name' nicht gefunden. Verfügbar: $(($instances | ForEach-Object { $_.name }) -join ', ')"
 }
 
+function Detect-Encoding {
+    param([string]$Path)
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    # UTF-8 BOM: EF BB BF
+    if ($bytes.Count -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        return "UTF8"
+    }
+    # UTF-16 LE BOM: FF FE
+    if ($bytes.Count -ge 2 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) {
+        return "Unicode"
+    }
+    # Kein BOM → ETS 5 ANSI/Windows-1252
+    return "Default"
+}
+
 function Detect-Delimiter {
     param([string]$Path, [string]$Enc)
     $firstLine = Get-Content -Path $Path -TotalCount 1 -Encoding $Enc
@@ -225,13 +241,17 @@ function Get-ColValue {
 
 Write-Host "openTWS ETS-GA-Import gestartet" -ForegroundColor Cyan
 Write-Host "  Datei    : $File"
-Write-Host "  Kodierung: $Encoding"
+Write-Host "  Kodierung: $Encoding (Auto = BOM-Erkennung: UTF8 oder Default/ANSI)"
 Write-Host "  Adapter  : $Adapter"
 Write-Host "  Richtung : $Direction"
 Write-Host ""
 
 # CSV einlesen
 if (-not (Test-Path $File)) { throw "Datei nicht gefunden: $File" }
+if ($Encoding -eq "Auto") {
+    $Encoding = Detect-Encoding -Path $File
+    Write-Host "  Kodierung: Auto → $Encoding erkannt" -ForegroundColor Gray
+}
 $delim   = Detect-Delimiter -Path $File -Enc $Encoding
 $rows    = Import-Csv -Path $File -Delimiter $delim -Encoding $Encoding
 

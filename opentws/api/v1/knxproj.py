@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from opentws.api.auth import get_current_user
 from opentws.db.database import Database, get_db
+from opentws.knxproj.csv_parser import parse_ga_csv
 from opentws.knxproj.parser import parse_knxproj
 
 router = APIRouter(tags=["knxproj"])
@@ -84,6 +85,67 @@ async def import_knxproj_file(
             "Bitte prüfe ob du das richtige ETS-Projekt exportiert hast: "
             "In ETS unter 'Datei → Speichern unter' oder 'Projekt exportieren'. "
             "Eine Produktdatenbank (nur M-XXXX/ Ordner) enthält keine Gruppenadressen.",
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    await db.executemany(
+        """INSERT INTO knx_group_addresses (address, name, description, dpt, imported_at)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(address) DO UPDATE SET
+               name        = excluded.name,
+               description = excluded.description,
+               dpt         = excluded.dpt,
+               imported_at = excluded.imported_at""",
+        [
+            (r.address, r.name, r.description, r.dpt, now)
+            for r in records
+        ],
+    )
+    await db.commit()
+
+    return ImportResult(
+        imported=len(records),
+        message=f"{len(records)} Gruppenadressen erfolgreich importiert",
+    )
+
+
+@router.post("/import-csv", response_model=ImportResult)
+async def import_ga_csv_file(
+    file:  UploadFile = File(...),
+    _user: str        = Depends(get_current_user),
+    db:    Database   = Depends(get_db),
+) -> ImportResult:
+    """
+    ETS Gruppen-Adressen CSV hochladen und in die DB importieren.
+    Unterstützt UTF-8 (mit/ohne BOM) und Windows-1252 (ANSI) Kodierung.
+    Bestehende Einträge werden mit UPSERT-Semantik aktualisiert.
+    """
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Nur .csv Dateien werden akzeptiert",
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Datei ist leer")
+
+    try:
+        records = parse_ga_csv(content)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            f"Unerwarteter Fehler beim Parsen: {e}",
+        )
+
+    if not records:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "Keine Gruppenadressen gefunden. "
+            "Bitte prüfe ob du den ETS GA-Export als CSV verwendet hast.",
         )
 
     now = datetime.now(timezone.utc).isoformat()
