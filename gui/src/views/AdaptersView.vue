@@ -29,7 +29,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
               <label class="label">Adapter-Typ *</label>
-              <select v-model="newForm.adapter_type" class="input" required>
+              <select v-model="newForm.adapter_type" class="input" required @change="onTypeChange">
                 <option value="">Typ wählen …</option>
                 <option v-for="t in availableTypes" :key="t" :value="t">{{ t }}</option>
               </select>
@@ -39,11 +39,16 @@
               <input v-model="newForm.name" type="text" class="input" placeholder="z.B. KNX Erdgeschoss" />
             </div>
           </div>
-          <div class="form-group">
-            <label class="label">Konfiguration (JSON)</label>
-            <textarea v-model="newForm.configJson" class="input font-mono text-xs resize-none h-36"
-              placeholder='{"host": "192.168.1.1", "port": 3671}' />
+
+          <!-- Schema-based config form -->
+          <div v-if="newForm.adapter_type && newSchema">
+            <label class="label mb-2">Konfiguration</label>
+            <SchemaForm :schema="newSchema" v-model="newForm.config" />
           </div>
+          <div v-else-if="newForm.adapter_type && schemaLoading" class="flex items-center gap-2 text-sm text-slate-500">
+            <Spinner size="xs" /> Schema wird geladen…
+          </div>
+
           <div v-if="createError" class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
             {{ createError }}
           </div>
@@ -74,7 +79,7 @@
             </Badge>
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <button @click="toggleExpand(a.id)" class="btn-icon">
+            <button @click="toggleExpand(a)" class="btn-icon">
               <svg class="w-4 h-4 transition-transform" :class="expanded[a.id] ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
@@ -94,10 +99,16 @@
             <label class="label">Name</label>
             <input v-model="drafts[a.id].name" type="text" class="input" />
           </div>
-          <div class="form-group">
-            <label class="label">Konfiguration (JSON)</label>
-            <textarea v-model="drafts[a.id].configJson" class="input font-mono text-xs resize-none h-40" />
+
+          <!-- Schema-based config form -->
+          <div v-if="schemas[a.adapter_type]">
+            <label class="label mb-2">Konfiguration</label>
+            <SchemaForm :schema="schemas[a.adapter_type]" v-model="drafts[a.id].config" />
           </div>
+          <div v-else class="flex items-center gap-2 text-sm text-slate-500">
+            <Spinner size="xs" /> Schema wird geladen…
+          </div>
+
           <div class="flex items-center gap-2">
             <input type="checkbox" :id="'enabled-' + a.id" v-model="drafts[a.id].enabled" class="w-4 h-4 rounded" />
             <label :for="'enabled-' + a.id" class="text-sm text-slate-600 dark:text-slate-300">Aktiviert</label>
@@ -159,17 +170,21 @@ import { useAdapterStore } from '@/stores/adapters'
 import Badge         from '@/components/ui/Badge.vue'
 import Spinner       from '@/components/ui/Spinner.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import SchemaForm    from '@/components/adapters/SchemaForm.vue'
 
 const store          = useAdapterStore()
 const expanded       = reactive({})
-const drafts         = reactive({})   // id → { name, configJson, enabled }
+const drafts         = reactive({})   // id → { name, config, enabled }
 const feedback       = reactive({})   // id → { success, detail }
 const busy           = reactive({})   // id → 'test' | 'save' | 'restart' | null
+const schemas        = reactive({})   // adapter_type → JSON Schema
 
 // Neue Instanz erstellen
 const creating       = ref(false)     // false | true | 'saving'
 const availableTypes = ref([])
-const newForm        = reactive({ adapter_type: '', name: '', configJson: '{}' })
+const newForm        = reactive({ adapter_type: '', name: '', config: {} })
+const newSchema      = ref(null)
+const schemaLoading  = ref(false)
 const createError    = ref(null)
 
 // Löschen
@@ -190,16 +205,57 @@ function initDrafts() {
   for (const a of store.instances) {
     if (!drafts[a.id]) {
       drafts[a.id] = {
-        name:       a.name,
-        configJson: JSON.stringify(a.config, null, 2),
-        enabled:    a.enabled,
+        name:    a.name,
+        config:  { ...a.config },
+        enabled: a.enabled,
       }
     }
   }
 }
 
-function toggleExpand(id) {
-  expanded[id] = !expanded[id]
+// ---------- Schema laden ----------
+
+async function loadSchema(adapterType) {
+  if (schemas[adapterType]) return schemas[adapterType]
+  try {
+    const { data } = await adapterApi.schema(adapterType)
+    schemas[adapterType] = data
+    return data
+  } catch {
+    return null
+  }
+}
+
+// ---------- Expand / collapse ----------
+
+async function toggleExpand(a) {
+  expanded[a.id] = !expanded[a.id]
+  if (expanded[a.id]) {
+    await loadSchema(a.adapter_type)
+  }
+}
+
+// ---------- Neue Instanz: Typ-Wechsel ----------
+
+async function onTypeChange() {
+  newForm.config = {}
+  newSchema.value = null
+  if (!newForm.adapter_type) return
+  schemaLoading.value = true
+  try {
+    const schema = await loadSchema(newForm.adapter_type)
+    newSchema.value = schema
+    // Pre-fill with schema defaults
+    if (schema?.properties) {
+      const defaults = {}
+      for (const [key, prop] of Object.entries(schema.properties)) {
+        if ('default' in prop) defaults[key] = prop.default
+      }
+      newForm.config = defaults
+    }
+  } finally {
+    schemaLoading.value = false
+  }
 }
 
 // ---------- Neu erstellen ----------
@@ -208,7 +264,8 @@ async function openCreate() {
   creating.value = true
   newForm.adapter_type = ''
   newForm.name = ''
-  newForm.configJson = '{}'
+  newForm.config = {}
+  newSchema.value = null
   createError.value = null
 }
 
@@ -222,15 +279,10 @@ async function submitCreate() {
     createError.value = 'Bitte Typ und Name ausfüllen.'
     return
   }
-  let cfg
-  try { cfg = JSON.parse(newForm.configJson || '{}') } catch {
-    createError.value = 'Ungültiges JSON in Konfiguration.'
-    return
-  }
   creating.value = 'saving'
   try {
-    const inst = await store.createInstance(newForm.adapter_type, newForm.name.trim(), cfg)
-    drafts[inst.id] = { name: inst.name, configJson: JSON.stringify(inst.config, null, 2), enabled: inst.enabled }
+    const inst = await store.createInstance(newForm.adapter_type, newForm.name.trim(), newForm.config)
+    drafts[inst.id] = { name: inst.name, config: { ...inst.config }, enabled: inst.enabled }
     creating.value = false
   } catch (e) {
     createError.value = e.response?.data?.detail ?? 'Fehler beim Erstellen'
@@ -244,9 +296,7 @@ async function testConnection(a) {
   busy[a.id] = 'test'
   delete feedback[a.id]
   try {
-    let cfg
-    try { cfg = JSON.parse(drafts[a.id].configJson || '{}') } catch { cfg = {} }
-    const result = await store.testInstance(a.id, cfg)
+    const result = await store.testInstance(a.id, drafts[a.id].config)
     feedback[a.id] = result
   } catch (e) {
     feedback[a.id] = { success: false, detail: e.response?.data?.detail ?? 'Fehler' }
@@ -261,14 +311,9 @@ async function saveInstance(a) {
   busy[a.id] = 'save'
   delete feedback[a.id]
   try {
-    let cfg
-    try { cfg = JSON.parse(drafts[a.id].configJson || '{}') } catch {
-      feedback[a.id] = { success: false, detail: 'Ungültiges JSON' }
-      return
-    }
     await store.updateInstance(a.id, {
       name:    drafts[a.id].name,
-      config:  cfg,
+      config:  drafts[a.id].config,
       enabled: drafts[a.id].enabled,
     })
     feedback[a.id] = { success: true, detail: 'Gespeichert und neu verbunden' }

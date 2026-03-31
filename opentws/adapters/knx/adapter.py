@@ -23,13 +23,13 @@ Adapter-Konfiguration (adapter_configs.config in DB):
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
 from opentws.adapters.base import AdapterBase
-from opentws.adapters.registry import register
 from opentws.adapters.knx.dpt_registry import DPTRegistry
+from opentws.adapters.registry import register
 from opentws.core.event_bus import DataValueEvent
 
 # Import APCI classes at module level so missing symbols fail loudly at startup
@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 class KnxAdapterConfig(BaseModel):
-    connection_type: str = "tunneling"          # tunneling | routing
+    connection_type: Literal["tunneling", "routing"] = "tunneling"
     host: str = "192.168.1.100"
     port: int = 3671
     individual_address: str = "1.1.255"
