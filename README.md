@@ -15,7 +15,7 @@ openTWS verbindet verschiedene Gebäudetechnik-Protokolle zu einem einheitlichen
 | **Protokolle** | KNX/IP (Tunneling + Routing), Modbus TCP, Modbus RTU, 1-Wire, externes MQTT |
 | **Mehrere Instanzen** | Beliebig viele Instanzen pro Protokoll (z. B. 2× KNX, 3× Modbus TCP) |
 | **Protokoll-Brücke** | Ein KNX-Wert wird automatisch in ein Modbus-Register geschrieben — und umgekehrt |
-| **Logik-Editor** | Visuelle Automatisierungslogik ohne Programmierung: 22 Blocktypen, Zeitpläne, Formeln, Python-Skripte, Benachrichtigungen, HTTP-Anfragen, Sonnenstand |
+| **Logik-Editor** | Visuelle Automatisierungslogik ohne Programmierung: 28 Blocktypen, Zeitpläne, Formeln, Python-Skripte, Benachrichtigungen, HTTP-Anfragen, Sonnenstand |
 | **MQTT** | Stabiler UUID-Topic + lesbarer Alias-Topic; Retain-Unterstützung |
 | **Weboberfläche** | Vollständige Bedienung über den Browser — kein separates Programm nötig |
 | **Datenbank** | SQLite — keine externe Datenbank erforderlich |
@@ -205,6 +205,7 @@ GET    /api/v1/datapoints/{id}/value           # Nur den aktuellen Wert
 | `data_type` | Datentyp: `BOOLEAN`, `INTEGER`, `FLOAT`, `STRING`, `DATE`, `TIME`, `DATETIME` |
 | `unit` | Einheit, z. B. `°C`, `%rH`, `kWh`, `lx` |
 | `tags` | Schlagwörter zum Gruppieren und Filtern |
+| `persist_value` | Letzten Wert beim Neustart wiederherstellen (Standard: `true`) |
 | `mqtt_topic` | Automatisch vergeben: `dp/{uuid}/value` |
 | `mqtt_alias` | Lesbares Alias-Topic, z. B. `alias/klima/wohnzimmer/value` |
 
@@ -318,6 +319,8 @@ GET /api/v1/search?q=&tag=&type=&adapter=&page=0&size=50
 
 Jeder Adapter-Typ kann in mehreren unabhängigen Instanzen betrieben werden. Alle Instanzen werden über die Weboberfläche oder die API verwaltet.
 
+Die **Adapter-Konfiguration erfolgt vollständig über die Weboberfläche** — alle Felder werden aus dem JSON-Schema des jeweiligen Adapters dynamisch gerendert. Passwort-Felder erscheinen maskiert. Änderungen greifen sofort ohne Neustart.
+
 ```
 GET    /api/v1/adapters/instances              # Alle Instanzen mit Status
 POST   /api/v1/adapters/instances              # Neue Instanz anlegen
@@ -325,6 +328,9 @@ PATCH  /api/v1/adapters/instances/{id}         # Konfiguration ändern + neu ver
 DELETE /api/v1/adapters/instances/{id}         # Stoppen + löschen
 POST   /api/v1/adapters/instances/{id}/restart # Neu verbinden
 POST   /api/v1/adapters/instances/{id}/test    # Verbindung testen
+
+GET    /api/v1/adapters/{type}/schema          # JSON-Schema der Instanz-Konfiguration
+GET    /api/v1/adapters/{type}/binding-schema  # JSON-Schema der Verknüpfungs-Konfiguration
 ```
 
 ### Anmeldung und Zugangsverwaltung
@@ -418,6 +424,8 @@ GET /api/v1/system/adapters    # Adapter-Status + Anzahl Verknüpfungen
 GET /api/v1/system/datatypes   # Alle verfügbaren Datentypen
 GET /api/v1/system/settings    # Systemeinstellungen lesen (z. B. Zeitzone)
 PUT /api/v1/system/settings    # Systemeinstellungen ändern
+
+GET /api/v1/adapters/knx/dpts  # Alle registrierten KNX-DPT-Typen auflisten
 ```
 
 ---
@@ -540,6 +548,12 @@ Der Graph kann auch manuell über den **▶ Ausführen**-Button gestartet werden
 | Block | Eingänge | Ausgänge | Beschreibung |
 |---|---|---|---|
 | **Python-Skript** | a, b, c | Ergebnis | Führt Python-Code aus. Eingangswerte sind über `inputs['a']`, `inputs['b']`, `inputs['c']` verfügbar. Das Ergebnis wird mit `result = …` gesetzt. Nur mathematische Funktionen erlaubt — kein Dateizugriff, kein Netzwerk. |
+
+#### KI
+
+| Block | Eingänge | Ausgänge | Beschreibung |
+|---|---|---|---|
+| **KI-Logik** | Trigger | Ergebnis | Platzhalter für zukünftige KI-Integration. |
 
 #### MCP
 
@@ -716,9 +730,10 @@ Zeigt berechnete Zwischenwerte direkt auf den Blöcken an — live und automatis
 | Feld | Werte | Beschreibung |
 |---|---|---|
 | `connection_type` | `tunneling` / `routing` | Tunneling = direkte Verbindung zur Zentrale; Routing = IP-Multicast |
-| `host` | IP-Adresse | IP der KNX/IP-Zentrale |
+| `host` | IP-Adresse | IP der KNX/IP-Zentrale (Tunneling) oder Multicast-Adresse (Routing) |
 | `port` | Standard `3671` | Port der KNX/IP-Zentrale (manche Geräte: `3674`) |
-| `individual_address` | z. B. `1.1.210` | Eigene KNX-Adresse |
+| `individual_address` | z. B. `1.1.210` | Eigene KNX-Adresse (Tunneling) |
+| `local_ip` | IP-Adresse | Lokale Netzwerkschnittstelle (nur Routing, optional) |
 
 **Verknüpfungs-Konfiguration:**
 
@@ -727,33 +742,224 @@ Zeigt berechnete Zwischenwerte direkt auf den Blöcken an — live und automatis
 | `group_address` | KNX-Gruppenadresse (dreiteilig, z. B. `27/6/6`) |
 | `dpt_id` | DPT-Kennung — Tabelle unten |
 | `state_group_address` | Optionale Rückmelde-Adresse für DEST-Verknüpfungen |
+| `respond_to_read` | `true`: openTWS beantwortet KNX-Leseanfragen (GroupValueRead) mit dem aktuellen Wert. Standard: `false` |
 
 **Unterstützte DPTs:**
 
+openTWS unterstützt über 85 KNX-Datentypen. Die vollständige Liste ist über `GET /api/v1/adapters/knx/dpts` abrufbar.
+
+**DPT 1 — 1-Bit Boolean**
+
+| DPT | Typische Verwendung |
+|---|---|
+| `DPT1.001` | Schalten (Ein/Aus) |
+| `DPT1.002` | Boolean |
+| `DPT1.003` | Freigabe (Enable) |
+| `DPT1.007` | Schritt/Richtung |
+| `DPT1.008` | Auf/Ab |
+| `DPT1.009` | Öffnen/Schliessen |
+| `DPT1.010` | Start/Stopp |
+| `DPT1.011` | Zustandsanzeige |
+| `DPT1.017` | Auslöser (Trigger) |
+| `DPT1.018` | Anwesenheit |
+| `DPT1.019` | Fenster/Tür |
+| `DPT1.021` | Szene A/B |
+| `DPT1.022` | Jalousie-Modus |
+| `DPT1.023` | Tag/Nacht |
+| *(weitere DPT1.x)* | *1-Bit Steuerungen* |
+
+**DPT 2 — 2-Bit Gesteuerter Wert**
+
+| DPT | Typische Verwendung |
+|---|---|
+| `DPT2.001` | Schaltsteuerung (Priorität + Wert) |
+| `DPT2.002` | Boolsche Steuerung |
+
+**DPT 3 — 4-Bit Relativer Steuerwert**
+
+| DPT | Typische Verwendung |
+|---|---|
+| `DPT3.007` | Dimmen (Richtung + Geschwindigkeit) |
+| `DPT3.008` | Jalousie (Richtung + Geschwindigkeit) |
+
+**DPT 4 — 1-Byte Zeichen**
+
 | DPT | Grösse | Typ | Typische Verwendung |
 |---|---|---|---|
-| `DPT1.001` | 1 Bit | Ein/Aus | Schalten |
-| `DPT1.008` | 1 Bit | Ein/Aus | Auf/Ab |
-| `DPT1.009` | 1 Bit | Ein/Aus | Öffnen/Schliessen |
-| `DPT5.001` | 8 Bit | Ganzzahl (0–255) | Dimmen 0–100 % |
-| `DPT5.003` | 8 Bit | Ganzzahl (0–255) | Winkel 0–360° |
-| `DPT6.001` | 8 Bit | Ganzzahl (−128…127) | Relativer Wert |
-| `DPT7.001` | 16 Bit | Ganzzahl (0–65535) | Impulszähler |
-| `DPT9.001` | 2 Byte Gleitkomma | Zahl | Temperatur (°C) |
-| `DPT9.002` | 2 Byte Gleitkomma | Zahl | Helligkeit (lx) |
-| `DPT9.004` | 2 Byte Gleitkomma | Zahl | Windgeschwindigkeit (m/s) |
-| `DPT9.007` | 2 Byte Gleitkomma | Zahl | Luftfeuchtigkeit (%) |
-| `DPT9.010` | 2 Byte Gleitkomma | Zahl | Leistung (W) |
-| `DPT10.001` | 3 Byte | Text `HH:MM:SS` | Uhrzeit |
+| `DPT4.001` | 1 Byte | Text | ASCII-Zeichen |
+| `DPT4.002` | 1 Byte | Text | ISO-8859-1-Zeichen |
+
+**DPT 5 — 8-Bit Vorzeichenlos**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT5.001` | 1 Byte | Zahl (0–100 %) | Dimmen / Jalousie-Position |
+| `DPT5.003` | 1 Byte | Zahl (0–360°) | Winkel |
+| `DPT5.004` | 1 Byte | Ganzzahl (0–255) | Prozent (unsigned) |
+| `DPT5.010` | 1 Byte | Ganzzahl | Zählerwert |
+
+**DPT 6 — 8-Bit Vorzeichenbehaftet**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT6.001` | 1 Byte | Ganzzahl (−128…127) | Relativer Wert (%) |
+| `DPT6.010` | 1 Byte | Ganzzahl | Impulszähler (vorzeichenbehaftet) |
+
+**DPT 7 — 16-Bit Vorzeichenlos**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT7.001` | 2 Byte | Ganzzahl (0–65535) | Impulszähler |
+| `DPT7.002` | 2 Byte | Ganzzahl | Zeitraum (ms) |
+| `DPT7.003` | 2 Byte | Ganzzahl | Zeitraum (10 ms) |
+| `DPT7.004` | 2 Byte | Ganzzahl | Zeitraum (100 ms) |
+| `DPT7.005` | 2 Byte | Ganzzahl | Zeitraum (s) |
+| `DPT7.006` | 2 Byte | Ganzzahl | Zeitraum (min) |
+| `DPT7.007` | 2 Byte | Ganzzahl | Zeitraum (h) |
+| `DPT7.011` | 2 Byte | Ganzzahl | Länge (mm) |
+| `DPT7.012` | 2 Byte | Ganzzahl | Stromstärke (mA) |
+| `DPT7.013` | 2 Byte | Ganzzahl | Helligkeit (lx) |
+| `DPT7.600` | 2 Byte | Ganzzahl | Farbtemperatur (K) |
+
+**DPT 8 — 16-Bit Vorzeichenbehaftet**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT8.001` | 2 Byte | Ganzzahl | Impulszähler (vorzeichenbehaftet) |
+| `DPT8.002` | 2 Byte | Ganzzahl | Zeitraum (ms) |
+| `DPT8.005` | 2 Byte | Ganzzahl | Zeitraum (s) |
+| `DPT8.010` | 2 Byte | Ganzzahl | Drehzahl-Differenz (1/min) |
+| `DPT8.011` | 2 Byte | Ganzzahl | Prozent-Differenz |
+| `DPT8.012` | 2 Byte | Ganzzahl | Rotationswinkel (°) |
+
+**DPT 9 — 2-Byte KNX-Gleitkomma (EIS5)**
+
+| DPT | Typische Verwendung |
+|---|---|
+| `DPT9.001` | Temperatur (°C) |
+| `DPT9.002` | Temperaturdifferenz (K) |
+| `DPT9.003` | Kelvin/Stunde (K/h) |
+| `DPT9.004` | Windgeschwindigkeit (m/s) |
+| `DPT9.005` | Luftdruck (Pa) |
+| `DPT9.006` | Luftfeuchtigkeit (%) |
+| `DPT9.007` | Luftfeuchtigkeit (% rH) |
+| `DPT9.008` | CO₂-Konzentration (ppm) |
+| `DPT9.009` | Spannung (mV) |
+| `DPT9.010` | Leistung (W) |
+| `DPT9.011` | Zeit (s) |
+| `DPT9.020` | Spannung (mV) |
+| `DPT9.021` | Strom (mA) |
+| `DPT9.024` | Leistung (kW) |
+| `DPT9.025` | Volumenfluss (l/h) |
+| `DPT9.026` | Niederschlag (l/m²) |
+| `DPT9.027` | Luftdruck (Pa) |
+| `DPT9.028` | Luftdruck (Pa) |
+| `DPT9.029` | Luftdruck (Pa) |
+| `DPT9.030` | Einstrahlungsdichte (W/m²) |
+
+**DPT 10, 11 — Uhrzeit und Datum**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT10.001` | 3 Byte | Text `HH:MM:SS` | Uhrzeit (inkl. Wochentag) |
 | `DPT11.001` | 3 Byte | Text `JJJJ-MM-TT` | Datum |
-| `DPT12.001` | 32 Bit | Ganzzahl (0–4 Mrd.) | Energiezähler |
-| `DPT13.001` | 32 Bit | Ganzzahl (±2 Mrd.) | Zählerwert |
-| `DPT14.019` | 32 Bit Gleitkomma | Zahl | Elektrischer Strom |
-| `DPT14.027` | 32 Bit Gleitkomma | Zahl | Energie (J) |
-| `DPT16.000` | 14 Byte | Text | ASCII-Text |
-| `DPT16.001` | 14 Byte | Text | ISO-8859-1-Text |
-| `DPT18.001` | 1 Byte | Ganzzahl | Szenen-Steuerung |
+
+**DPT 12, 13 — 32-Bit Integer**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT12.001` | 4 Byte | Ganzzahl (0–4 Mrd.) | Energiezähler (vorzeichenlos) |
+| `DPT13.001` | 4 Byte | Ganzzahl (±2 Mrd.) | Impulszähler (vorzeichenbehaftet) |
+| `DPT13.010` | 4 Byte | Ganzzahl | Wirkenergie (Wh) |
+| `DPT13.013` | 4 Byte | Ganzzahl | Wirkenergie (kWh) |
+
+**DPT 14 — 32-Bit IEEE-754-Gleitkomma (physikalische Grössen)**
+
+| DPT | Typische Verwendung |
+|---|---|
+| `DPT14.000` | Beschleunigung (m/s²) |
+| `DPT14.005` | Winkelgeschwindigkeit (rad/s) |
+| `DPT14.007` | Fläche (m²) |
+| `DPT14.012` | Kapazität (F) |
+| `DPT14.017` | Dichte (kg/m³) |
+| `DPT14.019` | Elektrischer Strom (A) |
+| `DPT14.020` | Elektrische Feldstärke (V/m) |
+| `DPT14.023` | Elektrisches Potential (V) |
+| `DPT14.024` | Elektrische Spannung (V) |
+| `DPT14.027` | Energie (J) |
+| `DPT14.028` | Kraft (N) |
+| `DPT14.029` | Frequenz (Hz) |
+| `DPT14.033` | Wärmestrom (W) |
+| `DPT14.039` | Länge (m) |
+| `DPT14.046` | Lichtstrom (lm) |
+| `DPT14.050` | Masse (kg) |
+| `DPT14.055` | Leistung (W) |
+| `DPT14.056` | Leistungsfaktor |
+| `DPT14.058` | Druck (Pa) |
+| `DPT14.065` | Widerstand (Ω) |
+| `DPT14.066` | Winkelauflösung (°) |
+| `DPT14.067` | Drehzahl (1/min) |
+| `DPT14.068` | Geschwindigkeit (m/s) |
+| `DPT14.069` | Drehmoment (Nm) |
+| `DPT14.070` | Volumen (m³) |
+| `DPT14.071` | Volumenfluss (m³/s) |
+| `DPT14.075` | Scheinleistung (VA) |
+| *(weitere DPT14.x)* | *Physikalische Mess­grössen* |
+
+**DPT 16, 17, 18, 19 — Text, Szenen, Datum/Zeit**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT16.000` | 14 Byte | Text | ASCII-Text (14 Zeichen) |
+| `DPT16.001` | 14 Byte | Text | ISO-8859-1-Text (14 Zeichen) |
+| `DPT17.001` | 1 Byte | Ganzzahl | Szenennummer (0–63) |
+| `DPT18.001` | 1 Byte | Ganzzahl | Szenen-Steuerung (inkl. Lernmodus) |
 | `DPT19.001` | 8 Byte | ISO-8601-Text | Datum und Uhrzeit |
+
+**DPT 20 — 1-Byte Enum/Modus**
+
+| DPT | Typische Verwendung |
+|---|---|
+| `DPT20.001` | HVAC-Modus (Auto/Komfort/Standby/Nacht/Schutz) |
+| `DPT20.002` | HVAC-Brennermodus |
+| `DPT20.003` | HVAC-Gebläsemodus |
+| `DPT20.004` | HVAC-Mastermodus |
+| `DPT20.005` | HVAC-Statusmeldung |
+| `DPT20.006` | HVAC-Positionswert |
+| `DPT20.007` | DALI-Verblend-Modus |
+| `DPT20.008` | Steuerungsverhalten |
+| `DPT20.011` | Priorität |
+| `DPT20.012` | Lichtsteuermodus |
+| `DPT20.013` | Heizungsregelungsmodus |
+| `DPT20.017` | Belüftungsmodus |
+| `DPT20.020` | Alarmschwere |
+| `DPT20.021` | Testmodus |
+| `DPT20.100` | Gebäude-Betriebsmodus |
+| `DPT20.102` | Aktiver Grundmodus |
+| `DPT20.105` | Warmwasser-Modus (DHW) |
+| `DPT20.111` | Heizklima-Modus |
+| `DPT20.113` | Zeitprogramm |
+| `DPT20.600` | Ventilator-Modus |
+| `DPT20.601` | Heizungstyp |
+| `DPT20.602` | Klappenventil-Modus |
+| `DPT20.603` | Heizkreis-Modus |
+| `DPT20.604` | Heizkörpermodus |
+| *(weitere DPT20.x)* | *1-Byte Enums/Modi* |
+
+**DPT 29 — 64-Bit Integer (Smart Metering)**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT29.010` | 8 Byte | Ganzzahl | Wirkenergie (Wh), hochauflösend |
+| `DPT29.011` | 8 Byte | Ganzzahl | Scheinenergie (VAh) |
+| `DPT29.012` | 8 Byte | Ganzzahl | Blindenergie (VARh) |
+
+**DPT 219, 240 — Spezielle Typen**
+
+| DPT | Grösse | Typ | Typische Verwendung |
+|---|---|---|---|
+| `DPT219.001` | 2 Byte | Ganzzahl | AlarmInfo (Modus + Statusbits) |
+| `DPT240.800` | 3 Byte | JSON-Text | Jalousie-Kombination (Höhe % + Lamellen %) |
 
 > **Hinweis für KNX-Dimmer:** Zwei separate Verknüpfungen anlegen — eine DEST für die Schreib-Adresse, eine SOURCE für die Rückmelde-Adresse.
 
@@ -761,19 +967,27 @@ Zeigt berechnete Zwischenwerte direkt auf den Blöcken an — live und automatis
 
 ### Modbus-TCP-Adapter
 
-**Instanz-Konfiguration:** `host`, `port` (Standard: `502`), `timeout`
+**Instanz-Konfiguration:**
+
+| Feld | Standard | Beschreibung |
+|---|---|---|
+| `host` | — | IP-Adresse der Modbus-Gegenstelle |
+| `port` | `502` | TCP-Port |
+| `timeout` | `3.0` | Verbindungs-Timeout in Sekunden |
 
 **Verknüpfungs-Konfiguration:**
 
 | Feld | Werte | Beschreibung |
 |---|---|---|
+| `unit_id` | `1` | Modbus-Slave-ID (Geräteadresse) |
 | `register_type` | `holding`, `input`, `coil`, `discrete_input` | Registertyp |
-| `address` | Ganzzahl | Registeradresse |
+| `address` | Ganzzahl | Registeradresse (0-basiert) |
+| `count` | `1` | Anzahl zu lesender Register |
 | `data_format` | `uint16`, `int16`, `uint32`, `int32`, `float32`, `uint64`, `int64` | Datenformat |
-| `scale_factor` | Zahl | Rohwert × Faktor = Messwert |
+| `scale_factor` | `1.0` | Rohwert × Faktor = Messwert |
 | `byte_order` | `big` / `little` | Byte-Reihenfolge im Register |
 | `word_order` | `big` / `little` | Wort-Reihenfolge bei 32/64-Bit-Werten |
-| `poll_interval` | Sekunden | Abfrageintervall (nur SOURCE/BOTH) |
+| `poll_interval` | `1.0` | Abfrageintervall in Sekunden (nur SOURCE/BOTH) |
 
 > **Praxistipp:** Die meisten Steuerungen (Siemens, Beckhoff …) verwenden `big`/`big`. Bei offensichtlich falschem Wert zuerst `word_order` auf `little` wechseln.
 
@@ -789,7 +1003,19 @@ Gleiche Verknüpfungs-Konfiguration wie TCP. Zusätzliche Instanz-Felder: `port`
 
 Liest Temperatursensoren über den Linux-Systemordner (`/sys/bus/w1/…`). Auf Windows funktioniert der Adapter nicht, startet aber ohne Fehlermeldung.
 
-**Verknüpfungs-Konfiguration:** `sensor_id` (z. B. `28-0000012345ab`), `poll_interval` (Sekunden)
+**Instanz-Konfiguration:**
+
+| Feld | Standard | Beschreibung |
+|---|---|---|
+| `poll_interval` | `30.0` | Abfrageintervall in Sekunden |
+| `w1_path` | `/sys/bus/w1/devices` | Pfad zum 1-Wire-Systemordner |
+
+**Verknüpfungs-Konfiguration:**
+
+| Feld | Beschreibung |
+|---|---|
+| `sensor_id` | Sensor-ID, z. B. `28-0000012345ab` |
+| `sensor_type` | Sensortyp, z. B. `DS18B20` (Standard) |
 
 Verfügbare Sensor-IDs können über den Verbindungstest abgerufen werden.
 
@@ -970,18 +1196,19 @@ uvicorn opentws.main:create_app --factory --reload --host 0.0.0.0 --port 8080
 
 ### Datenbankstruktur
 
-Die Datenbank wird automatisch aktualisiert — jede neue Version fügt fehlende Tabellen und Spalten hinzu, ohne bestehende Daten zu verlieren. Aktuelle Version: **V14**.
+Die Datenbank wird automatisch aktualisiert — jede neue Version fügt fehlende Tabellen und Spalten hinzu, ohne bestehende Daten zu verlieren. Aktuelle Version: **V15**.
 
 | Tabelle | Inhalt |
 |---|---|
-| `datapoints` | Alle Datenpunkte |
+| `datapoints` | Alle Datenpunkte (inkl. `persist_value`-Flag) |
 | `adapter_bindings` | Verknüpfungen zwischen Datenpunkten und Adaptern |
 | `adapter_instances` | Adapter-Instanzen |
 | `users` | Benutzerkonten |
 | `api_keys` | API-Schlüssel (nur als Hashwert gespeichert) |
 | `history_values` | Werteverlauf |
-| `logic_graphs` | Logik-Graphen (inkl. gespeichertem Zustand) |
+| `logic_graphs` | Logik-Graphen (inkl. gespeichertem Block-Zustand) |
 | `app_settings` | Systemeinstellungen (z. B. Zeitzone) |
+| `datapoint_last_values` | Letzter bekannter Wert je Datenpunkt — wird beim Start wiederhergestellt |
 
 ---
 
