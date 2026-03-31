@@ -130,7 +130,8 @@ async def _bulk_import_datapoints(
         else:
             dp_id      = str(uuid_mod.uuid4())
             mqtt_topic = f"dp/{dp_id}/value"
-            dp_inserts.append((dp_id, record.name, data_type, unit, "[]", mqtt_topic, None, row_ts, row_ts))
+            # persist_value=0 (False) by default — user must enable explicitly
+            dp_inserts.append((dp_id, record.name, data_type, unit, "[]", mqtt_topic, None, 0, row_ts, row_ts))
 
             binding_id = str(uuid_mod.uuid4())
             binding_inserts.append((
@@ -143,8 +144,8 @@ async def _bulk_import_datapoints(
     if dp_inserts:
         await db.executemany(
             """INSERT INTO datapoints
-               (id, name, data_type, unit, tags, mqtt_topic, mqtt_alias, created_at, updated_at)
-               VALUES (?,?,?,?,?,?,?,?,?)""",
+               (id, name, data_type, unit, tags, mqtt_topic, mqtt_alias, persist_value, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
             dp_inserts,
         )
     if binding_inserts:
@@ -204,14 +205,19 @@ async def _bulk_import_datapoints(
 
 @router.post("/import", response_model=ImportResult)
 async def import_knxproj_file(
-    file:     UploadFile = File(...),
-    password: str | None = Form(None),
-    _user:    str        = Depends(get_current_user),
-    db:       Database   = Depends(get_db),
+    file:         UploadFile = File(...),
+    password:     str | None = Form(None),
+    adapter_name: str | None = Query(None, description="Adapter-Instanzname — wenn angegeben, werden DataPoints und Bindings angelegt"),
+    direction:    str        = Query("BOTH", pattern="^(SOURCE|DEST|BOTH)$", description="Verknüpfungsrichtung"),
+    _user:        str        = Depends(get_current_user),
+    db:           Database   = Depends(get_db),
 ) -> ImportResult:
     """
     .knxproj Datei hochladen und Gruppenadressen in die DB importieren.
     Bestehende Einträge werden mit UPSERT-Semantik aktualisiert.
+
+    Mit adapter_name: zusätzlich DataPoints + KNX-Bindings anlegen.
+    persist_value wird beim Anlegen auf False gesetzt und beim Reimport nicht überschrieben.
     """
     if not file.filename or not file.filename.lower().endswith(".knxproj"):
         raise HTTPException(
@@ -259,9 +265,21 @@ async def import_knxproj_file(
     )
     await db.commit()
 
+    # Ohne Adapter: nur GA-Tabelle → fertig
+    if not adapter_name:
+        return ImportResult(
+            imported=len(records),
+            message=f"{len(records)} Gruppenadressen erfolgreich importiert",
+        )
+
+    # Mit Adapter: DataPoints + Bindings bulk anlegen
+    created, updated = await _bulk_import_datapoints(records, adapter_name, direction, db, now)
+
     return ImportResult(
         imported=len(records),
-        message=f"{len(records)} Gruppenadressen erfolgreich importiert",
+        created=created,
+        updated=updated,
+        message=f"{len(records)} Gruppenadressen importiert, {created} DataPoints neu erstellt, {updated} aktualisiert",
     )
 
 

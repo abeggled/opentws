@@ -84,8 +84,37 @@
             <label class="label">Projektpasswort <span class="text-slate-600 font-normal">(optional)</span></label>
             <input v-model="knxPassword" type="password" class="input text-sm" placeholder="Nur bei passwortgeschützten Projekten" autocomplete="off" />
           </div>
+
+          <!-- DataPoints anlegen -->
+          <label class="flex items-center gap-2 cursor-pointer select-none mt-1">
+            <input type="checkbox" v-model="knxCreateDps" class="w-4 h-4 rounded accent-blue-500" />
+            <span class="text-sm text-slate-600 dark:text-slate-300">DataPoints anlegen / aktualisieren</span>
+          </label>
+
+          <div v-if="knxCreateDps" class="flex flex-col gap-2 pl-6 border-l-2 border-blue-500/30">
+            <div class="form-group">
+              <label class="label">KNX-Adapter Instanz</label>
+              <select v-model="knxAdapterName" class="input text-sm">
+                <option value="">— bitte wählen —</option>
+                <option v-for="inst in knxAdapterInstances" :key="inst.name" :value="inst.name">{{ inst.name }}</option>
+              </select>
+              <p v-if="knxAdapterInstances.length === 0" class="text-xs text-amber-400 mt-1">
+                Keine KNX-Adapter-Instanz gefunden. Bitte zuerst einen KNX-Adapter anlegen.
+              </p>
+            </div>
+            <div class="form-group">
+              <label class="label">Richtung</label>
+              <select v-model="knxDirection" class="input text-sm">
+                <option value="BOTH">BOTH — lesen &amp; schreiben</option>
+                <option value="SOURCE">SOURCE — nur lesen (KNX → DataPoint)</option>
+                <option value="DEST">DEST — nur schreiben (DataPoint → KNX)</option>
+              </select>
+            </div>
+          </div>
+
           <div class="flex items-center gap-3">
-            <button @click="doKnxImport" class="btn-primary btn-sm" :disabled="!knxFile || knxImporting">
+            <button @click="doKnxImport" class="btn-primary btn-sm"
+              :disabled="!knxFile || knxImporting || (knxCreateDps && !knxAdapterName)">
               <Spinner v-if="knxImporting" size="sm" color="white" />
               Importieren
             </button>
@@ -375,7 +404,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { authApi, configApi, knxprojApi } from '@/api/client'
+import { authApi, adapterApi, configApi, knxprojApi } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
 import { useTz } from '@/composables/useTz'
@@ -620,17 +649,31 @@ async function onImportFile(e) {
 }
 
 // ── KNX Projekt Import ──────────────────────────────────────────────────────
-const knxFile      = ref(null)
-const knxPassword  = ref('')
-const knxImporting = ref(false)
-const knxResult    = ref(null)
-const knxGaCount   = ref(0)
+const knxFile             = ref(null)
+const knxPassword         = ref('')
+const knxImporting        = ref(false)
+const knxResult           = ref(null)
+const knxGaCount          = ref(0)
+const knxCreateDps        = ref(false)
+const knxAdapterName      = ref('')
+const knxDirection        = ref('BOTH')
+const knxAdapterInstances = ref([])
 
 async function loadKnxGaCount() {
   try {
     const { data } = await knxprojApi.listGA({ size: 1 })
     knxGaCount.value = data.total || 0
   } catch { knxGaCount.value = 0 }
+}
+
+async function loadKnxAdapterInstances() {
+  try {
+    const { data } = await adapterApi.listInstances()
+    knxAdapterInstances.value = (data || []).filter(i => i.adapter_type === 'knx')
+    if (knxAdapterInstances.value.length === 1) {
+      knxAdapterName.value = knxAdapterInstances.value[0].name
+    }
+  } catch { knxAdapterInstances.value = [] }
 }
 
 function onKnxprojFile(e) {
@@ -646,7 +689,12 @@ async function doKnxImport() {
     const fd = new FormData()
     fd.append('file', knxFile.value)
     if (knxPassword.value) fd.append('password', knxPassword.value)
-    const { data } = await knxprojApi.import(fd)
+    const params = {}
+    if (knxCreateDps.value && knxAdapterName.value) {
+      params.adapter_name = knxAdapterName.value
+      params.direction    = knxDirection.value
+    }
+    const { data } = await knxprojApi.import(fd, params)
     knxResult.value = { ok: true, text: data.message }
     await loadKnxGaCount()
   } catch (err) {
@@ -661,6 +709,7 @@ onMounted(async () => {
   if (auth.isAdmin) await loadUsers()
   await loadKeys()
   await loadKnxGaCount()
+  await loadKnxAdapterInstances()
 })
 // Note: timezone onMounted is defined above (merged there)
 
