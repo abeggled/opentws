@@ -6,11 +6,12 @@
  */
 
 import { computed, onMounted, onUnmounted } from 'vue'
+import type { ComputedRef } from 'vue'
 import { useDatapointsStore } from '@/stores/datapoints'
 import type { DataPointValue } from '@/types'
 
 export function useDataPoint(datapointId: string | null): {
-  value: ReturnType<typeof computed<DataPointValue | null>>
+  value: ComputedRef<DataPointValue | null>
 } {
   const store = useDatapointsStore()
 

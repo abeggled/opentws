@@ -80,7 +80,8 @@ function syncFromGrid() {
   if (!grid) return
   const items = grid.getGridItems()
   config.value.widgets = items.map((el) => {
-    const node = grid!.getNodeData(el)
+    // gridstackNode wird von Gridstack direkt auf das HTMLElement gesetzt
+    const node = (el as HTMLElement & { gridstackNode?: { x: number; y: number; w: number; h: number } }).gridstackNode
     const existing = config.value.widgets.find((w) => w.id === el.dataset.id)
     return {
       ...(existing ?? { id: el.dataset.id!, type: 'ValueDisplay', datapoint_id: null, config: {} }),
@@ -112,10 +113,6 @@ function insertWidget(type: string) {
     content: `<div class="gs-widget-placeholder text-xs text-gray-400 p-2">${def.label}</div>`,
   })
   selectedWidget.value = w
-}
-
-function selectWidget(w: WidgetInstance) {
-  selectedWidget.value = selectedWidget.value?.id === w.id ? null : w
 }
 
 function updateWidgetConfig(newConfig: Record<string, unknown>) {
