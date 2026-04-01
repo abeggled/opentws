@@ -8,6 +8,20 @@
 
 const BASE = '/api/v1'
 
+/** FastAPI gibt detail manchmal als Array zurück — immer zu String normalisieren */
+function extractDetail(body: unknown, fallback: string): string {
+  if (!body || typeof body !== 'object') return fallback
+  const detail = (body as Record<string, unknown>).detail
+  if (!detail) return fallback
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail
+      .map((e) => (typeof e === 'object' && e !== null ? (e as Record<string, unknown>).msg ?? JSON.stringify(e) : String(e)))
+      .join(', ')
+  }
+  return String(detail)
+}
+
 // ── Token-Verwaltung ──────────────────────────────────────────────────────────
 
 export function getJwt(): string | null {
@@ -62,8 +76,8 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ detail: res.statusText }))
-    throw new Error(body.detail ?? res.statusText)
+    const body = await res.json().catch(() => null)
+    throw new Error(extractDetail(body, res.statusText))
   }
 
   // 204 No Content
@@ -83,8 +97,8 @@ export const auth = {
       body: form,
     }).then(async (res) => {
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ detail: res.statusText }))
-        throw new Error(body.detail ?? 'Login fehlgeschlagen')
+        const body = await res.json().catch(() => null)
+        throw new Error(extractDetail(body, 'Login fehlgeschlagen'))
       }
       return res.json() as Promise<{ access_token: string; token_type: string }>
     })
