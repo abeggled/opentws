@@ -191,11 +191,11 @@ function nodePath(node: VisuNode): string {
 const moveOptions = computed(() => {
   if (!moveTargetId.value) return []
   const excluded = new Set([moveTargetId.value, ...getDescendants(moveTargetId.value).map(n => n.id)])
-  const locations = store.nodes
-    .filter(n => n.type === 'LOCATION' && !excluded.has(n.id))
-    .map(n => ({ id: n.id, path: nodePath(n) }))
+  const targets = store.nodes
+    .filter(n => !excluded.has(n.id))
+    .map(n => ({ id: n.id, path: `${n.type === 'PAGE' ? '📄' : '📁'} ${nodePath(n)}` }))
     .sort((a, b) => a.path.localeCompare(b.path))
-  return [{ id: null as string | null, path: '— Wurzel (kein übergeordneter Knoten) —' }, ...locations]
+  return [{ id: null as string | null, path: '— Wurzel (kein übergeordneter Knoten) —' }, ...targets]
 })
 
 function openMoveModal(nodeId: string) {
