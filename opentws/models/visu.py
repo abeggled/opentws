@@ -25,6 +25,7 @@ class WidgetInstance(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: str
     datapoint_id: str | None = None
+    status_datapoint_id: str | None = None   # optionaler Rückmelde-DP
     x: int = 0
     y: int = 0
     w: int = 2
@@ -37,6 +38,7 @@ class WidgetInstance(BaseModel):
 class PageConfig(BaseModel):
     grid_cols: int = 12
     grid_row_height: int = 80
+    grid_cell_width: int = 80   # feste Zellbreite in Pixeln (WYSIWYG)
     background: str | None = None
     widgets: list[WidgetInstance] = Field(default_factory=list)
 
