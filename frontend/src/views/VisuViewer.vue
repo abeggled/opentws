@@ -77,7 +77,7 @@ async function load() {
 
     // Access-Check: private → JWT
     if (currentNode?.access === 'private' && !getJwt()) {
-      router.push({ name: 'tree' })
+      router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
       return
     }
 

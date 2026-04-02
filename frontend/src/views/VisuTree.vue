@@ -2,15 +2,14 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVisuStore } from '@/stores/visu'
-import { useWebSocket } from '@/composables/useWebSocket'
 import { useThemeStore } from '@/stores/theme'
 import type { VisuNode } from '@/types'
 import { storeToRefs } from 'pinia'
+import AuthButton from '@/components/AuthButton.vue'
 
 const store = useVisuStore()
 const { rootNodes, isLoggedIn } = storeToRefs(store)
 const router = useRouter()
-const ws = useWebSocket()
 const loading = ref(true)
 const error = ref('')
 
@@ -41,25 +40,11 @@ function navigate(node: VisuNode) {
       <div class="flex items-center gap-3">
         <!-- Hell/Dunkel-Umschalter -->
         <button
-          class="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors px-2 py-1 rounded"
+          class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors px-2 py-1 rounded"
           @click="useThemeStore().toggle()"
           :title="useThemeStore().isDark ? 'Heller Modus' : 'Dunkler Modus'"
         >{{ useThemeStore().isDark ? '☀️' : '🌙' }}</button>
-        <template v-if="isLoggedIn">
-          <span class="text-xs text-green-500 dark:text-green-400 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 inline-block" />
-            Angemeldet
-          </span>
-          <button
-            class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-            @click="store.logout(); ws.disconnect(); router.push({ name: 'tree' })"
-          >Abmelden</button>
-        </template>
-        <button
-          v-else
-          class="text-sm text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 border border-blue-400/30 hover:border-blue-400 px-3 py-1.5 rounded-lg transition-colors"
-          @click="router.push({ name: 'login' })"
-        >Anmelden</button>
+        <AuthButton />
       </div>
     </header>
 
