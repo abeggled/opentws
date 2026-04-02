@@ -55,11 +55,14 @@ function accessIcon(node: VisuNode): string {
   <nav v-if="breadcrumb.length > 0" class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
     <!-- Haus-Icon -->
     <button
-      class="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
-      style="font-size: 0.85em; line-height: 1"
+      class="hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex items-center"
       title="Startseite"
       @click="router.push({ name: 'tree' })"
-    >⌂</button>
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 2L2 9h2v9h5v-5h2v5h5V9h2L10 2z"/>
+      </svg>
+    </button>
 
     <!-- Breadcrumb-Pfad -->
     <template v-for="(node, idx) in breadcrumb" :key="node.id">
