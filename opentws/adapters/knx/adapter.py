@@ -271,7 +271,11 @@ class KnxAdapter(AdapterBase):
                 from xknx.telegram.address import GroupAddress
                 from xknx.dpt import DPTArray, DPTBinary
                 raw = dpt.encoder(state.value)
-                payload_value = DPTBinary(raw[0]) if len(raw) == 1 else DPTArray(list(raw))
+                # DPTBinary only for 1-bit boolean DPTs; all others need DPTArray
+                if dpt.data_type == "BOOLEAN":
+                    payload_value = DPTBinary(raw[0])
+                else:
+                    payload_value = DPTArray(list(raw))
                 telegram = Telegram(
                     destination_address=GroupAddress(ga),
                     payload=GroupValueResponse(payload_value),
@@ -320,7 +324,12 @@ class KnxAdapter(AdapterBase):
             dpt = DPTRegistry.get(bc.dpt_id)
             raw = dpt.encoder(value)
 
-            payload_value = DPTBinary(raw[0]) if len(raw) == 1 else DPTArray(list(raw))
+            # DPTBinary only for 1-bit boolean DPTs; all others (incl. 1-byte
+            # DPT 5.x with values 0-255) need DPTArray to avoid ConversionError
+            if dpt.data_type == "BOOLEAN":
+                payload_value = DPTBinary(raw[0])
+            else:
+                payload_value = DPTArray(list(raw))
             telegram = Telegram(
                 destination_address=GroupAddress(bc.group_address),
                 payload=_GVW(payload_value),
