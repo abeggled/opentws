@@ -22,6 +22,15 @@
       </select>
     </div>
 
+    <!-- Pagination oben -->
+    <div v-if="store.pages > 1" class="flex items-center justify-between">
+      <span class="text-sm text-slate-500">Seite {{ store.page + 1 }} von {{ store.pages }}</span>
+      <div class="flex gap-2">
+        <button @click="goPage(store.page - 1)" :disabled="store.page === 0" class="btn-secondary btn-sm">‹</button>
+        <button @click="goPage(store.page + 1)" :disabled="store.page >= store.pages - 1" class="btn-secondary btn-sm">›</button>
+      </div>
+    </div>
+
     <!-- Table -->
     <div class="card overflow-hidden">
       <div v-if="store.loading" class="flex justify-center py-12"><Spinner size="lg" /></div>
