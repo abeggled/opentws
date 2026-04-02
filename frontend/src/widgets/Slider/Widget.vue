@@ -30,49 +30,67 @@ function toNumber(v: DataPointValue | null): number {
   return isNaN(parsed) ? min.value : parsed
 }
 
-// localValue: nur der Ziehlwert während der Nutzer dragged
-const localValue = ref(toNumber(displayValue.value))
-const isDragging = ref(false)
+const localValue  = ref(toNumber(displayValue.value))
+const isDragging  = ref(false)
 
 /**
- * Anzeigewert:
- * - Während des Ziehens: localValue (sofortige UI-Reaktion)
- * - Sonst: immer aktueller Status-Datenpunkt-Wert (reaktiv!)
- *
- * Durch das Computed wird displayValue immer angezeigt wenn isDragging=false,
- * auch wenn sich der Wert extern ändert (z.B. Schalter ausschalten).
+ * pendingValue: gesendeter Wert, der bis zur KNX-Rückmeldung angezeigt wird.
+ * Verhindert den Rücksprung auf den alten Wert zwischen Loslassen und Bestätigung.
+ * Wird beim nächsten eingehenden Status-Update (oder nach Timeout) gelöscht.
  */
-const shownValue = computed(() =>
-  isDragging.value ? localValue.value : toNumber(displayValue.value)
-)
+const pendingValue = ref<number | null>(null)
+let pendingTimer: ReturnType<typeof setTimeout> | null = null
 
-// localValue mit Status synchron halten, damit Drag vom richtigen Wert startet
+function clearPending() {
+  pendingValue.value = null
+  if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null }
+}
+
+/**
+ * Anzeigewert (Priorität):
+ * 1. Ziehen   → localValue   (sofortige UI-Reaktion)
+ * 2. Ausstehend → pendingValue  (optimistisch bis KNX bestätigt)
+ * 3. Sonst    → aktueller Status-DP-Wert
+ */
+const shownValue = computed(() => {
+  if (isDragging.value)       return localValue.value
+  if (pendingValue.value !== null) return pendingValue.value
+  return toNumber(displayValue.value)
+})
+
+// Sobald eine Statusmeldung eintrifft: pendingValue verwerfen, localValue synchronisieren
 watch(displayValue, (v) => {
+  clearPending()
   if (!isDragging.value) {
     localValue.value = toNumber(v)
   }
 })
 
-// Sicherheits-Reset: falls pointerup ausserhalb des Elements endet,
-// isDragging trotzdem zurücksetzen
+// Sicherheits-Reset: falls pointerup ausserhalb des Elements endet
 function onWindowPointerUp() {
-  if (isDragging.value) {
-    isDragging.value = false
-  }
+  if (isDragging.value) isDragging.value = false
 }
 onMounted(() => window.addEventListener('pointerup', onWindowPointerUp))
-onUnmounted(() => window.removeEventListener('pointerup', onWindowPointerUp))
+onUnmounted(() => {
+  window.removeEventListener('pointerup', onWindowPointerUp)
+  clearPending()
+})
 
-/** @input → Live-Vorschau während des Ziehens (kein Senden) */
+/** @input → Live-Vorschau während des Ziehens */
 function onInput(e: Event) {
   isDragging.value = true
   localValue.value = Number((e.target as HTMLInputElement).value)
 }
 
-/** @change → feuert beim Loslassen (Maus, Touch, Tastatur) → Wert senden */
+/** @change → feuert beim Loslassen → Wert optimistisch halten und senden */
 function onChange(e: Event) {
   localValue.value = Number((e.target as HTMLInputElement).value)
   isDragging.value = false
+
+  // Optimistisch anzeigen bis Status-Rückmeldung eintrifft (max. 5 s)
+  pendingValue.value = localValue.value
+  pendingTimer = setTimeout(clearPending, 5000)
+
   sendValue()
 }
 
@@ -81,7 +99,7 @@ async function sendValue() {
   try {
     await datapoints.write(props.datapointId, localValue.value)
   } catch {
-    // Fehler ignorieren — Nutzer sieht den Slider-Wert noch
+    clearPending()
   }
 }
 </script>
