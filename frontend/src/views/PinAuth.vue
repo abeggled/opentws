@@ -29,12 +29,12 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-950">
-    <div class="w-80 bg-gray-900 border border-gray-700 rounded-2xl p-8 shadow-2xl">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950">
+    <div class="w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 shadow-2xl">
       <div class="text-center mb-6">
         <span class="text-4xl">🔒</span>
-        <h1 class="text-lg font-semibold text-gray-100 mt-2">Zugang gesichert</h1>
-        <p class="text-sm text-gray-400 mt-1">Bitte PIN eingeben</p>
+        <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mt-2">Zugang gesichert</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Bitte PIN eingeben</p>
       </div>
 
       <form @submit.prevent="submit" class="space-y-4">
@@ -45,10 +45,10 @@ async function submit() {
           placeholder="PIN"
           maxlength="16"
           autofocus
-          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-center text-xl tracking-widest text-gray-100 focus:outline-none focus:border-blue-500"
+          class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-center text-xl tracking-widest text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500"
         />
 
-        <p v-if="error" class="text-red-400 text-sm text-center">{{ error }}</p>
+        <p v-if="error" class="text-red-500 dark:text-red-400 text-sm text-center">{{ error }}</p>
 
         <button
           type="submit"
@@ -60,7 +60,7 @@ async function submit() {
       </form>
 
       <button
-        class="mt-4 w-full text-sm text-gray-500 hover:text-gray-300 transition-colors"
+        class="mt-4 w-full text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
         @click="router.push({ name: 'tree' })"
       >
         ← Zurück
