@@ -79,7 +79,7 @@
               <td class="font-mono text-xs text-slate-400">{{ fmtDateTime(p.ts) }}</td>
               <td class="font-mono text-blue-500 dark:text-blue-300">{{ p.v ?? '—' }}<span v-if="p.u" class="text-slate-500 ml-1 text-xs">{{ p.u }}</span></td>
               <td><Badge :variant="p.q === 'good' ? 'success' : 'warning'" size="xs">{{ p.q }}</Badge></td>
-              <td class="text-slate-500 text-xs">—</td>
+              <td class="text-slate-500 text-xs">{{ p.a ?? '—' }}</td>
             </tr>
           </tbody>
         </table>

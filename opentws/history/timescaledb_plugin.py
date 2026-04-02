@@ -131,6 +131,7 @@ class TimescaleDBHistoryPlugin(HistoryPlugin):
         unit: str | None,
         quality: str,
         ts: datetime | None = None,
+        source_adapter: str | None = None,
     ) -> None:
         self._require_pool()
         ts_dt = ts or datetime.now(timezone.utc)

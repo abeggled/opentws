@@ -222,6 +222,7 @@ class InfluxDBHistoryPlugin(HistoryPlugin):
         unit: str | None,
         quality: str,
         ts: datetime | None = None,
+        source_adapter: str | None = None,
     ) -> None:
         ts_dt = ts or datetime.now(timezone.utc)
         line = self._build_line(datapoint_id, value, unit, quality, ts_dt)

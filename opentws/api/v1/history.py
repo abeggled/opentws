@@ -29,6 +29,7 @@ class HistoryPoint(BaseModel):
     v: Any
     u: str | None
     q: str
+    a: str | None = None   # source_adapter
 
 
 class AggregatedPoint(BaseModel):

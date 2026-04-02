@@ -64,6 +64,7 @@ async def handle_value_event(event: Any) -> None:
             unit=unit,
             quality=event.quality,
             ts=event.ts,
+            source_adapter=event.source_adapter,
         )
     except Exception as exc:
         logger.error("History write failed for %s: %s", event.datapoint_id, exc)
