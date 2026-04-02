@@ -60,6 +60,15 @@ export function setSessionToken(nodeId: string, token: string, expiresIn = 3600)
   }))
 }
 
+// ── Write-Kontext ─────────────────────────────────────────────────────────────
+// Wird von VisuViewer gesetzt bevor Widgets rendern; automatisch bei Write mitgeschickt.
+
+interface WriteContext { pageId?: string; sessionToken?: string }
+let _writeContext: WriteContext = {}
+
+export function setWriteContext(ctx: WriteContext): void { _writeContext = ctx }
+export function clearWriteContext(): void { _writeContext = {} }
+
 // ── Request-Helper ────────────────────────────────────────────────────────────
 
 type RequestOptions = Omit<RequestInit, 'headers'> & {
@@ -193,11 +202,16 @@ export const datapoints = {
       `/datapoints/${id}/value`, { silent401 }
     ),
 
-  write: (id: string, value: unknown) =>
-    request<void>(`/datapoints/${id}/value`, {
+  write: (id: string, value: unknown) => {
+    const headers: Record<string, string> = {}
+    if (_writeContext.pageId)      headers['X-Page-Id']       = _writeContext.pageId
+    if (_writeContext.sessionToken) headers['X-Session-Token'] = _writeContext.sessionToken
+    return request<void>(`/datapoints/${id}/value`, {
       method: 'POST',
       body: JSON.stringify({ value }),
-    }),
+      headers,
+    })
+  },
 }
 
 // ── History ───────────────────────────────────────────────────────────────────

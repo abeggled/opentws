@@ -19,7 +19,6 @@ Endpoints:
 from __future__ import annotations
 
 import json
-import secrets
 import uuid
 from datetime import datetime, timezone
 
@@ -27,6 +26,7 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from opentws.api.auth import get_current_user, optional_current_user
+from opentws.api.v1.sessions import create_session
 from opentws.db.database import get_db, Database
 from opentws.models.visu import (
     VisuNode,
@@ -281,18 +281,12 @@ async def move_node(
 
 # ── PIN-Authentifizierung ─────────────────────────────────────────────────────
 
-# Einfacher In-Memory Session-Store (reicht für Single-Instance)
-# In Multi-Instance: Redis oder DB-Tabelle verwenden
-_sessions: dict[str, tuple[str, float]] = {}   # token → (node_id, expires_at)
-
-
 @router.post("/nodes/{node_id}/auth", response_model=PinAuthResponse)
 async def pin_auth(
     node_id: str,
     body: PinAuthRequest,
     db: Database = Depends(get_db),
 ):
-    import time
     async with db.conn.execute(
         "SELECT access_pin, access FROM visu_nodes WHERE id = ?", (node_id,)
     ) as cur:
@@ -310,10 +304,7 @@ async def pin_auth(
     if not bcrypt.checkpw(body.pin.encode(), row["access_pin"].encode()):
         raise HTTPException(status_code=401, detail="Falscher PIN")
 
-    token = secrets.token_urlsafe(32)
-    expires_at = time.time() + 3600
-    _sessions[token] = (node_id, expires_at)
-
+    token = create_session(node_id, expires_in=3600)
     return PinAuthResponse(session_token=token, expires_in=3600)
 
 

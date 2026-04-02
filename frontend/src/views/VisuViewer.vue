@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVisuStore } from '@/stores/visu'
 import { useDatapointsStore } from '@/stores/datapoints'
@@ -9,7 +9,7 @@ import { WidgetRegistry } from '@/widgets/registry'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import NodeOverview from '@/components/NodeOverview.vue'
 import AuthButton from '@/components/AuthButton.vue'
-import { getJwt } from '@/api/client'
+import { getJwt, getSessionToken, setWriteContext, clearWriteContext } from '@/api/client'
 import type { WidgetInstance } from '@/types'
 
 // Alle Widgets registrieren (self-registering via import)
@@ -96,6 +96,11 @@ async function load() {
 
     if (currentNode?.type === 'PAGE') {
       await visuStore.loadPage(props.id)
+      // Write-Kontext für Backend-Autorisierung setzen (pageId + ggf. Session-Token)
+      setWriteContext({
+        pageId:       props.id,
+        sessionToken: getSessionToken(props.id) ?? undefined,
+      })
       ws.connect()
       dpStore.subscribe(allDpIds.value)
       // Sofort aktuelle Werte per HTTP laden (unabhängig von WS-Status)
@@ -109,6 +114,7 @@ async function load() {
 }
 
 onMounted(load)
+onUnmounted(clearWriteContext)
 watch(() => props.id, load)
 
 // Grid-Geometrie — feste Pixel-Werte → 1:1 identisch mit Editor (WYSIWYG)

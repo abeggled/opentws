@@ -14,11 +14,13 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, field_serializer
 
 from opentws.api.auth import get_current_user, optional_current_user
+from opentws.api.v1.sessions import validate_session
 from opentws.core.registry import get_registry
+from opentws.db.database import get_db, Database
 from opentws.models.datapoint import DataPointCreate, DataPointUpdate
 
 router = APIRouter(tags=["datapoints"])
@@ -208,22 +210,63 @@ async def get_value(
     )
 
 
+async def _resolve_page_access(db: Database, node_id: str) -> str:
+    """Traversiert die parent_id-Kette und gibt das effektive Access-Level zurück."""
+    current_id: str | None = node_id
+    while current_id:
+        async with db.conn.execute(
+            "SELECT access, parent_id FROM visu_nodes WHERE id = ?", (current_id,)
+        ) as cur:
+            row = await cur.fetchone()
+        if not row:
+            return "private"   # Unbekannter Knoten → sicher ablehnen
+        if row["access"] is not None:
+            return row["access"]
+        current_id = row["parent_id"]
+    return "public"
+
+
 @router.post("/{dp_id}/value", status_code=status.HTTP_204_NO_CONTENT)
 async def write_value(
     dp_id: uuid.UUID,
     body: WriteValueIn,
-    _user: str | None = Depends(optional_current_user),
+    request: Request,
+    user: str | None = Depends(optional_current_user),
+    db: Database = Depends(get_db),
 ) -> None:
     """Write a value to a DataPoint via the internal EventBus.
 
-    Fires a DataValueEvent which updates the registry, pushes to MQTT and
-    routes to all DEST/BOTH bindings (e.g. KNX, Modbus) via the WriteRouter.
+    Zugriffslogik:
+    - JWT vorhanden → immer erlaubt (Admin)
+    - X-Page-Id Header + Seite ist 'public' → erlaubt
+    - X-Page-Id Header + Seite ist 'protected' + gültiger X-Session-Token → erlaubt
+    - Seite ist 'readonly' → 403 (auch mit Page-Header)
+    - Seite ist 'private' ohne JWT → 401
+    - Kein Auth-Kontext → 401
     """
     from opentws.core.event_bus import get_event_bus, DataValueEvent
 
     reg = get_registry()
     if reg.get(dp_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"DataPoint {dp_id} not found")
+
+    if user is None:
+        page_id = request.headers.get("X-Page-Id")
+        if not page_id:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+        access = await _resolve_page_access(db, page_id)
+
+        if access == "readonly":
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Page is read-only")
+        elif access == "public":
+            pass   # Erlaubt — keine weitere Prüfung nötig
+        elif access == "protected":
+            session_token = request.headers.get("X-Session-Token")
+            if not session_token or not validate_session(session_token, page_id):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Valid session token required")
+        else:   # private oder unbekannt
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
 
     event = DataValueEvent(
         datapoint_id=dp_id,
