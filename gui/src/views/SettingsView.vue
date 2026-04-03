@@ -185,9 +185,14 @@
     <!-- ── Datenmanagement ── -->
     <div v-if="activeTab === 'importexport'" class="flex flex-col gap-4 max-w-lg">
       <div class="card p-5 flex flex-col gap-3">
-        <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Sicherung erstellen</h3>
+        <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Konfiguration sichern</h3>
         <p class="text-sm text-slate-400">Alle Objekte, Verknüpfungen, Adapter-Instanzen, KNX-Gruppenadressen und Logikblätter als JSON-Datei sichern.</p>
-        <button @click="doExport" class="btn-secondary">Sicherung herunterladen</button>
+        <button @click="doExport" class="btn-secondary">JSON herunterladen</button>
+      </div>
+      <div class="card p-5 flex flex-col gap-3">
+        <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Datenbank sichern</h3>
+        <p class="text-sm text-slate-400">Vollständige SQLite-Datenbank (inkl. Historiendaten) als Datei sichern.</p>
+        <button @click="doExportDb" class="btn-secondary">SQLite herunterladen</button>
       </div>
       <div class="card p-5 flex flex-col gap-3">
         <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Sicherung wiederherstellen</h3>
@@ -797,23 +802,25 @@ async function deleteApiKey(id) { await authApi.deleteApiKey(id); await loadKeys
 // ── Sicherung / Wiederherstellung ──────────────────────────────────────────
 const importResult = ref(null)
 
-async function doExport() {
+function _ts() {
   const now = new Date()
   const pad = (n) => String(n).padStart(2, '0')
-  const ts  = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
+  return `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
+}
 
-  // JSON-Konfigurationssicherung
+async function doExport() {
   const { data } = await configApi.export()
-  const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-  const jsonUrl  = URL.createObjectURL(jsonBlob)
-  const a1 = document.createElement('a'); a1.href = jsonUrl; a1.download = `openTWS_Backup_${ts}.json`; a1.click()
-  URL.revokeObjectURL(jsonUrl)
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url  = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = `openTWS_Backup_${_ts()}.json`; a.click()
+  URL.revokeObjectURL(url)
+}
 
-  // SQLite-Datenbanksicherung
-  const { data: dbBlob } = await configApi.exportDb()
-  const dbUrl = URL.createObjectURL(dbBlob)
-  const a2 = document.createElement('a'); a2.href = dbUrl; a2.download = `openTWS_DB_${ts}.sqlite`; a2.click()
-  URL.revokeObjectURL(dbUrl)
+async function doExportDb() {
+  const { data: blob } = await configApi.exportDb()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = `openTWS_DB_${_ts()}.sqlite`; a.click()
+  URL.revokeObjectURL(url)
 }
 async function onImportFile(e) {
   const file = e.target.files[0]; if (!file) return
