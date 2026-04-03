@@ -220,6 +220,7 @@ export const datapoints = {
 export const history = {
   query: (id: string, from: string, to: string, limit = 500) =>
     request<{ ts: string; v: unknown; u: string | null; q: string }[]>(
-      `/history/${id}?from=${from}&to=${to}&limit=${limit}`
+      `/history/${id}?from=${from}&to=${to}&limit=${limit}`,
+      { silent401: true },
     ),
 }
