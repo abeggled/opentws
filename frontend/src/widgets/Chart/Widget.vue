@@ -85,7 +85,7 @@ onMounted(() => {
             color: '#6b7280',
             maxTicksLimit: 6,
             maxRotation: 0,
-            callback: (ms) => fmtMs(Number(ms)),
+            callback: (ms) => ms == null ? '' : fmtMs(Number(ms)),
           },
           grid: { color: '#1f2937' },
         },
