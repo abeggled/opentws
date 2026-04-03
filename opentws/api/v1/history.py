@@ -10,11 +10,13 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 
-from opentws.api.auth import get_current_user
+from opentws.api.auth import optional_current_user
+from opentws.api.v1.sessions import validate_session
 from opentws.core.registry import get_registry
+from opentws.db.database import get_db, Database
 from opentws.history.factory import get_history_plugin
 
 router = APIRouter(tags=["history"])
@@ -53,6 +55,37 @@ def _parse_ts(s: str | None, default: datetime) -> datetime:
         )
 
 
+async def _check_history_access(
+    request: Request,
+    user: str | None,
+    db: Database,
+) -> None:
+    """JWT oder gültiger Session-Token (protected/public Seite) erlaubt History-Zugriff."""
+    if user is not None:
+        return  # JWT vorhanden → immer erlaubt
+
+    page_id = request.headers.get("X-Page-Id")
+    if not page_id:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+    async with db.conn.execute(
+        "SELECT access, parent_id FROM visu_nodes WHERE id = ?", (page_id,)
+    ) as cur:
+        row = await cur.fetchone()
+
+    access = row["access"] if row and row["access"] else "public"
+
+    if access in ("public", "readonly"):
+        return  # Öffentliche Seite → History-Lesen erlaubt
+    if access == "protected":
+        session_token = request.headers.get("X-Session-Token")
+        if session_token and validate_session(session_token, page_id):
+            return
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Valid session token required")
+    # private oder unbekannt
+    raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -63,8 +96,11 @@ async def query_history(
     from_ts: str | None = Query(None, alias="from"),
     to_ts: str | None = Query(None, alias="to"),
     limit: int = Query(1000, ge=1, le=10000),
-    _user: str = Depends(get_current_user),
+    request: Request = None,
+    user: str | None = Depends(optional_current_user),
+    db: Database = Depends(get_db),
 ) -> list[HistoryPoint]:
+    await _check_history_access(request, user, db)
     if get_registry().get(dp_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"DataPoint {dp_id} not found")
 
@@ -84,8 +120,11 @@ async def aggregate_history(
     interval: str = Query("1h", description="1m | 5m | 15m | 30m | 1h | 6h | 12h | 1d"),
     from_ts: str | None = Query(None, alias="from"),
     to_ts: str | None = Query(None, alias="to"),
-    _user: str = Depends(get_current_user),
+    request: Request = None,
+    user: str | None = Depends(optional_current_user),
+    db: Database = Depends(get_db),
 ) -> list[AggregatedPoint]:
+    await _check_history_access(request, user, db)
     if get_registry().get(dp_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"DataPoint {dp_id} not found")
     if fn not in ("avg", "min", "max", "last"):

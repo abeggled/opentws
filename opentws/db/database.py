@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS visu_nodes (
     type         TEXT NOT NULL DEFAULT 'PAGE' CHECK (type IN ('LOCATION', 'PAGE')),
     node_order   INTEGER NOT NULL DEFAULT 0,
     icon         TEXT,
-    access       TEXT CHECK (access IN ('public', 'protected', 'private')),
+    access       TEXT CHECK (access IN ('readonly', 'public', 'protected', 'private')),
     access_pin   TEXT,
     page_config  TEXT NOT NULL DEFAULT '{"grid_cols":12,"grid_row_height":80,"background":null,"widgets":[]}',
     created_at   TEXT NOT NULL,
@@ -261,6 +261,26 @@ CREATE INDEX IF NOT EXISTS idx_visu_nodes_parent ON visu_nodes(parent_id);
 
 _MIGRATION_V17 = """
 ALTER TABLE history_values ADD COLUMN source_adapter TEXT;
+"""
+
+_MIGRATION_V18 = """
+CREATE TABLE visu_nodes_new (
+    id           TEXT PRIMARY KEY,
+    parent_id    TEXT REFERENCES visu_nodes(id) ON DELETE CASCADE,
+    name         TEXT NOT NULL,
+    type         TEXT NOT NULL DEFAULT 'PAGE' CHECK (type IN ('LOCATION', 'PAGE')),
+    node_order   INTEGER NOT NULL DEFAULT 0,
+    icon         TEXT,
+    access       TEXT CHECK (access IN ('readonly', 'public', 'protected', 'private')),
+    access_pin   TEXT,
+    page_config  TEXT NOT NULL DEFAULT '{"grid_cols":12,"grid_row_height":80,"background":null,"widgets":[]}',
+    created_at   TEXT NOT NULL,
+    updated_at   TEXT NOT NULL
+);
+INSERT INTO visu_nodes_new SELECT * FROM visu_nodes;
+DROP TABLE visu_nodes;
+ALTER TABLE visu_nodes_new RENAME TO visu_nodes;
+CREATE INDEX IF NOT EXISTS idx_visu_nodes_parent ON visu_nodes(parent_id);
 """
 
 # List of (version, sql_or_callable) tuples — append new migrations here
@@ -282,6 +302,7 @@ MIGRATIONS: list[tuple[int, str | Callable]] = [
     (15, _MIGRATION_V15),
     (16, _MIGRATION_V16),
     (17, _MIGRATION_V17),
+    (18, _MIGRATION_V18),
 ]
 
 
