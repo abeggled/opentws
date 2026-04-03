@@ -36,6 +36,18 @@ export function clearJwt(): void {
   localStorage.removeItem('visu_jwt')
 }
 
+export function getIsAdmin(): boolean {
+  return localStorage.getItem('visu_is_admin') === '1'
+}
+
+export function setIsAdmin(value: boolean): void {
+  localStorage.setItem('visu_is_admin', value ? '1' : '0')
+}
+
+export function clearIsAdmin(): void {
+  localStorage.removeItem('visu_is_admin')
+}
+
 /** Session-Token für einen bestimmten Knoten (PIN-Auth), nur für diese Browser-Session */
 export function getSessionToken(nodeId: string): string | null {
   const raw = sessionStorage.getItem(`session_${nodeId}`)
@@ -130,11 +142,15 @@ export const auth = {
       return res.json() as Promise<{ access_token: string; token_type: string }>
     })
   },
+
+  me() {
+    return request<{ id: string; username: string; is_admin: boolean }>('/auth/me', { silent401: true })
+  },
 }
 
 // ── Visu-Nodes ────────────────────────────────────────────────────────────────
 
-import type { VisuNode, PageConfig, PinAuthResponse } from '@/types'
+import type { VisuNode, PageConfig, PinAuthResponse, UserResponse } from '@/types'
 
 export const visu = {
   tree: () => request<VisuNode[]>('/visu/tree'),
@@ -178,11 +194,30 @@ export const visu = {
   getPage: (id: string, sessionToken?: string) =>
     request<PageConfig>(`/visu/pages/${id}`, { sessionToken }),
 
+  /** Lädt alle Widget-Instanzen einer Seite ohne Zugriffsprüfung — für WidgetRef. */
+  getWidgetRef: (pageId: string) =>
+    request<import('@/types').WidgetInstance[]>(`/visu/widget-ref/${pageId}`, { silent401: true }),
+
   savePage: (id: string, config: PageConfig) =>
     request<void>(`/visu/pages/${id}`, {
       method: 'PUT',
       body: JSON.stringify(config),
     }),
+
+  getNodeUsers: (id: string) =>
+    request<string[]>(`/visu/nodes/${id}/users`),
+
+  setNodeUsers: (id: string, usernames: string[]) =>
+    request<void>(`/visu/nodes/${id}/users`, {
+      method: 'PUT',
+      body: JSON.stringify({ usernames }),
+    }),
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+
+export const users = {
+  list: () => request<UserResponse[]>('/auth/users'),
 }
 
 // ── DataPoints ────────────────────────────────────────────────────────────────

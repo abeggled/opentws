@@ -8,7 +8,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { visu as visuApi, getJwt, setJwt, clearJwt, setSessionToken, getSessionToken } from '@/api/client'
+import { visu as visuApi, auth as authApi, getJwt, setJwt, clearJwt, getIsAdmin, setIsAdmin, clearIsAdmin, setSessionToken, getSessionToken } from '@/api/client'
 import type { VisuNode, PageConfig } from '@/types'
 
 export const useVisuStore = defineStore('visu', () => {
@@ -56,16 +56,29 @@ export const useVisuStore = defineStore('visu', () => {
   // ── Auth ──────────────────────────────────────────────────────────────────
   // Reaktiver Spiegel des localStorage-JWT — wird bei login/logout aktualisiert
   const _jwt = ref<string | null>(getJwt())
+  const _isAdmin = ref<boolean>(getIsAdmin())
   const isLoggedIn = computed(() => !!_jwt.value)
+  const isAdmin = computed(() => _isAdmin.value)
 
-  function login(token: string) {
+  async function login(token: string) {
     setJwt(token)
     _jwt.value = token
+    // Admin-Status direkt nach Login ermitteln
+    try {
+      const me = await authApi.me()
+      setIsAdmin(me.is_admin)
+      _isAdmin.value = me.is_admin
+    } catch {
+      setIsAdmin(false)
+      _isAdmin.value = false
+    }
   }
 
   function logout() {
     clearJwt()
+    clearIsAdmin()
     _jwt.value = null
+    _isAdmin.value = false
   }
 
   /** PIN-Auth für einen protected Knoten */
@@ -111,7 +124,7 @@ export const useVisuStore = defineStore('visu', () => {
 
   return {
     // State
-    nodes, treeLoaded, breadcrumb, pageConfig, isLoggedIn,
+    nodes, treeLoaded, breadcrumb, pageConfig, isLoggedIn, isAdmin,
     // Tree
     loadTree, getNode, getChildren, rootNodes,
     // Breadcrumb

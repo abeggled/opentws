@@ -3,21 +3,20 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useVisuStore } from '@/stores/visu'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { getJwt } from '@/api/client'
 import type { VisuNode } from '@/types'
 
 const store = useVisuStore()
-const { breadcrumb } = storeToRefs(store)
+const { breadcrumb, isLoggedIn } = storeToRefs(store)
 const router = useRouter()
 
 // Letzter Knoten im Breadcrumb
 const lastNode = computed(() => breadcrumb.value[breadcrumb.value.length - 1] ?? null)
 
-// Kinder des letzten Knotens (gefiltert: private nur für Admins)
+// Kinder des letzten Knotens (gefiltert: user-geschützte nur für angemeldete Benutzer)
 const children = computed<VisuNode[]>(() => {
   if (!lastNode.value) return []
   return store.getChildren(lastNode.value.id).filter(n => {
-    if (n.access === 'private') return !!getJwt()
+    if (n.access === 'user') return isLoggedIn.value
     return true
   })
 })
@@ -46,7 +45,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 function accessIcon(node: VisuNode): string {
   if (node.access === 'readonly')  return '👁'
   if (node.access === 'protected') return '🔐'
-  if (node.access === 'private')   return '🔒'
+  if (node.access === 'user')      return '👤'
   return ''
 }
 </script>

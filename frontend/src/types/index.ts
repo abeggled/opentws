@@ -1,7 +1,7 @@
 // ── VisuNode ──────────────────────────────────────────────────────────────────
 
 export type NodeType = 'LOCATION' | 'PAGE'
-export type AccessLevel = 'readonly' | 'public' | 'protected' | 'private'
+export type AccessLevel = 'readonly' | 'public' | 'protected' | 'user'
 
 export interface VisuNode {
   id: string
@@ -100,4 +100,13 @@ export interface LoginResponse {
 export interface PinAuthResponse {
   session_token: string
   expires_in: number
+}
+
+export interface UserResponse {
+  id: string
+  username: string
+  is_admin: boolean
+  mqtt_enabled: boolean
+  mqtt_password_set: boolean
+  created_at: string
 }

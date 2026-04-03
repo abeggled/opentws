@@ -8,7 +8,7 @@ import { storeToRefs } from 'pinia'
 import AuthButton from '@/components/AuthButton.vue'
 
 const store = useVisuStore()
-const { rootNodes, isLoggedIn } = storeToRefs(store)
+const { rootNodes, isAdmin } = storeToRefs(store)
 const router = useRouter()
 const loading = ref(true)
 const error = ref('')
@@ -58,7 +58,7 @@ function navigate(node: VisuNode) {
 
       <div v-else-if="rootNodes.length === 0" class="text-gray-400 dark:text-gray-500 text-center py-16">
         Noch keine Seiten vorhanden.<br />
-        <span v-if="isLoggedIn" class="text-sm">
+        <span v-if="isAdmin" class="text-sm">
           <router-link class="text-blue-500 dark:text-blue-400 hover:underline" to="/editor/new">
             Erste Seite erstellen
           </router-link>
@@ -85,9 +85,9 @@ function navigate(node: VisuNode) {
             class="text-xs text-yellow-600 dark:text-yellow-500 flex items-center gap-1"
           >🔐 PIN</span>
           <span
-            v-else-if="node.access === 'private'"
-            class="text-xs text-red-500 dark:text-red-400 flex items-center gap-1"
-          >🔑 Login</span>
+            v-else-if="node.access === 'user'"
+            class="text-xs text-purple-500 dark:text-purple-400 flex items-center gap-1"
+          >👤 Anmeldung</span>
         </button>
       </div>
     </main>

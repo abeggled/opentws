@@ -5,14 +5,13 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVisuStore } from '@/stores/visu'
-import { getJwt } from '@/api/client'
 import type { VisuNode, AccessLevel } from '@/types'
 
 const props = defineProps<{ nodeId: string }>()
 const router = useRouter()
 const store  = useVisuStore()
 
-const isAdmin = computed(() => !!getJwt())
+const isLoggedIn = computed(() => store.isLoggedIn)
 
 /**
  * Effektiven Zugang eines Knotens bestimmen (Vererbung berücksichtigen).
@@ -32,8 +31,8 @@ const children = computed(() => {
   const all = store.getChildren(props.nodeId)
   return all.filter(n => {
     const access = effectiveAccess(n)
-    // Private Seiten nur für Admins sichtbar
-    if (access === 'private') return isAdmin.value
+    // user-gesicherte Seiten nur für angemeldete Benutzer sichtbar (Zugangsprüfung erfolgt im Viewer)
+    if (access === 'user') return isLoggedIn.value
     return true
   })
 })
@@ -46,7 +45,7 @@ function accessBadge(node: VisuNode): { icon: string; label: string; cls: string
   const access = effectiveAccess(node)
   if (access === 'readonly')  return { icon: '👁', label: 'Nur ansehen', cls: 'bg-blue-500/20 text-blue-600 dark:text-blue-400' }
   if (access === 'protected') return { icon: '🔐', label: 'PIN', cls: 'bg-amber-500/20 text-amber-600 dark:text-amber-400' }
-  if (access === 'private')   return { icon: '🔒', label: 'Privat', cls: 'bg-red-500/20 text-red-500 dark:text-red-400' }
+  if (access === 'user')      return { icon: '👤', label: 'Anmeldung', cls: 'bg-purple-500/20 text-purple-600 dark:text-purple-400' }
   return null
 }
 </script>

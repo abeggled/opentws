@@ -283,6 +283,38 @@ ALTER TABLE visu_nodes_new RENAME TO visu_nodes;
 CREATE INDEX IF NOT EXISTS idx_visu_nodes_parent ON visu_nodes(parent_id);
 """
 
+_MIGRATION_V19 = """
+CREATE TABLE visu_nodes_v19 (
+    id           TEXT PRIMARY KEY,
+    parent_id    TEXT REFERENCES visu_nodes_v19(id) ON DELETE CASCADE,
+    name         TEXT NOT NULL,
+    type         TEXT NOT NULL DEFAULT 'PAGE' CHECK (type IN ('LOCATION', 'PAGE')),
+    node_order   INTEGER NOT NULL DEFAULT 0,
+    icon         TEXT,
+    access       TEXT CHECK (access IN ('readonly', 'public', 'protected', 'user')),
+    access_pin   TEXT,
+    page_config  TEXT NOT NULL DEFAULT '{"grid_cols":12,"grid_row_height":80,"background":null,"widgets":[]}',
+    created_at   TEXT NOT NULL,
+    updated_at   TEXT NOT NULL
+);
+INSERT INTO visu_nodes_v19
+    SELECT id, parent_id, name, type, node_order, icon,
+           CASE WHEN access = 'private' THEN 'user' ELSE access END,
+           access_pin, page_config, created_at, updated_at
+    FROM visu_nodes;
+DROP TABLE visu_nodes;
+ALTER TABLE visu_nodes_v19 RENAME TO visu_nodes;
+CREATE INDEX IF NOT EXISTS idx_visu_nodes_parent ON visu_nodes(parent_id);
+
+CREATE TABLE IF NOT EXISTS visu_node_users (
+    node_id  TEXT NOT NULL REFERENCES visu_nodes(id) ON DELETE CASCADE,
+    username TEXT NOT NULL,
+    PRIMARY KEY (node_id, username)
+);
+CREATE INDEX IF NOT EXISTS idx_vnu_node ON visu_node_users(node_id);
+CREATE INDEX IF NOT EXISTS idx_vnu_user ON visu_node_users(username);
+"""
+
 # List of (version, sql_or_callable) tuples — append new migrations here
 MIGRATIONS: list[tuple[int, str | Callable]] = [
     (1, _MIGRATION_V1),
@@ -303,6 +335,7 @@ MIGRATIONS: list[tuple[int, str | Callable]] = [
     (16, _MIGRATION_V16),
     (17, _MIGRATION_V17),
     (18, _MIGRATION_V18),
+    (19, _MIGRATION_V19),
 ]
 
 
