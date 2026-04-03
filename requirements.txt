@@ -39,6 +39,9 @@ xknxproject>=1.0.0
 # Logic Engine — cron scheduling
 croniter>=1.4.0
 astral>=3.0
+
+# Zeitschaltuhr — holiday calendar
+holidays>=0.50
 httpx>=0.27.0
 
 # History plugins — optional, install only the backend(s) you use:

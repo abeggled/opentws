@@ -33,11 +33,18 @@
         </div>
         <div class="form-group">
           <label class="label">Richtung *</label>
-          <select v-model="form.direction" class="input">
+          <select
+            v-model="form.direction"
+            class="input"
+            :disabled="selectedAdapterType === 'ZEITSCHALTUHR'"
+          >
             <option value="SOURCE">Lesen (von Adapter)</option>
-            <option value="DEST">Schreiben (auf Adapter)</option>
-            <option value="BOTH">Lesen/Schreiben (von/auf Adapter)</option>
+            <option v-if="selectedAdapterType !== 'ZEITSCHALTUHR'" value="DEST">Schreiben (auf Adapter)</option>
+            <option v-if="selectedAdapterType !== 'ZEITSCHALTUHR'" value="BOTH">Lesen/Schreiben (von/auf Adapter)</option>
           </select>
+          <p v-if="selectedAdapterType === 'ZEITSCHALTUHR'" class="hint">
+            Die Zeitschaltuhr ist eine reine Quelle — nur Lesen möglich.
+          </p>
         </div>
       </div>
 
@@ -363,6 +370,195 @@
         </div>
       </template>
 
+      <!-- Zeitschaltuhr -->
+      <template v-if="selectedAdapterType === 'ZEITSCHALTUHR'">
+        <div class="section-header">Zeitschaltuhr Binding</div>
+
+        <!-- Typ -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="label">Typ *</label>
+            <select v-model="cfg.timer_type" class="input">
+              <option value="daily">Tagesschaltuhr (täglich/wöchentlich)</option>
+              <option value="annual">Jahresschaltuhr (monatlich/jährlich)</option>
+              <option value="meta">Metadaten (Feiertag-/Ferienstatus)</option>
+            </select>
+          </div>
+          <div v-if="cfg.timer_type === 'meta'" class="form-group">
+            <label class="label">Metadaten-Typ *</label>
+            <select v-model="cfg.meta_type" class="input">
+              <optgroup label="Feiertage">
+                <option value="holiday_today">Feiertag heute (bool)</option>
+                <option value="holiday_tomorrow">Feiertag morgen (bool)</option>
+                <option value="holiday_name_today">Feiertagsname heute (string)</option>
+                <option value="holiday_name_tomorrow">Feiertagsname morgen (string)</option>
+              </optgroup>
+              <optgroup label="Ferienperioden">
+                <option value="vacation_1">Ferienperiode 1 aktiv (bool)</option>
+                <option value="vacation_2">Ferienperiode 2 aktiv (bool)</option>
+                <option value="vacation_3">Ferienperiode 3 aktiv (bool)</option>
+                <option value="vacation_4">Ferienperiode 4 aktiv (bool)</option>
+                <option value="vacation_5">Ferienperiode 5 aktiv (bool)</option>
+                <option value="vacation_6">Ferienperiode 6 aktiv (bool)</option>
+              </optgroup>
+            </select>
+            <p class="hint">Wird beim Start und täglich um Mitternacht automatisch aktualisiert.</p>
+          </div>
+        </div>
+
+        <template v-if="cfg.timer_type !== 'meta'">
+
+          <!-- Wochentage -->
+          <div class="form-group">
+            <label class="label">Wochentage</label>
+            <div class="flex gap-1.5 flex-wrap">
+              <button
+                v-for="(label, idx) in ['Mo','Di','Mi','Do','Fr','Sa','So']"
+                :key="idx"
+                type="button"
+                @click="ztToggleWeekday(idx)"
+                class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
+                :class="cfg.weekdays.includes(idx)
+                  ? 'bg-blue-500 border-blue-500 text-white'
+                  : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-blue-400'"
+              >{{ label }}</button>
+              <button type="button" class="ml-2 text-xs text-slate-400 hover:text-blue-400" @click="cfg.weekdays = [0,1,2,3,4,5,6]">Alle</button>
+              <button type="button" class="text-xs text-slate-400 hover:text-blue-400" @click="cfg.weekdays = [0,1,2,3,4]">Mo–Fr</button>
+              <button type="button" class="text-xs text-slate-400 hover:text-blue-400" @click="cfg.weekdays = [5,6]">Sa+So</button>
+            </div>
+          </div>
+
+          <!-- Monate + Tag (nur Jahresschaltuhr) -->
+          <template v-if="cfg.timer_type === 'annual'">
+            <div class="form-group">
+              <label class="label">Monate <span class="optional">(leer = alle)</span></label>
+              <div class="flex gap-1.5 flex-wrap">
+                <button
+                  v-for="(label, idx) in ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']"
+                  :key="idx+1"
+                  type="button"
+                  @click="ztToggleMonth(idx+1)"
+                  class="px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors"
+                  :class="cfg.months.includes(idx+1)
+                    ? 'bg-blue-500 border-blue-500 text-white'
+                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-blue-400'"
+                >{{ label }}</button>
+                <button type="button" class="ml-2 text-xs text-slate-400 hover:text-blue-400" @click="cfg.months = []">Alle</button>
+              </div>
+            </div>
+            <div class="form-group" style="max-width:160px">
+              <label class="label">Tag im Monat <span class="optional">(0 = alle)</span></label>
+              <input v-model.number="cfg.day_of_month" type="number" min="0" max="31" class="input" />
+            </div>
+          </template>
+
+          <!-- Zeitreferenz -->
+          <div class="optional-divider">Zeitpunkt</div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="label">Zeitreferenz *</label>
+              <select v-model="cfg.time_ref" class="input">
+                <option value="absolute">Absolute Zeit</option>
+                <option value="sunrise">Sonnenaufgang + Offset</option>
+                <option value="sunset">Sonnenuntergang + Offset</option>
+                <option value="solar_noon">Sonnenmittag + Offset</option>
+                <option value="solar_altitude">Sonnenhöhenwinkel</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Absolute Zeit -->
+          <div v-if="cfg.time_ref === 'absolute'" class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="label">Stunde</label>
+              <input v-model.number="cfg.hour" type="number" min="0" max="23" class="input" />
+            </div>
+            <div class="form-group">
+              <label class="label">Minute</label>
+              <input v-model.number="cfg.minute" type="number" min="0" max="59" class="input" />
+            </div>
+          </div>
+
+          <!-- Offset (bei allen nicht-absoluten Zeitreferenzen) -->
+          <div v-if="cfg.time_ref !== 'absolute'" class="form-group" style="max-width:200px">
+            <label class="label">Offset in Minuten</label>
+            <input v-model.number="cfg.offset_minutes" type="number" class="input" placeholder="0" />
+            <p class="hint">Positiv = nach dem Ereignis, negativ = davor</p>
+          </div>
+
+          <!-- Sonnenhöhenwinkel -->
+          <div v-if="cfg.time_ref === 'solar_altitude'" class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="label">Sonnenhöhenwinkel (°)</label>
+              <input v-model.number="cfg.solar_altitude_deg" type="number" min="-18" max="90" step="0.5" class="input" />
+              <p class="hint">−18° = naut. Dämmerung · 0° = Horizont · 30° = Vormittag</p>
+            </div>
+            <div class="form-group">
+              <label class="label">Sonnenrichtung</label>
+              <select v-model="cfg.sun_direction" class="input">
+                <option value="rising">Aufsteigend (morgens)</option>
+                <option value="setting">Absteigend (abends)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Takt -->
+          <div class="optional-divider">Takt <span class="font-normal text-slate-400">(Zeitreferenz wird ignoriert)</span></div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-start gap-2">
+              <input type="checkbox" id="zt_every_minute" v-model="cfg.every_minute" class="w-4 h-4 rounded mt-0.5" />
+              <div>
+                <label for="zt_every_minute" class="text-sm text-slate-600 dark:text-slate-300">Jede Minute schalten</label>
+                <p class="hint">Schaltet minütlich (Wochentag/Datum-Filter gilt weiterhin)</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2">
+              <input type="checkbox" id="zt_every_hour" v-model="cfg.every_hour" class="w-4 h-4 rounded mt-0.5" />
+              <div>
+                <label for="zt_every_hour" class="text-sm text-slate-600 dark:text-slate-300">Jede Stunde schalten</label>
+                <p class="hint">Schaltet zur eingestellten Minute jeder Stunde</p>
+              </div>
+            </div>
+          </div>
+          <div v-if="cfg.every_hour && !cfg.every_minute" class="form-group" style="max-width:160px">
+            <label class="label">Zur Minute</label>
+            <input v-model.number="cfg.minute" type="number" min="0" max="59" class="input" />
+          </div>
+
+          <!-- Feiertag / Ferien -->
+          <div class="optional-divider">Feiertag &amp; Ferien</div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="label">Feiertagsbehandlung</label>
+              <select v-model="cfg.holiday_mode" class="input">
+                <option value="ignore">Ignorieren (wie Normaltage)</option>
+                <option value="skip">Nicht schalten an Feiertagen</option>
+                <option value="only">Nur an Feiertagen schalten</option>
+                <option value="as_sunday">Feiertage wie Sonntag behandeln</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label">Ferienbehandlung</label>
+              <select v-model="cfg.vacation_mode" class="input">
+                <option value="ignore">Ignorieren (wie Normaltage)</option>
+                <option value="skip">Nicht schalten in Ferien</option>
+                <option value="only">Nur in Ferien schalten</option>
+                <option value="as_sunday">Ferientage wie Sonntag behandeln</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Ausgabewert -->
+          <div class="optional-divider">Ausgabe</div>
+          <div class="form-group" style="max-width:200px">
+            <label class="label">Schalt-Wert</label>
+            <input v-model="cfg.value" class="input" placeholder="1" />
+            <p class="hint">z.B. 1 / 0 / true / false / 21.5 / Beliebiger Text</p>
+          </div>
+
+        </template><!-- /timer_type !== meta -->
+      </template>
+
       <div v-if="!selectedAdapterType && !props.initial" class="p-3 bg-slate-100/80 dark:bg-slate-800/40 rounded-lg text-sm text-slate-500 text-center">
         Bitte zuerst eine Adapter-Instanz wählen
       </div>
@@ -532,6 +728,14 @@ const cfg = reactive({
   value_map: null, value_map_preset: '', value_map_custom: '',
   source_data_type: '', json_key: '', xml_path: '',
   sensor_id: '', sensor_type: 'DS18B20',
+  // ZEITSCHALTUHR
+  timer_type: 'daily', meta_type: 'none',
+  weekdays: [0,1,2,3,4,5,6], months: [], day_of_month: 0,
+  time_ref: 'absolute', hour: 0, minute: 0, offset_minutes: 0,
+  solar_altitude_deg: 0.0, sun_direction: 'rising',
+  every_hour: false, every_minute: false,
+  holiday_mode: 'ignore', vacation_mode: 'ignore',
+  value: '1',
 })
 
 // MQTT source data type constants + compatibility map
@@ -592,7 +796,7 @@ const currentInstanceName = computed(() => {
 
 const visibleTabs = computed(() => {
   const tabs = [{ id: 'conn', label: 'Verbindung', badge: false }]
-  if (selectedAdapterType.value) {
+  if (selectedAdapterType.value && selectedAdapterType.value !== 'ZEITSCHALTUHR') {
     const hasFormula = !!form.value_formula?.trim()
     tabs.push({ id: 'transform', label: 'Transformation', badge: hasFormula })
     if (form.direction === 'DEST' || form.direction === 'BOTH') {
@@ -670,6 +874,23 @@ watch(() => props.initial, val => {
   if (cfg.source_data_type   == null) cfg.source_data_type = ''
   if (cfg.json_key           == null) cfg.json_key = ''
   if (cfg.xml_path           == null) cfg.xml_path = ''
+  // ZEITSCHALTUHR defaults when loading
+  if (cfg.timer_type    == null) cfg.timer_type    = 'daily'
+  if (cfg.meta_type     == null) cfg.meta_type     = 'none'
+  if (cfg.weekdays      == null) cfg.weekdays      = [0,1,2,3,4,5,6]
+  if (cfg.months        == null) cfg.months        = []
+  if (cfg.day_of_month  == null) cfg.day_of_month  = 0
+  if (cfg.time_ref      == null) cfg.time_ref      = 'absolute'
+  if (cfg.hour          == null) cfg.hour          = 0
+  if (cfg.minute        == null) cfg.minute        = 0
+  if (cfg.offset_minutes == null) cfg.offset_minutes = 0
+  if (cfg.solar_altitude_deg == null) cfg.solar_altitude_deg = 0.0
+  if (cfg.sun_direction == null) cfg.sun_direction = 'rising'
+  if (cfg.every_hour    == null) cfg.every_hour    = false
+  if (cfg.every_minute  == null) cfg.every_minute  = false
+  if (cfg.holiday_mode  == null) cfg.holiday_mode  = 'ignore'
+  if (cfg.vacation_mode == null) cfg.vacation_mode = 'ignore'
+  if (cfg.value         == null) cfg.value         = '1'
   // Restore value_map UI state from loaded config
   if (cfg.value_map && typeof cfg.value_map === 'object') {
     const mapStr = JSON.stringify(cfg.value_map)
@@ -761,6 +982,24 @@ async function loadMqttSample() {
 watch(() => cfg.source_data_type, sdt => {
   if (sdt === 'json' || sdt === 'xml') loadMqttSample()
 })
+
+// Force direction to SOURCE when ZEITSCHALTUHR is selected
+watch(selectedAdapterType, type => {
+  if (type === 'ZEITSCHALTUHR') form.direction = 'SOURCE'
+})
+
+// Zeitschaltuhr helpers
+function ztToggleWeekday(idx) {
+  const i = cfg.weekdays.indexOf(idx)
+  if (i >= 0) cfg.weekdays.splice(i, 1)
+  else cfg.weekdays.push(idx)
+}
+
+function ztToggleMonth(m) {
+  const i = cfg.months.indexOf(m)
+  if (i >= 0) cfg.months.splice(i, 1)
+  else cfg.months.push(m)
+}
 
 function collectXmlLeafPaths(el, prefix) {
   const result = []
@@ -889,6 +1128,36 @@ function buildConfig() {
   }
   if (type === 'ONEWIRE') {
     return { sensor_id: cfg.sensor_id, sensor_type: cfg.sensor_type || 'DS18B20' }
+  }
+  if (type === 'ZEITSCHALTUHR') {
+    const c = {
+      timer_type:   cfg.timer_type,
+      meta_type:    cfg.meta_type,
+      weekdays:     [...cfg.weekdays],
+      holiday_mode: cfg.holiday_mode,
+      vacation_mode: cfg.vacation_mode,
+    }
+    if (cfg.timer_type === 'annual') {
+      c.months        = [...cfg.months]
+      c.day_of_month  = cfg.day_of_month ?? 0
+    }
+    if (cfg.timer_type !== 'meta') {
+      c.time_ref       = cfg.time_ref
+      c.minute         = cfg.minute ?? 0
+      c.every_hour     = cfg.every_hour
+      c.every_minute   = cfg.every_minute
+      c.value          = cfg.value || '1'
+      if (cfg.time_ref === 'absolute') {
+        c.hour = cfg.hour ?? 0
+      } else {
+        c.offset_minutes = cfg.offset_minutes ?? 0
+      }
+      if (cfg.time_ref === 'solar_altitude') {
+        c.solar_altitude_deg = cfg.solar_altitude_deg ?? 0.0
+        c.sun_direction      = cfg.sun_direction || 'rising'
+      }
+    }
+    return c
   }
   return {}
 }
