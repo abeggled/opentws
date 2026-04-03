@@ -138,15 +138,15 @@ function gridStyle(w: WidgetInstance) {
       <Breadcrumb />
       <div class="flex items-center gap-2">
         <button
-          v-if="visuStore.isLoggedIn && isPage"
+          v-if="visuStore.isAdmin && isPage"
           class="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors px-2 py-1 rounded"
           @click="router.push({ name: 'editor', params: { id } })"
         >✏️ Bearbeiten</button>
         <button
-          v-if="visuStore.isLoggedIn"
+          v-if="visuStore.isAdmin"
           class="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors px-2 py-1 rounded"
           @click="router.push({ name: 'manage' })"
-        >🗂 Verwalten</button>
+        >🗂 Visu-Manager</button>
         <!-- Hell/Dunkel-Umschalter -->
         <button
           class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors px-2 py-1 rounded"

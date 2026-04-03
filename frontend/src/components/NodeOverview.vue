@@ -5,14 +5,13 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVisuStore } from '@/stores/visu'
-import { getJwt } from '@/api/client'
 import type { VisuNode, AccessLevel } from '@/types'
 
 const props = defineProps<{ nodeId: string }>()
 const router = useRouter()
 const store  = useVisuStore()
 
-const isAdmin = computed(() => !!getJwt())
+const isAdmin = computed(() => store.isAdmin)
 
 /**
  * Effektiven Zugang eines Knotens bestimmen (Vererbung berücksichtigen).

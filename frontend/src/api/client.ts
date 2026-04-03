@@ -36,6 +36,18 @@ export function clearJwt(): void {
   localStorage.removeItem('visu_jwt')
 }
 
+export function getIsAdmin(): boolean {
+  return localStorage.getItem('visu_is_admin') === '1'
+}
+
+export function setIsAdmin(value: boolean): void {
+  localStorage.setItem('visu_is_admin', value ? '1' : '0')
+}
+
+export function clearIsAdmin(): void {
+  localStorage.removeItem('visu_is_admin')
+}
+
 /** Session-Token für einen bestimmten Knoten (PIN-Auth), nur für diese Browser-Session */
 export function getSessionToken(nodeId: string): string | null {
   const raw = sessionStorage.getItem(`session_${nodeId}`)
@@ -129,6 +141,10 @@ export const auth = {
       }
       return res.json() as Promise<{ access_token: string; token_type: string }>
     })
+  },
+
+  me() {
+    return request<{ id: string; username: string; is_admin: boolean }>('/auth/me', { silent401: true })
   },
 }
 

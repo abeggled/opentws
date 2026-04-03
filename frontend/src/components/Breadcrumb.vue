@@ -3,11 +3,10 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useVisuStore } from '@/stores/visu'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { getJwt } from '@/api/client'
 import type { VisuNode } from '@/types'
 
 const store = useVisuStore()
-const { breadcrumb } = storeToRefs(store)
+const { breadcrumb, isAdmin } = storeToRefs(store)
 const router = useRouter()
 
 // Letzter Knoten im Breadcrumb
@@ -17,7 +16,7 @@ const lastNode = computed(() => breadcrumb.value[breadcrumb.value.length - 1] ??
 const children = computed<VisuNode[]>(() => {
   if (!lastNode.value) return []
   return store.getChildren(lastNode.value.id).filter(n => {
-    if (n.access === 'user') return !!getJwt()
+    if (n.access === 'user') return isAdmin.value
     return true
   })
 })

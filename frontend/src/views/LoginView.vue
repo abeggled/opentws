@@ -22,7 +22,7 @@ async function login() {
   try {
     const res = await auth.login(username.value, password.value)
     setJwt(res.access_token)
-    store.login(res.access_token)
+    await store.login(res.access_token)
     ws.connect()
     // Zurück zur ursprünglichen Seite oder zur Übersicht
     const redirect = route.query.redirect as string | undefined

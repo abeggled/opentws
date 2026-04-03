@@ -9,7 +9,7 @@
  */
 
 import { createRouter, createWebHistory } from 'vue-router'
-import { getJwt } from '@/api/client'
+import { getJwt, getIsAdmin } from '@/api/client'
 
 const router = createRouter({
   history: createWebHistory('/visu/'),
@@ -38,14 +38,14 @@ const router = createRouter({
       path: '/manage',
       name: 'manage',
       component: () => import('@/views/TreeManager.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/editor/:id',
       name: 'editor',
       component: () => import('@/views/VisuEditor.vue'),
       props: true,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     // Viewer muss nach /editor/:id stehen (sonst matcht /:id zuerst)
     {
@@ -61,8 +61,11 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (to.meta.requiresAuth && !getJwt()) {
-    // Editor erfordert JWT → zur Login-Seite, danach zurück
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.requiresAdmin && !getIsAdmin()) {
+    // Eingeloggt aber kein Admin → zurück zur Übersicht
+    return { name: 'tree' }
   }
 })
 
