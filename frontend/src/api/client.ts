@@ -224,6 +224,19 @@ export const users = {
 
 import type { DataPoint, PaginatedResponse } from '@/types'
 
+export interface BindingOut {
+  id: string
+  datapoint_id: string
+  adapter_type: string
+  adapter_instance_id: string | null
+  instance_name: string | null
+  direction: string
+  config: Record<string, unknown>
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
 export const datapoints = {
   search: (q: string, page = 0, size = 50, type = '') => {
     const params = new URLSearchParams({ q, page: String(page), size: String(size) })
@@ -237,6 +250,15 @@ export const datapoints = {
     request<{ value: unknown; unit: string | null; ts: string | null; quality: string }>(
       `/datapoints/${id}/value`, { silent401 }
     ),
+
+  listBindings: (dpId: string) =>
+    request<BindingOut[]>(`/datapoints/${dpId}/bindings`),
+
+  updateBinding: (dpId: string, bindingId: string, data: { config?: Record<string, unknown>; enabled?: boolean }) =>
+    request<BindingOut>(`/datapoints/${dpId}/bindings/${bindingId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   write: (id: string, value: unknown) => {
     const headers: Record<string, string> = {}

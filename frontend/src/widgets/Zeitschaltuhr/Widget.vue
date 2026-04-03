@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useDatapointsStore } from '@/stores/datapoints'
+import { getJwt } from '@/api/client'
+import ZeitschaltuhrBindingModal from '@/components/ZeitschaltuhrBindingModal.vue'
 import type { DataPointValue } from '@/types'
 
 const props = defineProps<{
@@ -15,8 +17,8 @@ const dpStore = useDatapointsStore()
 
 const label          = computed(() => (props.config.label        as string  | undefined) ?? '—')
 const cfgDatapointId = computed(() => (props.config.datapoint_id as string  | undefined) ?? '')
-const bindingEnabled = computed(() => (props.config.binding_enabled as boolean | undefined))
-const hasBinding     = computed(() => !!(props.config.binding_id as string | undefined))
+const cfgBindingId   = computed(() => (props.config.binding_id   as string  | undefined) ?? '')
+const hasBinding     = computed(() => !!(cfgDatapointId.value && cfgBindingId.value))
 
 /** Live-Wert aus dem Datenpunkt-Store (wird via getExtraDatapointIds abonniert) */
 const liveValue = computed((): DataPointValue | null => {
@@ -36,18 +38,29 @@ function resolveBool(v: DataPointValue | null): boolean | null {
 const outputActive = computed(() => resolveBool(liveValue.value))
 const quality      = computed(() => liveValue.value?.q ?? null)
 
-/** Klick öffnet die Datenpunkt-Detailansicht im Admin-Frontend */
-function openAdmin() {
-  if (props.editorMode || !cfgDatapointId.value) return
-  window.open(`/datapoints/${cfgDatapointId.value}`, '_blank')
+/** Binding-Status: aus Config (Snapshot, aktualisiert nach Modal-Speichern) */
+const bindingEnabled = ref((props.config.binding_enabled as boolean | undefined) ?? true)
+
+/** Modal nur wenn JWT vorhanden (Admin) und Binding konfiguriert */
+const canEdit   = computed(() => !props.editorMode && hasBinding.value && !!getJwt())
+const showModal = ref(false)
+
+function handleClick() {
+  if (!canEdit.value) return
+  showModal.value = true
+}
+
+function onSaved(enabled: boolean) {
+  bindingEnabled.value = enabled
+  showModal.value = false
 }
 </script>
 
 <template>
   <div
     class="flex flex-col h-full p-3 select-none gap-1.5"
-    :class="!editorMode && cfgDatapointId ? 'cursor-pointer' : 'cursor-default'"
-    @click="openAdmin"
+    :class="canEdit ? 'cursor-pointer' : 'cursor-default'"
+    @click="handleClick"
   >
     <!-- Kopfzeile: Icon + Beschriftung + Qualitätsindikator -->
     <div class="flex items-center gap-1.5 min-w-0">
@@ -79,7 +92,7 @@ function openAdmin() {
       </span>
     </div>
 
-    <!-- Aktivierungsstatus der Verknüpfung (nur wenn Verknüpfung gewählt) -->
+    <!-- Aktivierungsstatus der Verknüpfung -->
     <div v-if="hasBinding" class="flex items-center gap-1.5 mt-auto">
       <span
         class="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -88,6 +101,19 @@ function openAdmin() {
       <span class="text-xs text-gray-400 dark:text-gray-500">
         {{ bindingEnabled ? 'ZSU aktiviert' : 'ZSU deaktiviert' }}
       </span>
+      <!-- Edit-Hinweis für Admins -->
+      <span v-if="canEdit" class="ml-auto text-xs text-gray-600 dark:text-gray-700">✏️</span>
     </div>
   </div>
+
+  <!-- Binding-Edit-Modal (Teleport ins body, damit es über allem liegt) -->
+  <Teleport to="body">
+    <ZeitschaltuhrBindingModal
+      v-if="showModal"
+      :datapoint-id="cfgDatapointId"
+      :binding-id="cfgBindingId"
+      @close="showModal = false"
+      @saved="onSaved"
+    />
+  </Teleport>
 </template>
