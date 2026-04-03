@@ -218,9 +218,13 @@ export const datapoints = {
 // ── History ───────────────────────────────────────────────────────────────────
 
 export const history = {
-  query: (id: string, from: string, to: string, limit = 500) =>
-    request<{ ts: string; v: unknown; u: string | null; q: string }[]>(
+  query: (id: string, from: string, to: string, limit = 500) => {
+    const headers: Record<string, string> = {}
+    if (_writeContext.pageId)      headers['X-Page-Id']       = _writeContext.pageId
+    if (_writeContext.sessionToken) headers['X-Session-Token'] = _writeContext.sessionToken
+    return request<{ ts: string; v: unknown; u: string | null; q: string }[]>(
       `/history/${id}?from=${from}&to=${to}&limit=${limit}`,
-      { silent401: true },
-    ),
+      { headers, silent401: true },
+    )
+  },
 }
