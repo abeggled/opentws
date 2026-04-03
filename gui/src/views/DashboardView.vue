@@ -9,7 +9,7 @@
     <!-- Stat cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard label="Objekte" :value="health.datapoints" icon="📋" color="blue" />
-      <StatCard label="Adapter aktiv" :value="health.adapters_running" icon="🔌" color="green" />
+      <StatCard label="Aktive Adapter Instanzen" :value="health.adapters_running" icon="🔌" color="green" />
       <StatCard label="WS-Status" :value="ws.connected ? 'Live' : 'Offline'" icon="⚡" :color="ws.connected ? 'green' : 'red'" />
       <StatCard label="Server" :value="health.status === 'ok' ? 'Online' : 'Fehler'" icon="🖥️" :color="health.status === 'ok' ? 'green' : 'red'" />
     </div>
