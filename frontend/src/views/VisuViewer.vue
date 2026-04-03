@@ -20,6 +20,7 @@ import '@/widgets/Chart/index'
 import '@/widgets/Link/index'
 import '@/widgets/WidgetRef/index'
 import '@/widgets/Info/index'
+import '@/widgets/Text/index'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()

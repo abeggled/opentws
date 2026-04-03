@@ -42,6 +42,7 @@ import '@/widgets/Chart/index'
 import '@/widgets/Link/index'
 import '@/widgets/WidgetRef/index'
 import '@/widgets/Info/index'
+import '@/widgets/Text/index'
 
 // ── Props / Router / Store ────────────────────────────────────────────────────
 const props = defineProps<{ id: string }>()
