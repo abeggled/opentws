@@ -278,7 +278,7 @@
                 >
                   <option value="">— aus Sample —</option>
                   <option v-for="k in mqttJsonKeys" :key="k.key" :value="k.key">
-                    {{ k.key }} <template v-if="k.type !== 'unknown'">({{ k.type }})</template>
+                    {{ k.key }}<template v-if="k.text"> = {{ k.text }}</template>
                   </option>
                 </select>
               </div>
@@ -828,6 +828,7 @@ function onMqttJsonSampleInput() {
       mqttJsonKeys.value = Object.entries(obj).map(([k, v]) => ({
         key: k,
         type: v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v,
+        text: v === null ? 'null' : Array.isArray(v) || typeof v === 'object' ? JSON.stringify(v) : String(v),
       }))
     } else {
       mqttJsonParseError.value = 'Sample muss ein JSON-Objekt sein (kein Array / Primitivwert)'
