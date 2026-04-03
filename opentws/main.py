@@ -103,11 +103,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await _reload_mqtt(_m.reload_command, _m.reload_pid)
 
     # 8. Adapters — import triggers @register, then start_all loads DB configs + bindings
-    import opentws.adapters.knx.adapter        # noqa: F401
-    import opentws.adapters.modbus_tcp.adapter  # noqa: F401
-    import opentws.adapters.modbus_rtu.adapter  # noqa: F401
-    import opentws.adapters.onewire.adapter     # noqa: F401
-    import opentws.adapters.mqtt.adapter        # noqa: F401
+    import opentws.adapters.knx.adapter              # noqa: F401
+    import opentws.adapters.modbus_tcp.adapter       # noqa: F401
+    import opentws.adapters.modbus_rtu.adapter       # noqa: F401
+    import opentws.adapters.onewire.adapter          # noqa: F401
+    import opentws.adapters.mqtt.adapter             # noqa: F401
+    import opentws.adapters.zeitschaltuhr.adapter    # noqa: F401
     await adapter_registry.start_all(bus, db, value_getter=registry.get_value)
 
     # 9. Logic Engine
