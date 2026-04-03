@@ -351,7 +351,7 @@ onMounted(async () => {
 
     <!-- ── Header ──────────────────────────────────────────────────────────── -->
     <header class="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 px-4 py-2.5 flex items-center gap-3 bg-gray-50 dark:bg-gray-900">
-      <span class="text-lg font-semibold">🗂 Seiten-Manager</span>
+      <span class="text-lg font-semibold">🗂 Visu-Manager</span>
       <div class="flex-1" />
       <button
         class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1 rounded transition-colors"
@@ -373,7 +373,7 @@ onMounted(async () => {
     <div v-else class="flex-1 flex min-h-0">
 
       <!-- ── Baum (links) ──────────────────────────────────────────────────── -->
-      <div class="w-96 flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
+      <div class="w-[30rem] flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
         <div class="flex items-center justify-between px-3 pt-3 pb-2">
           <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Struktur</span>
           <button
@@ -407,7 +407,7 @@ onMounted(async () => {
 
             <!-- Icon + Name -->
             <span class="flex-shrink-0 leading-none">{{ node.icon ?? (node.type === 'PAGE' ? '📄' : '📁') }}</span>
-            <span class="flex-1 truncate text-sm" :title="node.name">{{ node.name }}</span>
+            <span class="flex-1 text-sm whitespace-nowrap">{{ node.name }}</span>
 
             <!-- Type-Badge -->
             <span class="flex-shrink-0 text-xs px-1 rounded"
