@@ -15,15 +15,30 @@ Binding-Konfiguration (pro AdapterBinding.config):
   retain:           bool       — Retain-Flag beim Publishen (default: False)
   payload_template: str?       — Für DEST/BOTH: Payload-Template mit ###DP### als Platzhalter
   value_map:        dict[str,str]? — Wertzuordnung: z.B. {"0": "off", "1": "on"}
+  source_data_type: str?       — SOURCE/BOTH: "string"|"int"|"float"|"bool"|"json"|None(=auto)
+  json_key:         str?       — Schlüssel zum Extrahieren aus JSON-Payload (source_data_type=="json")
 
 Richtungs-Semantik:
   SOURCE  → Adapter subscribet auf topic, liefert Werte ins System
   DEST    → Adapter publisht auf publish_topic (oder topic) wenn write() aufgerufen wird
   BOTH    → Beides: subscriben auf topic, publishen auf publish_topic (oder topic)
 
+source_data_type:
+  Steuert, wie der eingehende Payload interpretiert wird (SOURCE/BOTH):
+    None/"auto": json.loads-Erkennung (Standardverhalten)
+    "string":    Wert direkt als String
+    "int":       Konvertierung nach int (via float für Strings wie "22.0")
+    "float":     Konvertierung nach float
+    "bool":      true/false, on/off, 1/0 → Python bool
+    "json":      Payload als JSON-Objekt parsen, dann json_key extrahieren
+
+json_key:
+  Wenn source_data_type=="json": Schlüssel im geparsten JSON-Objekt, dessen Wert als
+  DataPoint-Wert übernommen wird. Leer = gesamtes Objekt.
+
 value_map:
-  Wird auf eingehende (SOURCE) und ausgehende (DEST) Werte angewendet.
-  Schlüssel und Werte sind Strings; der Istwert wird via str() konvertiert für den Lookup.
+  Wird auf eingehende (SOURCE, nach source_data_type-Parsing) und ausgehende (DEST) Werte
+  angewendet. Schlüssel und Werte sind Strings; der Istwert wird via str() für den Lookup.
 
 payload_template:
   Enthält den Platzhalter ###DP###, der durch den (ggf. per value_map transformierten) Wert
@@ -58,11 +73,13 @@ class MqttAdapterConfig(BaseModel):
 
 
 class MqttBindingConfig(BaseModel):
-    topic: str                                  # subscribe (SOURCE/BOTH) or publish (DEST)
-    publish_topic: str | None = None            # DEST/BOTH: publish here if set, else use topic
-    retain: bool = False                        # retain flag when publishing
-    payload_template: str | None = None        # DEST/BOTH: template with ###DP### placeholder
-    value_map: dict[str, str] | None = None    # value substitution map (str keys + values)
+    topic: str                                        # subscribe (SOURCE/BOTH) or publish (DEST)
+    publish_topic: str | None = None                  # DEST/BOTH: publish here if set, else use topic
+    retain: bool = False                              # retain flag when publishing
+    payload_template: str | None = None              # DEST/BOTH: template with ###DP### placeholder
+    value_map: dict[str, str] | None = None          # value substitution map (str keys + values)
+    source_data_type: str | None = None              # SOURCE/BOTH: "string"|"int"|"float"|"bool"|"json"|None
+    json_key: str | None = None                      # key to extract when source_data_type=="json"
 
 
 # ---------------------------------------------------------------------------
@@ -189,19 +206,52 @@ class MqttAdapter(AdapterBase):
             return
 
         raw = payload.decode("utf-8", errors="replace") if isinstance(payload, bytes) else str(payload)
+        # Auto-parse baseline (used as fallback and for "json" source type)
         try:
-            value = json.loads(raw)
+            auto_value = json.loads(raw)
         except Exception:
-            value = raw
+            auto_value = raw
 
         for binding in entries:
-            pub_value = value
+            pub_value = auto_value
             try:
                 bc = MqttBindingConfig(**binding.config)
+                sdt = bc.source_data_type
+
+                # --- source_data_type coercion / extraction ---
+                if sdt == "json":
+                    obj = auto_value if isinstance(auto_value, dict) else json.loads(raw)
+                    if bc.json_key:
+                        pub_value = obj.get(bc.json_key, pub_value) if isinstance(obj, dict) else pub_value
+                    else:
+                        pub_value = obj
+                elif sdt == "int":
+                    try:
+                        pub_value = int(float(pub_value)) if isinstance(pub_value, str) else int(pub_value)
+                    except (ValueError, TypeError):
+                        logger.warning("MQTT: cannot coerce %r to int for binding %s", pub_value, binding.id)
+                elif sdt == "float":
+                    try:
+                        pub_value = float(pub_value)
+                    except (ValueError, TypeError):
+                        logger.warning("MQTT: cannot coerce %r to float for binding %s", pub_value, binding.id)
+                elif sdt == "bool":
+                    if isinstance(pub_value, bool):
+                        pass  # already bool
+                    elif isinstance(pub_value, str):
+                        pub_value = pub_value.lower() in ("true", "1", "on", "yes")
+                    else:
+                        pub_value = bool(pub_value)
+                elif sdt == "string":
+                    pub_value = str(pub_value)
+                # else None/"auto": use auto_value as-is
+
+                # --- value_map substitution ---
                 if bc.value_map:
                     pub_value = bc.value_map.get(str(pub_value), pub_value)
             except Exception:
-                pass
+                logger.exception("MQTT: error processing binding %s", binding.id)
+
             if binding.value_formula and pub_value is not None:
                 from opentws.core.formula import apply_formula
                 pub_value = apply_formula(binding.value_formula, pub_value)

@@ -227,6 +227,60 @@
           <p class="hint"><code class="text-blue-400">###DP###</code> wird durch den Datenpunktwert ersetzt. Leer = Wert direkt als Payload.</p>
         </div>
 
+        <!-- Source Data Type — SOURCE / BOTH only -->
+        <div v-if="form.direction === 'SOURCE' || form.direction === 'BOTH'" class="form-group">
+          <label class="label">Quell-Datentyp <span class="optional">(optional)</span></label>
+          <div class="flex gap-2 items-start">
+            <select v-model="cfg.source_data_type" class="input flex-1">
+              <option v-for="t in MQTT_SOURCE_TYPES" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
+            <span v-if="mqttTypeCompat" class="mt-1.5 shrink-0 text-xs px-2 py-1 rounded-full font-medium" :class="mqttTypeCompat.cls">
+              {{ mqttTypeCompat.label }}
+            </span>
+          </div>
+          <p class="hint">
+            Wie der eingehende Payload interpretiert wird.
+            DataPoint-Typ: <code class="text-blue-400">{{ props.dpDataType }}</code>
+          </p>
+
+          <!-- JSON key extraction panel -->
+          <div v-if="cfg.source_data_type === 'json'" class="mt-3 flex flex-col gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+            <div class="form-group">
+              <label class="text-xs font-medium text-slate-500 mb-1 block">
+                Sample Payload <span class="font-normal text-slate-400">(optional — für Schlüssel-Vorschau)</span>
+              </label>
+              <textarea
+                v-model="mqttJsonSample"
+                class="input font-mono text-xs h-20 resize-y"
+                placeholder='{"temperature": 22.5, "humidity": 65}'
+                @input="onMqttJsonSampleInput"
+              />
+              <p v-if="mqttJsonParseError" class="text-xs text-red-400 mt-0.5">{{ mqttJsonParseError }}</p>
+            </div>
+            <div class="form-group">
+              <label class="text-xs font-medium text-slate-500 mb-1 block">JSON-Schlüssel *</label>
+              <div class="flex gap-2">
+                <input
+                  v-model="cfg.json_key"
+                  class="input flex-1 font-mono text-sm"
+                  placeholder="z.B. temperature"
+                />
+                <select
+                  v-if="mqttJsonKeys.length"
+                  v-model="cfg.json_key"
+                  class="input w-52 shrink-0"
+                >
+                  <option value="">— aus Sample —</option>
+                  <option v-for="k in mqttJsonKeys" :key="k.key" :value="k.key">
+                    {{ k.key }} <template v-if="k.type !== 'unknown'">({{ k.type }})</template>
+                  </option>
+                </select>
+              </div>
+              <p class="hint">Schlüssel im JSON-Objekt, dessen Wert übernommen wird.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Value Mapping -->
         <div class="form-group">
           <label class="label">Wertzuordnung <span class="optional">(optional)</span></label>
@@ -381,6 +435,7 @@ const props = defineProps({
   dpId:           { type: String,  required: true },
   initial:        { type: Object,  default: null },
   dpPersistValue: { type: Boolean, default: false },
+  dpDataType:     { type: String,  default: 'UNKNOWN' },  // DataPoint.data_type for compat check
 })
 const emit = defineEmits(['save', 'cancel'])
 
@@ -426,8 +481,35 @@ const cfg = reactive({
   byte_order: 'big', word_order: 'big',
   topic: '', publish_topic: '', retain: false, payload_template: '',
   value_map: null, value_map_preset: '', value_map_custom: '',
+  source_data_type: 'auto', json_key: '',
   sensor_id: '', sensor_type: 'DS18B20',
 })
+
+// MQTT source data type constants + compatibility map
+const MQTT_SOURCE_TYPES = [
+  { value: 'auto',   label: 'auto — JSON-Erkennung (Standard)' },
+  { value: 'string', label: 'string' },
+  { value: 'int',    label: 'int' },
+  { value: 'float',  label: 'float' },
+  { value: 'bool',   label: 'bool' },
+  { value: 'json',   label: 'JSON — Schlüssel extrahieren' },
+]
+
+// DataPoint type → which MQTT source types are ok / warn / bad
+const MQTT_TYPE_COMPAT = {
+  BOOLEAN:  { ok: ['bool', 'auto'], warn: ['int', 'string'], bad: ['float', 'json'] },
+  INTEGER:  { ok: ['int', 'auto'],  warn: ['float'],          bad: ['bool', 'string', 'json'] },
+  FLOAT:    { ok: ['float', 'int', 'auto'], warn: [],          bad: ['bool', 'string', 'json'] },
+  STRING:   { ok: ['string', 'auto'], warn: ['int', 'float', 'bool'], bad: ['json'] },
+  DATE:     { ok: ['string', 'auto'], warn: [],  bad: ['int', 'float', 'bool', 'json'] },
+  TIME:     { ok: ['string', 'auto'], warn: [],  bad: ['int', 'float', 'bool', 'json'] },
+  DATETIME: { ok: ['string', 'auto'], warn: [],  bad: ['int', 'float', 'bool', 'json'] },
+}
+
+// JSON sample state (UI-only — not persisted)
+const mqttJsonSample    = ref('')
+const mqttJsonKeys      = ref([])   // [{ key: 'temperature', type: 'number' }, …]
+const mqttJsonParseError = ref(null)
 
 // MQTT topic browser state
 const mqttBrowseTopics = ref([])
@@ -499,6 +581,20 @@ const groupedInstances = computed(() => {
   return Object.entries(groups).map(([type, items]) => ({ type, items }))
 })
 
+// Compatibility badge for MQTT source_data_type vs DataPoint data_type
+const mqttTypeCompat = computed(() => {
+  const sdt = cfg.source_data_type ?? 'auto'
+  if (sdt === 'auto' || sdt === 'json') return null   // no badge — dynamic
+  const dpType = (props.dpDataType ?? 'UNKNOWN').toUpperCase()
+  const compat = MQTT_TYPE_COMPAT[dpType]
+  if (!compat) return null                             // UNKNOWN → no badge
+  if (compat.ok.includes(sdt))
+    return { cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: 'kompatibel' }
+  if (compat.warn.includes(sdt))
+    return { cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', label: 'Konvertierung nötig' }
+  return { cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', label: 'inkompatibel' }
+})
+
 // ---------------------------------------------------------------------------
 // Init beim Bearbeiten
 // ---------------------------------------------------------------------------
@@ -513,6 +609,8 @@ watch(() => props.initial, val => {
   if (cfg.publish_topic       == null) cfg.publish_topic = ''
   if (cfg.respond_to_read     == null) cfg.respond_to_read = false
   if (cfg.payload_template    == null) cfg.payload_template = ''
+  if (cfg.source_data_type   == null) cfg.source_data_type = 'auto'
+  if (cfg.json_key           == null) cfg.json_key = ''
   // Restore value_map UI state from loaded config
   if (cfg.value_map && typeof cfg.value_map === 'object') {
     const mapStr = JSON.stringify(cfg.value_map)
@@ -574,6 +672,26 @@ function onValueMapPresetChange() {
   if (cfg.value_map_preset !== 'custom') cfg.value_map_custom = ''
 }
 
+function onMqttJsonSampleInput() {
+  mqttJsonParseError.value = null
+  mqttJsonKeys.value = []
+  const s = mqttJsonSample.value.trim()
+  if (!s) return
+  try {
+    const obj = JSON.parse(s)
+    if (obj !== null && typeof obj === 'object' && !Array.isArray(obj)) {
+      mqttJsonKeys.value = Object.entries(obj).map(([k, v]) => ({
+        key: k,
+        type: v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v,
+      }))
+    } else {
+      mqttJsonParseError.value = 'Sample muss ein JSON-Objekt sein (kein Array / Primitivwert)'
+    }
+  } catch (e) {
+    mqttJsonParseError.value = `Kein gültiges JSON: ${e.message}`
+  }
+}
+
 function onGaSelect(item) {
   if (item.dpt && item.dpt !== cfg.dpt_id) cfg.dpt_id = item.dpt
 }
@@ -608,6 +726,12 @@ function buildConfig() {
     const c = { topic: cfg.topic, retain: cfg.retain }
     if (cfg.publish_topic?.trim())    c.publish_topic    = cfg.publish_topic.trim()
     if (cfg.payload_template?.trim()) c.payload_template = cfg.payload_template.trim()
+    // source_data_type + json_key
+    if (cfg.source_data_type && cfg.source_data_type !== 'auto') {
+      c.source_data_type = cfg.source_data_type
+      if (cfg.source_data_type === 'json' && cfg.json_key?.trim())
+        c.json_key = cfg.json_key.trim()
+    }
     // Resolve value_map from preset or custom JSON
     let valueMap = null
     if (cfg.value_map_preset === 'custom') {
