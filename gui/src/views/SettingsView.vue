@@ -798,14 +798,22 @@ async function deleteApiKey(id) { await authApi.deleteApiKey(id); await loadKeys
 const importResult = ref(null)
 
 async function doExport() {
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  const ts  = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
+
+  // JSON-Konfigurationssicherung
   const { data } = await configApi.export()
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-  const url  = URL.createObjectURL(blob)
-  const now  = new Date()
-  const pad  = (n) => String(n).padStart(2, '0')
-  const ts   = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
-  const a    = document.createElement('a'); a.href = url; a.download = `openTWS_Backup_${ts}.json`; a.click()
-  URL.revokeObjectURL(url)
+  const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const jsonUrl  = URL.createObjectURL(jsonBlob)
+  const a1 = document.createElement('a'); a1.href = jsonUrl; a1.download = `openTWS_Backup_${ts}.json`; a1.click()
+  URL.revokeObjectURL(jsonUrl)
+
+  // SQLite-Datenbanksicherung
+  const { data: dbBlob } = await configApi.exportDb()
+  const dbUrl = URL.createObjectURL(dbBlob)
+  const a2 = document.createElement('a'); a2.href = dbUrl; a2.download = `openTWS_DB_${ts}.sqlite`; a2.click()
+  URL.revokeObjectURL(dbUrl)
 }
 async function onImportFile(e) {
   const file = e.target.files[0]; if (!file) return
