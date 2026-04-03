@@ -101,7 +101,7 @@
 
     <!-- Delete confirm -->
     <ConfirmDialog v-model="showConfirm" title="DataPoint löschen"
-      :message="`'${deleteTarget?.name}' und alle Bindings löschen?`"
+      :message="`'${deleteTarget?.name}' und alle Verknüpfungen löschen?`"
       confirm-label="Löschen" @confirm="doDelete" />
   </div>
 </template>

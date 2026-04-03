@@ -32,7 +32,7 @@
             <Badge :variant="a.connected ? 'success' : a.running ? 'warning' : 'muted'" size="xs">
               {{ a.connected ? 'Verbunden' : a.running ? 'Läuft' : 'Inaktiv' }}
             </Badge>
-            <span class="text-xs text-slate-500">{{ a.bindings }} Bindings</span>
+            <span class="text-xs text-slate-500">{{ a.bindings }} Verknüpfungen</span>
           </div>
         </div>
       </div>

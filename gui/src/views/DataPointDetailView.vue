@@ -55,18 +55,18 @@
       </div>
     </div>
 
-    <!-- Bindings -->
+    <!-- Verknüpfungen -->
     <div class="card">
       <div class="card-header">
-        <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm">Adapter Bindings</h3>
+        <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm">Adapter Verknüpfungen</h3>
         <button @click="showBindingForm = true" class="btn-primary btn-sm">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Binding
+          Verknüpfung
         </button>
       </div>
       <div class="card-body">
         <div v-if="bindingsLoading" class="flex justify-center py-4"><Spinner /></div>
-        <div v-else-if="!bindings.length" class="text-center text-slate-500 text-sm py-4">Keine Bindings — DataPoint ist noch mit keinem Adapter verknüpft</div>
+        <div v-else-if="!bindings.length" class="text-center text-slate-500 text-sm py-4">Keine Verknüpfungen — Objekt ist noch mit keinem Adapter verknüpft</div>
         <div v-else class="flex flex-col gap-2">
           <div v-for="b in bindings" :key="b.id" class="flex items-center gap-3 p-3 bg-surface-700 rounded-lg">
             <div class="flex-1 min-w-0">
