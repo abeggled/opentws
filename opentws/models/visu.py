@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 # ── Typen ─────────────────────────────────────────────────────────────────────
 
 NodeType   = Literal["LOCATION", "PAGE"]
-AccessLevel = Literal["readonly", "public", "protected", "private"]
+AccessLevel = Literal["readonly", "public", "protected", "user"]
 
 
 # ── WidgetInstance ────────────────────────────────────────────────────────────
@@ -87,6 +87,10 @@ class PinAuthRequest(BaseModel):
 class PinAuthResponse(BaseModel):
     session_token: str
     expires_in: int = 3600
+
+
+class VisuNodeUsersUpdate(BaseModel):
+    usernames: list[str]
 
 
 class CopyNodeRequest(BaseModel):

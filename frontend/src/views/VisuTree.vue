@@ -85,9 +85,9 @@ function navigate(node: VisuNode) {
             class="text-xs text-yellow-600 dark:text-yellow-500 flex items-center gap-1"
           >🔐 PIN</span>
           <span
-            v-else-if="node.access === 'private'"
-            class="text-xs text-red-500 dark:text-red-400 flex items-center gap-1"
-          >🔑 Login</span>
+            v-else-if="node.access === 'user'"
+            class="text-xs text-purple-500 dark:text-purple-400 flex items-center gap-1"
+          >👤 Anmeldung</span>
         </button>
       </div>
     </main>

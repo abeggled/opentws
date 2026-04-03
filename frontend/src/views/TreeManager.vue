@@ -11,12 +11,13 @@
  * - Löschen mit Bestätigung
  * - Navigation zu Viewer / Editor
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVisuStore } from '@/stores/visu'
 import { useThemeStore } from '@/stores/theme'
 import AuthButton from '@/components/AuthButton.vue'
-import type { VisuNode, NodeType, AccessLevel } from '@/types'
+import { visu as visuApi, users as usersApi } from '@/api/client'
+import type { VisuNode, NodeType, AccessLevel, UserResponse } from '@/types'
 
 const router = useRouter()
 const store  = useVisuStore()
@@ -100,6 +101,14 @@ async function saveNode() {
     }
     if (editPin.value) patch.access_pin = editPin.value
     await store.updateNode(selectedId.value, patch)
+
+    // Benutzer-Zuweisung speichern (bei user-Access oder wenn vorher user war)
+    if (editAccess.value === 'user' || nodeUsersDirty.value) {
+      const usersToSave = editAccess.value === 'user' ? nodeUsers.value : []
+      await visuApi.setNodeUsers(selectedId.value, usersToSave)
+      nodeUsersDirty.value = false
+    }
+
     editPin.value        = ''
     editPinConfirm.value = ''
     flashOk.value        = true
@@ -248,11 +257,11 @@ async function doDelete() {
 
 // ── Zugangs-Optionen ──────────────────────────────────────────────────────────
 const ACCESS_OPTIONS = [
-  { value: null        as AccessLevel | null, label: 'Erben',       desc: 'Vom übergeordneten Knoten',      icon: '↑'  },
-  { value: 'readonly'  as AccessLevel,        label: 'Nur ansehen', desc: 'Öffentlich, keine Interaktion',  icon: '👁' },
-  { value: 'public'    as AccessLevel,        label: 'Öffentlich',  desc: 'Ohne Anmeldung, interaktiv',     icon: '🌐' },
-  { value: 'protected' as AccessLevel,        label: 'PIN',         desc: 'PIN-Eingabe erforderlich',       icon: '🔐' },
-  { value: 'private'   as AccessLevel,        label: 'Privat',      desc: 'Nur Admins (JWT)',               icon: '🔒' },
+  { value: null        as AccessLevel | null, label: 'Erben',            desc: 'Vom übergeordneten Knoten',           icon: '↑'  },
+  { value: 'readonly'  as AccessLevel,        label: 'Nur ansehen',      desc: 'Öffentlich, keine Interaktion',       icon: '👁' },
+  { value: 'public'    as AccessLevel,        label: 'Öffentlich',       desc: 'Ohne Anmeldung, interaktiv',          icon: '🌐' },
+  { value: 'protected' as AccessLevel,        label: 'Authentifiziert (PIN)', desc: 'PIN-Eingabe erforderlich',        icon: '🔐' },
+  { value: 'user'      as AccessLevel,        label: 'Authentifiziert (Benutzer)', desc: 'Admins + zugewiesene Benutzer', icon: '👤' },
 ]
 
 function accessBadge(access: AccessLevel | null) {
@@ -260,13 +269,66 @@ function accessBadge(access: AccessLevel | null) {
     case 'readonly':  return 'bg-blue-500/10  text-blue-600  dark:text-blue-400  border border-blue-500/30'
     case 'public':    return 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/30'
     case 'protected': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-    case 'private':   return 'bg-red-500/10   text-red-600   dark:text-red-400   border border-red-500/30'
+    case 'user':      return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30'
     default:          return 'bg-gray-500/10  text-gray-500  dark:text-gray-500  border border-gray-500/20'
   }
 }
 
 function accessLabel(access: AccessLevel | null) {
   return ACCESS_OPTIONS.find(o => o.value === access)?.label ?? '—'
+}
+
+// ── Benutzer-Zuweisung (user-Access) ─────────────────────────────────────────
+const allUsers      = ref<UserResponse[]>([])
+const nodeUsers     = ref<string[]>([])   // aktuell zugewiesene Benutzernamen für den Knoten
+const nodeUsersDirty = ref(false)
+
+// Nicht-Admin Benutzer für die Auswahl
+const selectableUsers = computed(() =>
+  allUsers.value.filter(u => !u.is_admin)
+)
+
+async function loadUsersIfNeeded() {
+  if (allUsers.value.length === 0) {
+    try { allUsers.value = await usersApi.list() } catch { /* ignore */ }
+  }
+}
+
+// Beim Wechsel auf 'user'-Access → Benutzer laden und bestehende Zuweisung abrufen
+watch(editAccess, async (val) => {
+  if (val === 'user' && selectedId.value) {
+    await loadUsersIfNeeded()
+    try {
+      nodeUsers.value = await visuApi.getNodeUsers(selectedId.value)
+    } catch {
+      nodeUsers.value = []
+    }
+    nodeUsersDirty.value = false
+  }
+})
+
+// Beim Wechsel des ausgewählten Knotens auf 'user'-Access → Zuweisung laden
+watch(selectedId, async (id) => {
+  if (!id) { nodeUsers.value = []; return }
+  const node = store.getNode(id)
+  if (node?.access === 'user') {
+    await loadUsersIfNeeded()
+    try {
+      nodeUsers.value = await visuApi.getNodeUsers(id)
+    } catch {
+      nodeUsers.value = []
+    }
+    nodeUsersDirty.value = false
+  } else {
+    nodeUsers.value = []
+  }
+})
+
+function toggleNodeUser(username: string) {
+  const idx = nodeUsers.value.indexOf(username)
+  if (idx === -1) nodeUsers.value = [...nodeUsers.value, username]
+  else nodeUsers.value = nodeUsers.value.filter(u => u !== username)
+  nodeUsersDirty.value = true
 }
 
 // ── Quick-Icons ───────────────────────────────────────────────────────────────
@@ -520,6 +582,34 @@ onMounted(async () => {
               <p v-if="editPin && editPinConfirm && editPin !== editPinConfirm" class="text-xs text-red-500">
                 PINs stimmen nicht überein
               </p>
+            </div>
+
+            <!-- Benutzer-Auswahl (nur wenn user gewählt) -->
+            <div v-if="editAccess === 'user'" class="space-y-2 pl-2 border-l-2 border-purple-500/40">
+              <p class="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                Zugelassene Benutzer (Admins haben immer Zugriff)
+              </p>
+              <div v-if="selectableUsers.length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">
+                Keine nicht-Admin Benutzer vorhanden. Benutzer können in den Einstellungen angelegt werden.
+              </div>
+              <div v-else class="space-y-1">
+                <label
+                  v-for="u in selectableUsers"
+                  :key="u.username"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors text-sm"
+                  :class="nodeUsers.includes(u.username)
+                    ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300'
+                    : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 text-gray-700 dark:text-gray-300'"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="nodeUsers.includes(u.username)"
+                    class="text-purple-500 focus:ring-purple-500"
+                    @change="toggleNodeUser(u.username)"
+                  />
+                  <span class="font-medium">{{ u.username }}</span>
+                </label>
+              </div>
             </div>
           </section>
 

@@ -13,11 +13,11 @@ const router = useRouter()
 // Letzter Knoten im Breadcrumb
 const lastNode = computed(() => breadcrumb.value[breadcrumb.value.length - 1] ?? null)
 
-// Kinder des letzten Knotens (gefiltert: private nur für Admins)
+// Kinder des letzten Knotens (gefiltert: user-geschützte nur für eingeloggte Benutzer)
 const children = computed<VisuNode[]>(() => {
   if (!lastNode.value) return []
   return store.getChildren(lastNode.value.id).filter(n => {
-    if (n.access === 'private') return !!getJwt()
+    if (n.access === 'user') return !!getJwt()
     return true
   })
 })
@@ -46,7 +46,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 function accessIcon(node: VisuNode): string {
   if (node.access === 'readonly')  return '👁'
   if (node.access === 'protected') return '🔐'
-  if (node.access === 'private')   return '🔒'
+  if (node.access === 'user')      return '👤'
   return ''
 }
 </script>

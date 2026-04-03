@@ -265,8 +265,17 @@ async def write_value(
             session_token = request.headers.get("X-Session-Token")
             if not session_token or not validate_session(session_token, page_id):
                 raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Valid session token required")
-        else:   # private oder unbekannt
+        else:   # user, unbekannt oder sonstige → 401
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+    else:
+        # Benutzer ist eingeloggt — prüfe ob er Zugang zur Seite hat
+        page_id = request.headers.get("X-Page-Id")
+        if page_id:
+            access = await _resolve_page_access(db, page_id)
+            if access == "user":
+                from opentws.api.v1.visu import _check_user_access
+                if not await _check_user_access(db, page_id, user):
+                    raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Zugriff verweigert")
 
     event = DataValueEvent(
         datapoint_id=dp_id,

@@ -134,7 +134,7 @@ export const auth = {
 
 // ── Visu-Nodes ────────────────────────────────────────────────────────────────
 
-import type { VisuNode, PageConfig, PinAuthResponse } from '@/types'
+import type { VisuNode, PageConfig, PinAuthResponse, UserResponse } from '@/types'
 
 export const visu = {
   tree: () => request<VisuNode[]>('/visu/tree'),
@@ -183,6 +183,21 @@ export const visu = {
       method: 'PUT',
       body: JSON.stringify(config),
     }),
+
+  getNodeUsers: (id: string) =>
+    request<string[]>(`/visu/nodes/${id}/users`),
+
+  setNodeUsers: (id: string, usernames: string[]) =>
+    request<void>(`/visu/nodes/${id}/users`, {
+      method: 'PUT',
+      body: JSON.stringify({ usernames }),
+    }),
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+
+export const users = {
+  list: () => request<UserResponse[]>('/auth/users'),
 }
 
 // ── DataPoints ────────────────────────────────────────────────────────────────

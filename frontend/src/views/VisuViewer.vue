@@ -88,8 +88,8 @@ async function load() {
       return
     }
 
-    // Access-Check: private → JWT
-    if (currentNode?.access === 'private' && !getJwt()) {
+    // Access-Check: user → JWT-Login erforderlich
+    if (currentNode?.access === 'user' && !getJwt()) {
       router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
       return
     }
