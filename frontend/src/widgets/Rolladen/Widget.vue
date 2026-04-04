@@ -93,13 +93,14 @@ async function write(id: string | null, value: unknown) {
 
 // ── Stop senden ──────────────────────────────────────────────────────────────
 /**
- * Sendet den Stop-Befehl (true, dann false nach kurzer Zeit).
- * Wird nach Kurzklick UND über die Stop-Taste verwendet.
- * Sendet nichts wenn kein dp_stop konfiguriert ist.
+ * Sendet den Stop-Befehl (nur true — KEIN nachfolgendes false).
+ * Viele Aktoren interpretieren false auf dem Stop-DP als neuen Fahrbefehl
+ * (z.B. „fahre zur Standardposition"), was ungewollte Bewegungen auslöst.
+ * KNX-Telegramme werden auch bei unverändertem Wert erneut ausgelöst,
+ * d.h. ein erneuter Stop-Klick sendet stets einen neuen true-Impuls.
  */
 async function sendStop() {
   await write(dpStop.value, true)
-  if (dpStop.value) setTimeout(() => write(dpStop.value, false), 200)
 }
 
 // ── Hoch-Taste ──────────────────────────────────────────────────────────────
