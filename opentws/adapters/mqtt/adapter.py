@@ -85,7 +85,6 @@ class MqttBindingConfig(BaseModel):
     publish_topic: str | None = None                  # DEST/BOTH: publish here if set, else use topic
     retain: bool = False                              # retain flag when publishing
     payload_template: str | None = None              # DEST/BOTH: template with ###DP### placeholder
-    value_map: dict[str, str] | None = None          # value substitution map (str keys + values)
     source_data_type: str | None = None              # SOURCE/BOTH: "string"|"int"|"float"|"bool"|"json"|"xml"|None
     json_key: str | None = None                      # key to extract when source_data_type=="json"
     xml_path: str | None = None                      # ET-XPath path when source_data_type=="xml"
@@ -293,8 +292,8 @@ class MqttAdapter(AdapterBase):
             bc = MqttBindingConfig(**binding.config)
             topic = bc.publish_topic or bc.topic
 
-            # Apply value_map substitution
-            mapped = apply_value_map(value, bc.value_map)
+            # Apply value_map substitution (general binding-level field)
+            mapped = apply_value_map(value, binding.value_map)
 
             # Build payload
             if bc.payload_template:

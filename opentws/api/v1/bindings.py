@@ -45,6 +45,7 @@ class BindingOut(BaseModel):
     send_min_delta: float | None = None
     send_min_delta_pct: float | None = None
     value_formula: str | None = None
+    value_map: dict[str, str] | None = None
     created_at: str
     updated_at: str
 
@@ -101,6 +102,7 @@ def _row_out(row: Any, name_map: dict[str, str] | None = None) -> BindingOut:
         send_min_delta=float(min_delta) if min_delta is not None else None,
         send_min_delta_pct=float(min_delta_p) if min_delta_p is not None else None,
         value_formula=row["value_formula"] or None,
+        value_map=json.loads(row["value_map"]) if row["value_map"] else None,
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
@@ -172,8 +174,8 @@ async def create_binding(
         """INSERT INTO adapter_bindings
            (id, datapoint_id, adapter_type, adapter_instance_id, direction, config, enabled,
             send_throttle_ms, send_on_change, send_min_delta, send_min_delta_pct,
-            value_formula, created_at, updated_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            value_formula, value_map, created_at, updated_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             binding_id, str(dp_id), adapter_type,
             str(body.adapter_instance_id), body.direction,
@@ -181,6 +183,7 @@ async def create_binding(
             body.send_throttle_ms, int(body.send_on_change),
             body.send_min_delta, body.send_min_delta_pct,
             body.value_formula or None,
+            json.dumps(body.value_map) if body.value_map else None,
             now, now,
         ),
     )
@@ -217,6 +220,8 @@ async def update_binding(
     min_delta       = updates.get("send_min_delta", row["send_min_delta"])
     min_delta_pct   = updates.get("send_min_delta_pct", row["send_min_delta_pct"])
     formula         = updates.get("value_formula", row["value_formula"]) or None
+    value_map_new   = updates.get("value_map", json.loads(row["value_map"]) if row["value_map"] else None)
+    value_map_json  = json.dumps(value_map_new) if value_map_new else None
 
     # Formel validieren
     if formula:
@@ -229,11 +234,11 @@ async def update_binding(
         """UPDATE adapter_bindings
            SET direction=?, config=?, enabled=?,
                send_throttle_ms=?, send_on_change=?, send_min_delta=?, send_min_delta_pct=?,
-               value_formula=?, updated_at=?
+               value_formula=?, value_map=?, updated_at=?
            WHERE id=?""",
         (direction, config_val, enabled,
          throttle_ms, on_change, min_delta, min_delta_pct,
-         formula, now, str(binding_id)),
+         formula, value_map_json, now, str(binding_id)),
     )
 
     instance_id = row["adapter_instance_id"]

@@ -136,9 +136,13 @@ class ModbusTcpAdapter(AdapterBase):
             try:
                 value = await self._read_register(bc)
                 quality = "good" if value is not None else "bad"
-                if binding.value_formula and quality == "good":
-                    from opentws.core.formula import apply_formula
-                    value = apply_formula(binding.value_formula, value)
+                if quality == "good":
+                    if binding.value_formula:
+                        from opentws.core.formula import apply_formula
+                        value = apply_formula(binding.value_formula, value)
+                    if binding.value_map:
+                        from opentws.core.transformation import apply_value_map
+                        value = apply_value_map(value, binding.value_map)
                 await self._bus.publish(DataValueEvent(
                     datapoint_id=binding.datapoint_id,
                     value=value,

@@ -21,6 +21,7 @@ class AdapterBinding(BaseModel):
     send_min_delta: Optional[float] = None                # Nur senden bei abs. Abweichung >= X
     send_min_delta_pct: Optional[float] = None            # Nur senden bei rel. Abweichung >= X %
     value_formula: Optional[str] = None                   # Transformation: "x * 0.1", "x / 3600"
+    value_map: Optional[dict[str, str]] = None            # Wertzuordnung: z.B. {"0": "off", "1": "on"}
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
     )
@@ -40,6 +41,7 @@ class AdapterBindingCreate(BaseModel):
     send_min_delta: Optional[float] = None
     send_min_delta_pct: Optional[float] = None
     value_formula: Optional[str] = None
+    value_map: Optional[dict[str, str]] = None
 
 
 class AdapterBindingUpdate(BaseModel):
@@ -51,3 +53,4 @@ class AdapterBindingUpdate(BaseModel):
     send_min_delta: Optional[float] = None
     send_min_delta_pct: Optional[float] = None
     value_formula: Optional[str] = None
+    value_map: Optional[dict[str, str]] = None

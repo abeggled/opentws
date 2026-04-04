@@ -131,10 +131,10 @@ const showAbsolute = computed(() => showTimeRef.value && cfg.time_ref === 'absol
 const showOffset   = computed(() => showTimeRef.value && cfg.time_ref !== 'absolute' && cfg.time_ref !== 'solar_altitude')
 const showSolar    = computed(() => showTimeRef.value && cfg.time_ref === 'solar_altitude')
 
-// ── Input class helper (dark-mode Tailwind, matches existing Config.vue) ──────
-const iCls = 'w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-blue-500 disabled:opacity-50'
-const lCls = 'block text-xs text-gray-400 mb-1'
-const hCls = 'text-xs text-gray-500 mt-0.5'
+// ── Input class helper (light/dark Tailwind) ──────────────────────────────────
+const iCls = 'w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500 disabled:opacity-50'
+const lCls = 'block text-xs text-gray-500 dark:text-gray-400 mb-1'
+const hCls = 'text-xs text-gray-400 dark:text-gray-500 mt-0.5'
 </script>
 
 <template>
@@ -144,13 +144,13 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
     @click.self="emit('close')"
   >
     <!-- Dialog -->
-    <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
 
       <!-- Header -->
-      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-700 flex-shrink-0">
-        <h2 class="text-sm font-semibold text-gray-100">🕐 Verknüpfung bearbeiten</h2>
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">🕐 Verknüpfung bearbeiten</h2>
         <button
-          class="text-gray-400 hover:text-gray-200 text-lg leading-none"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none"
           @click="emit('close')"
         >×</button>
       </div>
@@ -158,7 +158,7 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
       <!-- Body -->
       <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
 
-        <div v-if="loading" class="text-sm text-gray-400 text-center py-6">Lade …</div>
+        <div v-if="loading" class="text-sm text-gray-500 dark:text-gray-400 text-center py-6">Lade …</div>
 
         <template v-else-if="!errorMsg">
 
@@ -170,10 +170,10 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
               v-model="bindingEnabled"
               class="w-4 h-4 rounded accent-blue-500"
             />
-            <label for="zt-enabled" class="text-sm text-gray-200">Verknüpfung aktiviert</label>
+            <label for="zt-enabled" class="text-sm text-gray-700 dark:text-gray-200">Verknüpfung aktiviert</label>
           </div>
 
-          <hr class="border-gray-700" />
+          <hr class="border-gray-200 dark:border-gray-700" />
 
           <!-- Typ -->
           <div class="grid grid-cols-2 gap-3">
@@ -220,19 +220,19 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
                   class="px-2.5 py-1 text-xs font-medium rounded border transition-colors"
                   :class="cfg.weekdays.includes(idx)
                     ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'bg-gray-800 border-gray-600 text-gray-300 hover:border-blue-500'"
+                    : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-500'"
                   @click="toggleWeekday(idx)"
                 >{{ lbl }}</button>
-                <button type="button" class="ml-2 text-xs text-gray-500 hover:text-blue-400" @click="cfg.weekdays = [0,1,2,3,4,5,6]">Alle</button>
-                <button type="button" class="text-xs text-gray-500 hover:text-blue-400" @click="cfg.weekdays = [0,1,2,3,4]">Mo–Fr</button>
-                <button type="button" class="text-xs text-gray-500 hover:text-blue-400" @click="cfg.weekdays = [5,6]">Sa+So</button>
+                <button type="button" class="ml-2 text-xs text-gray-400 dark:text-gray-500 hover:text-blue-400" @click="cfg.weekdays = [0,1,2,3,4,5,6]">Alle</button>
+                <button type="button" class="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-400" @click="cfg.weekdays = [0,1,2,3,4]">Mo–Fr</button>
+                <button type="button" class="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-400" @click="cfg.weekdays = [5,6]">Sa+So</button>
               </div>
             </div>
 
             <!-- Monate + Tag (nur Jahresschaltuhr) -->
             <template v-if="cfg.timer_type === 'annual'">
               <div>
-                <label :class="lCls">Monate <span class="text-gray-600">(leer = alle)</span></label>
+                <label :class="lCls">Monate <span class="text-gray-400 dark:text-gray-600">(leer = alle)</span></label>
                 <div class="flex gap-1 flex-wrap">
                   <button
                     v-for="(lbl, idx) in MONTH_LABELS"
@@ -241,20 +241,20 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
                     class="px-2 py-1 text-xs font-medium rounded border transition-colors"
                     :class="cfg.months.includes(idx+1)
                       ? 'bg-blue-600 border-blue-600 text-white'
-                      : 'bg-gray-800 border-gray-600 text-gray-300 hover:border-blue-500'"
+                      : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-500'"
                     @click="toggleMonth(idx + 1)"
                   >{{ lbl }}</button>
-                  <button type="button" class="ml-1 text-xs text-gray-500 hover:text-blue-400" @click="cfg.months = []">Alle</button>
+                  <button type="button" class="ml-1 text-xs text-gray-400 dark:text-gray-500 hover:text-blue-400" @click="cfg.months = []">Alle</button>
                 </div>
               </div>
               <div class="w-36">
-                <label :class="lCls">Tag im Monat <span class="text-gray-600">(0 = alle)</span></label>
+                <label :class="lCls">Tag im Monat <span class="text-gray-400 dark:text-gray-600">(0 = alle)</span></label>
                 <input v-model.number="cfg.day_of_month" type="number" min="0" max="31" :class="iCls" />
               </div>
             </template>
 
             <!-- Zeitreferenz -->
-            <hr class="border-gray-700" />
+            <hr class="border-gray-200 dark:border-gray-700" />
             <div class="w-56">
               <label :class="lCls">Zeitreferenz</label>
               <select v-model="cfg.time_ref" :class="iCls">
@@ -302,19 +302,19 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
             </div>
 
             <!-- Takt -->
-            <hr class="border-gray-700" />
+            <hr class="border-gray-200 dark:border-gray-700" />
             <div class="grid grid-cols-2 gap-3">
               <div class="flex items-center gap-2">
                 <input id="zt-every-minute" type="checkbox" v-model="cfg.every_minute" class="w-4 h-4 rounded accent-blue-500" />
                 <div>
-                  <label for="zt-every-minute" class="text-xs text-gray-300">Jede Minute schalten</label>
+                  <label for="zt-every-minute" class="text-xs text-gray-600 dark:text-gray-300">Jede Minute schalten</label>
                   <p :class="hCls">Wochentag-Filter gilt weiterhin</p>
                 </div>
               </div>
               <div class="flex items-center gap-2">
                 <input id="zt-every-hour" type="checkbox" v-model="cfg.every_hour" class="w-4 h-4 rounded accent-blue-500" />
                 <div>
-                  <label for="zt-every-hour" class="text-xs text-gray-300">Jede Stunde schalten</label>
+                  <label for="zt-every-hour" class="text-xs text-gray-600 dark:text-gray-300">Jede Stunde schalten</label>
                   <p :class="hCls">Zur eingestellten Minute</p>
                 </div>
               </div>
@@ -325,7 +325,7 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
             </div>
 
             <!-- Feiertag / Ferien -->
-            <hr class="border-gray-700" />
+            <hr class="border-gray-200 dark:border-gray-700" />
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label :class="lCls">Feiertagsbehandlung</label>
@@ -348,7 +348,7 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
             </div>
 
             <!-- Ausgabewert -->
-            <hr class="border-gray-700" />
+            <hr class="border-gray-200 dark:border-gray-700" />
             <div class="w-40">
               <label :class="lCls">Schalt-Wert</label>
               <input v-model="cfg.value" type="text" :class="iCls" placeholder="1" />
@@ -364,9 +364,9 @@ const hCls = 'text-xs text-gray-500 mt-0.5'
       </div><!-- /body -->
 
       <!-- Footer -->
-      <div class="flex justify-end gap-2 px-5 py-3 border-t border-gray-700 flex-shrink-0">
+      <div class="flex justify-end gap-2 px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <button
-          class="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 rounded"
+          class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded"
           @click="emit('close')"
         >Abbrechen</button>
         <button

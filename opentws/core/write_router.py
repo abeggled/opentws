@@ -177,14 +177,20 @@ class WriteRouter:
                     except (TypeError, ValueError):
                         pass  # Nicht-numerische Werte: Delta-Filter ignorieren
 
-            # --- DEST-Formel: Wert vor dem Schreiben transformieren ---
+            # --- DEST-Transformation: Formel dann value_map ---
             write_value = value
             if binding.value_formula:
                 from opentws.core.formula import apply_formula
-                write_value = apply_formula(binding.value_formula, value)
+                write_value = apply_formula(binding.value_formula, write_value)
                 logger.debug(
                     "WriteRouter: DEST formula '%s' applied: %r → %r",
                     binding.value_formula, value, write_value,
+                )
+            if binding.value_map:
+                from opentws.core.transformation import apply_value_map
+                write_value = apply_value_map(write_value, binding.value_map)
+                logger.debug(
+                    "WriteRouter: DEST value_map applied: %r → %r", value, write_value,
                 )
 
             try:

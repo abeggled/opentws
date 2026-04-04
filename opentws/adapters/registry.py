@@ -267,6 +267,8 @@ def _row_to_binding(row: Any) -> Any:
     throttle    = row["send_throttle_ms"]
     min_delta   = row["send_min_delta"]
     min_delta_p = row["send_min_delta_pct"]
+    value_map_raw = row["value_map"] if row["value_map"] else None
+    value_map = json.loads(value_map_raw) if value_map_raw else None
     return AdapterBinding(
         id=uuid.UUID(row["id"]),
         datapoint_id=uuid.UUID(row["datapoint_id"]),
@@ -280,6 +282,7 @@ def _row_to_binding(row: Any) -> Any:
         send_min_delta=float(min_delta) if min_delta is not None else None,
         send_min_delta_pct=float(min_delta_p) if min_delta_p is not None else None,
         value_formula=row["value_formula"] or None,
+        value_map=value_map,
         created_at=datetime.fromisoformat(row["created_at"]),
         updated_at=datetime.fromisoformat(row["updated_at"]),
     )
