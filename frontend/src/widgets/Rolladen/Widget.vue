@@ -107,11 +107,12 @@ async function write(id: string | null, value: unknown) {
 async function onMoveUpStart() {
   if (props.editorMode || props.readonly) return
   upState.value = 'pressing'
-  await write(dpMoveUp.value, activeVal(invertUp.value))
+  // Timer SOFORT starten — misst ab dem Moment des Drückens, nicht nach dem Write
   upTimer = setTimeout(() => {
     upState.value = 'moving'
     upTimer = null
   }, LONG_PRESS_MS)
+  await write(dpMoveUp.value, activeVal(invertUp.value))
 }
 
 async function onMoveUpEnd() {
@@ -130,11 +131,12 @@ async function onMoveUpEnd() {
 async function onMoveDownStart() {
   if (props.editorMode || props.readonly) return
   downState.value = 'pressing'
-  await write(dpMoveDown.value, activeVal(invertDown.value))
+  // Timer SOFORT starten — misst ab dem Moment des Drückens, nicht nach dem Write
   downTimer = setTimeout(() => {
     downState.value = 'moving'
     downTimer = null
   }, LONG_PRESS_MS)
+  await write(dpMoveDown.value, activeVal(invertDown.value))
 }
 
 async function onMoveDownEnd() {
@@ -235,7 +237,6 @@ onUnmounted(() => {
           :title="tooltipUp"
           @pointerdown.prevent="onMoveUpStart"
           @pointerup="onMoveUpEnd"
-          @pointerleave="onMoveUpEnd"
         >
           ▲
           <!-- Long-Press-Fortschrittsbalken (sichtbar solange pressing) -->
@@ -285,7 +286,6 @@ onUnmounted(() => {
           :title="tooltipDown"
           @pointerdown.prevent="onMoveDownStart"
           @pointerup="onMoveDownEnd"
-          @pointerleave="onMoveDownEnd"
         >
           ▼
           <span
