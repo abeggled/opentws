@@ -95,11 +95,14 @@ async function write(id: string | null, value: unknown) {
 // ── Hoch-Taste ──────────────────────────────────────────────────────────────
 /**
  * Kurzklick (< 0.5 s): Schritt hoch / Lamellen öffnen
- *   → sende aktiv bei pointerdown, sende inaktiv bei pointerup → Aktuator interpretiert
- *     das kurze Signal als Einzelschritt (KNX Short-Travel).
+ *   → aktiv bei pointerdown, inaktiv bei pointerup  (kurzes Signal = Short-Travel/Schritt)
  *
- * Langdruck (≥ 0.5 s): Auffahren bis Endlage oder Stop
- *   → aktives Signal bleibt gehalten; inaktiv nur beim Loslassen → KNX Long-Travel.
+ * Langdruck (≥ 0.5 s): Auffahren bis Endlage
+ *   → aktiv bei pointerdown, beim Loslassen NICHTS senden → Aktor fährt eigenständig
+ *     bis zur Endlage.  Abbruch nur über Stop-Taste.
+ *
+ * WICHTIG: Wir senden beim Loslassen nach Langdruck KEINEN inaktiven Wert!
+ * Viele Aktoren interpretieren 0 auf dem Down-DP als „fahr hoch" (DPT 1.008).
  */
 async function onMoveUpStart() {
   if (props.editorMode || props.readonly) return
@@ -113,10 +116,14 @@ async function onMoveUpStart() {
 
 async function onMoveUpEnd() {
   if (upState.value === 'idle') return
+  const wasShort = upState.value === 'pressing'   // Timer hat noch nicht ausgelöst
   if (upTimer) { clearTimeout(upTimer); upTimer = null }
   upState.value = 'idle'
-  // Inaktiv senden: bei Kurzklick → Schritt-Ende; bei Langdruck → Stopp
-  await write(dpMoveUp.value, inactiveVal(invertUp.value))
+  // Nur bei Kurzklick: inaktiven Wert senden → Aktor erkennt kurzes Signal als Schritt
+  // Bei Langdruck:     nichts senden → Aktor fährt bis Endlage (Stop-Taste zum Abbruch)
+  if (wasShort) {
+    await write(dpMoveUp.value, inactiveVal(invertUp.value))
+  }
 }
 
 // ── Runter-Taste ─────────────────────────────────────────────────────────────
@@ -132,9 +139,12 @@ async function onMoveDownStart() {
 
 async function onMoveDownEnd() {
   if (downState.value === 'idle') return
+  const wasShort = downState.value === 'pressing'
   if (downTimer) { clearTimeout(downTimer); downTimer = null }
   downState.value = 'idle'
-  await write(dpMoveDown.value, inactiveVal(invertDown.value))
+  if (wasShort) {
+    await write(dpMoveDown.value, inactiveVal(invertDown.value))
+  }
 }
 
 // ── Stop-Taste ───────────────────────────────────────────────────────────────
@@ -342,7 +352,7 @@ onUnmounted(() => {
  * Füllt sich in genau LONG_PRESS_MS (500 ms) → visuelles Feedback für Langdruck.
  */
 .long-press-bar {
-  animation: longPressProgress v-bind('LONG_PRESS_MS + "ms"') linear forwards;
+  animation: longPressProgress 500ms linear forwards;
 }
 
 @keyframes longPressProgress {
