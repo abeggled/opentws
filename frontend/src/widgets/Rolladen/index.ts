@@ -12,8 +12,10 @@ WidgetRegistry.register({
   configComponent: Config,
   defaultConfig: {
     label: '',
-    mode: 'rolladen',   // 'rolladen' | 'jalousie'
-    invert: false,      // true = 0% ist geschlossen, 100% ist offen
+    mode: 'rolladen',        // 'rolladen' | 'jalousie'
+    invert: false,           // true = 0% ist geschlossen, 100% ist offen
+    invert_move_up: false,   // true = false ist aktiv (Hoch)
+    invert_move_down: false, // true = false ist aktiv (Runter)
     dp_move_up: '',
     dp_move_down: '',
     dp_stop: '',

@@ -4,6 +4,12 @@ import { datapoints } from '@/api/client'
 import { useDatapointsStore } from '@/stores/datapoints'
 import type { DataPointValue } from '@/types'
 
+/** Schwellwert in ms: darunter = Kurzklick (Schritt/Stop), darüber = Langdruck (Fahren) */
+const LONG_PRESS_MS = 500
+
+/** Tastenstatus für Richtungstasten */
+type PressState = 'idle' | 'pressing' | 'moving'
+
 const props = defineProps<{
   config: Record<string, unknown>
   datapointId: string | null
@@ -15,11 +21,13 @@ const props = defineProps<{
 
 const dpStore = useDatapointsStore()
 
-const label  = computed(() => (props.config.label  as string)  ?? '—')
-const mode   = computed(() => (props.config.mode   as string)  ?? 'rolladen')
-const invert = computed(() => (props.config.invert as boolean) ?? false)
+const label      = computed(() => (props.config.label           as string)  ?? '—')
+const mode       = computed(() => (props.config.mode            as string)  ?? 'rolladen')
+const invert     = computed(() => (props.config.invert          as boolean) ?? false)
+const invertUp   = computed(() => (props.config.invert_move_up  as boolean) ?? false)
+const invertDown = computed(() => (props.config.invert_move_down as boolean) ?? false)
 
-// DP-IDs aus der Config
+// ── DP-IDs aus der Config ────────────────────────────────────────────────────
 const dpMoveUp         = computed(() => (props.config.dp_move_up          as string) || null)
 const dpMoveDown       = computed(() => (props.config.dp_move_down        as string) || null)
 const dpStop           = computed(() => (props.config.dp_stop             as string) || null)
@@ -28,7 +36,7 @@ const dpPositionStatus = computed(() => (props.config.dp_position_status  as str
 const dpSlat           = computed(() => (props.config.dp_slat             as string) || null)
 const dpSlatStatus     = computed(() => (props.config.dp_slat_status      as string) || null)
 
-// Hilfsfunktion: DataPointValue → Zahl (0–100)
+// ── Werte aus dem Store lesen ────────────────────────────────────────────────
 function toNumber(id: string | null): number | null {
   if (!id) return null
   const v = dpStore.getValue(id)
@@ -38,78 +46,108 @@ function toNumber(id: string | null): number | null {
   return isNaN(p) ? null : p
 }
 
-// Positions-Rohwert vom Status-DP (Vorrang) oder Schreib-DP
 const rawPosition = computed(() => toNumber(dpPositionStatus.value ?? dpPosition.value))
 
-/**
- * Anzeigeposition (0 = offen/hochgefahren, 100 = geschlossen/runtergefahren).
- * Bei invert=true ist der KNX-Wert invertiert (0 = zu, 100 = auf).
- */
+/** Anzeigeposition: 0 = auf/hochgefahren, 100 = zu/runtergefahren */
 const displayPosition = computed<number | null>(() => {
   if (rawPosition.value === null) return null
   return invert.value ? 100 - rawPosition.value : rawPosition.value
 })
 
-// Lamellenwinkel (nur Jalousie)
 const rawSlat = computed(() => {
   if (mode.value !== 'jalousie') return null
   return toNumber(dpSlatStatus.value ?? dpSlat.value)
 })
 
-// Lokale Slider-Werte (optimistisch bis KNX antwortet)
+// ── Lokale Slider-Werte (optimistisch) ──────────────────────────────────────
 const localPosition = ref<number | null>(null)
 const localSlat     = ref<number | null>(null)
-let posTimer: ReturnType<typeof setTimeout> | null = null
+let posTimer:  ReturnType<typeof setTimeout> | null = null
 let slatTimer: ReturnType<typeof setTimeout> | null = null
 
 const shownPosition = computed(() => localPosition.value ?? displayPosition.value ?? 0)
 const shownSlat     = computed(() => localSlat.value ?? rawSlat.value ?? 0)
 
-// Visuelle Befüllung (0 % = Rollo hochgefahren, 100 % = Rollo unten)
 const blindCoverage = computed(() => {
   if (props.editorMode) return 50
   return Math.max(0, Math.min(100, shownPosition.value))
 })
 
-const movingUp   = ref(false)
-const movingDown = ref(false)
+// ── Tastenstatus ─────────────────────────────────────────────────────────────
+const upState   = ref<PressState>('idle')
+const downState = ref<PressState>('idle')
+let upTimer:   ReturnType<typeof setTimeout> | null = null
+let downTimer: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * Hilfsfunktionen für Invertierung.
+ * Aktiv = Befehl ist eingeschaltet (Taste gedrückt).
+ * Inaktiv = Befehl zurückgesetzt (Taste losgelassen / Kurzklick-Ende).
+ */
+function activeVal(inv: boolean):   boolean { return !inv }
+function inactiveVal(inv: boolean): boolean { return  inv }
 
 async function write(id: string | null, value: unknown) {
   if (!id || props.editorMode || props.readonly) return
   try { await datapoints.write(id, value) } catch { /* ignore */ }
 }
 
+// ── Hoch-Taste ──────────────────────────────────────────────────────────────
+/**
+ * Kurzklick (< 0.5 s): Schritt hoch / Lamellen öffnen
+ *   → sende aktiv bei pointerdown, sende inaktiv bei pointerup → Aktuator interpretiert
+ *     das kurze Signal als Einzelschritt (KNX Short-Travel).
+ *
+ * Langdruck (≥ 0.5 s): Auffahren bis Endlage oder Stop
+ *   → aktives Signal bleibt gehalten; inaktiv nur beim Loslassen → KNX Long-Travel.
+ */
 async function onMoveUpStart() {
   if (props.editorMode || props.readonly) return
-  movingUp.value = true
-  await write(dpMoveUp.value, true)
+  upState.value = 'pressing'
+  await write(dpMoveUp.value, activeVal(invertUp.value))
+  upTimer = setTimeout(() => {
+    upState.value = 'moving'
+    upTimer = null
+  }, LONG_PRESS_MS)
 }
 
 async function onMoveUpEnd() {
-  if (!movingUp.value) return
-  movingUp.value = false
-  await write(dpMoveUp.value, false)
+  if (upState.value === 'idle') return
+  if (upTimer) { clearTimeout(upTimer); upTimer = null }
+  upState.value = 'idle'
+  // Inaktiv senden: bei Kurzklick → Schritt-Ende; bei Langdruck → Stopp
+  await write(dpMoveUp.value, inactiveVal(invertUp.value))
 }
 
+// ── Runter-Taste ─────────────────────────────────────────────────────────────
 async function onMoveDownStart() {
   if (props.editorMode || props.readonly) return
-  movingDown.value = true
-  await write(dpMoveDown.value, true)
+  downState.value = 'pressing'
+  await write(dpMoveDown.value, activeVal(invertDown.value))
+  downTimer = setTimeout(() => {
+    downState.value = 'moving'
+    downTimer = null
+  }, LONG_PRESS_MS)
 }
 
 async function onMoveDownEnd() {
-  if (!movingDown.value) return
-  movingDown.value = false
-  await write(dpMoveDown.value, false)
+  if (downState.value === 'idle') return
+  if (downTimer) { clearTimeout(downTimer); downTimer = null }
+  downState.value = 'idle'
+  await write(dpMoveDown.value, inactiveVal(invertDown.value))
 }
 
+// ── Stop-Taste ───────────────────────────────────────────────────────────────
 async function onStop() {
-  movingUp.value   = false
-  movingDown.value = false
+  if (upTimer)   { clearTimeout(upTimer);   upTimer   = null }
+  if (downTimer) { clearTimeout(downTimer); downTimer = null }
+  upState.value   = 'idle'
+  downState.value = 'idle'
   await write(dpStop.value, true)
   setTimeout(() => write(dpStop.value, false), 200)
 }
 
+// ── Positionsregler ──────────────────────────────────────────────────────────
 function onPositionInput(e: Event) {
   localPosition.value = Number((e.target as HTMLInputElement).value)
 }
@@ -119,11 +157,11 @@ async function onPositionChange(e: Event) {
   localPosition.value = val
   if (posTimer) clearTimeout(posTimer)
   posTimer = setTimeout(() => { localPosition.value = null }, 5000)
-  // Invertierung rückgängig machen bevor an KNX senden
   const sendVal = invert.value ? 100 - val : val
   await write(dpPosition.value, sendVal)
 }
 
+// ── Lamellenregler ───────────────────────────────────────────────────────────
 function onSlatInput(e: Event) {
   localSlat.value = Number((e.target as HTMLInputElement).value)
 }
@@ -136,15 +174,30 @@ async function onSlatChange(e: Event) {
   await write(dpSlat.value, val)
 }
 
-// Sicherheits-Reset: pointerup ausserhalb der Buttons
+// ── Tooltip-Texte ────────────────────────────────────────────────────────────
+const tooltipUp = computed(() => {
+  const short = mode.value === 'jalousie' ? 'Lamellen öffnen (Schritt)' : 'Schritt hoch / Stopp'
+  return `Kurz: ${short}\nLang: Auffahren bis Endlage`
+})
+
+const tooltipDown = computed(() => {
+  const short = mode.value === 'jalousie' ? 'Lamellen schliessen (Schritt)' : 'Schritt runter / Stopp'
+  return `Kurz: ${short}\nLang: Abfahren bis Endlage`
+})
+
+const tooltipStop = 'Sofort stoppen'
+
+// ── Sicherheits-Cleanup ──────────────────────────────────────────────────────
 function onWindowPointerUp() {
-  if (movingUp.value)   onMoveUpEnd()
-  if (movingDown.value) onMoveDownEnd()
+  if (upState.value   !== 'idle') onMoveUpEnd()
+  if (downState.value !== 'idle') onMoveDownEnd()
 }
 
 onMounted(() => window.addEventListener('pointerup', onWindowPointerUp))
 onUnmounted(() => {
   window.removeEventListener('pointerup', onWindowPointerUp)
+  if (upTimer)   clearTimeout(upTimer)
+  if (downTimer) clearTimeout(downTimer)
   if (posTimer)  clearTimeout(posTimer)
   if (slatTimer) clearTimeout(slatTimer)
 })
@@ -156,30 +209,39 @@ onUnmounted(() => {
     <span class="text-xs text-gray-500 dark:text-gray-400 truncate leading-none">{{ label }}</span>
 
     <div class="flex flex-1 gap-2 min-h-0">
-      <!-- Linke Spalte: Buttons + visuelle Rollo-Darstellung -->
+      <!-- Linke Spalte: Steuer-Buttons + Rollo-Visualisierung -->
       <div class="flex flex-col items-center gap-1">
+
         <!-- Hoch-Taste -->
         <button
-          class="w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors shrink-0"
-          :class="movingUp
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900 disabled:opacity-40'"
+          class="relative w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors shrink-0 overflow-hidden"
+          :class="{
+            'bg-blue-500 text-white':                                                     upState === 'moving',
+            'bg-amber-400 text-white':                                                    upState === 'pressing',
+            'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 \
+             hover:bg-blue-100 dark:hover:bg-blue-900 disabled:opacity-40':               upState === 'idle',
+          }"
           :disabled="editorMode || readonly"
-          title="Hoch fahren"
+          :title="tooltipUp"
           @pointerdown.prevent="onMoveUpStart"
           @pointerup="onMoveUpEnd"
           @pointerleave="onMoveUpEnd"
-        >▲</button>
+        >
+          ▲
+          <!-- Long-Press-Fortschrittsbalken (sichtbar solange pressing) -->
+          <span
+            v-if="upState === 'pressing'"
+            class="absolute bottom-0 left-0 h-0.5 bg-blue-400 long-press-bar"
+          />
+        </button>
 
         <!-- Rollo-Visualisierung -->
         <div class="flex-1 w-7 relative rounded overflow-hidden border border-gray-300 dark:border-gray-600 bg-sky-100 dark:bg-sky-950 min-h-0">
-          <!-- Befüllter Bereich = zugezogenes Rollo (von oben) -->
           <div
             class="absolute top-0 left-0 right-0 transition-all duration-300"
             :class="mode === 'jalousie' ? 'bg-amber-300 dark:bg-amber-700' : 'bg-gray-400 dark:bg-gray-500'"
             :style="{ height: blindCoverage + '%' }"
           >
-            <!-- Lamellenlinien bei Jalousie -->
             <div
               v-if="mode === 'jalousie'"
               class="w-full h-full"
@@ -192,29 +254,42 @@ onUnmounted(() => {
 
         <!-- Stop-Taste -->
         <button
-          class="w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors shrink-0 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900 disabled:opacity-40"
+          class="w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors shrink-0
+                 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300
+                 hover:bg-red-200 dark:hover:bg-red-900 disabled:opacity-40"
           :disabled="editorMode || readonly"
-          title="Stop"
+          :title="tooltipStop"
           @click="onStop"
         >■</button>
 
         <!-- Runter-Taste -->
         <button
-          class="w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors shrink-0"
-          :class="movingDown
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900 disabled:opacity-40'"
+          class="relative w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors shrink-0 overflow-hidden"
+          :class="{
+            'bg-blue-500 text-white':                                                       downState === 'moving',
+            'bg-amber-400 text-white':                                                      downState === 'pressing',
+            'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 \
+             hover:bg-blue-100 dark:hover:bg-blue-900 disabled:opacity-40':                 downState === 'idle',
+          }"
           :disabled="editorMode || readonly"
-          title="Runter fahren"
+          :title="tooltipDown"
           @pointerdown.prevent="onMoveDownStart"
           @pointerup="onMoveDownEnd"
           @pointerleave="onMoveDownEnd"
-        >▼</button>
+        >
+          ▼
+          <span
+            v-if="downState === 'pressing'"
+            class="absolute bottom-0 left-0 h-0.5 bg-blue-400 long-press-bar"
+          />
+        </button>
+
       </div>
 
       <!-- Rechte Spalte: Schieberegler -->
       <div class="flex flex-col flex-1 justify-center gap-3">
-        <!-- Positions-Regler -->
+
+        <!-- Positionsregler -->
         <div>
           <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-0.5">
             <span>Position</span>
@@ -223,8 +298,7 @@ onUnmounted(() => {
             </span>
           </div>
           <input
-            type="range"
-            min="0" max="100" step="1"
+            type="range" min="0" max="100" step="1"
             :value="shownPosition"
             :disabled="editorMode || readonly"
             class="w-full accent-blue-500 cursor-pointer disabled:cursor-default disabled:opacity-40"
@@ -236,7 +310,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Lamellen-Regler (nur Jalousie) -->
+        <!-- Lamellenregler (nur Jalousie) -->
         <div v-if="mode === 'jalousie'">
           <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-0.5">
             <span>Lamellen</span>
@@ -245,8 +319,7 @@ onUnmounted(() => {
             </span>
           </div>
           <input
-            type="range"
-            min="0" max="100" step="1"
+            type="range" min="0" max="100" step="1"
             :value="shownSlat"
             :disabled="editorMode || readonly"
             class="w-full accent-amber-500 cursor-pointer disabled:cursor-default disabled:opacity-40"
@@ -257,7 +330,23 @@ onUnmounted(() => {
             <span>offen</span><span>zu</span>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/**
+ * Fortschrittsbalken am unteren Rand der Richtungstaste.
+ * Füllt sich in genau LONG_PRESS_MS (500 ms) → visuelles Feedback für Langdruck.
+ */
+.long-press-bar {
+  animation: longPressProgress v-bind('LONG_PRESS_MS + "ms"') linear forwards;
+}
+
+@keyframes longPressProgress {
+  from { width: 0% }
+  to   { width: 100% }
+}
+</style>

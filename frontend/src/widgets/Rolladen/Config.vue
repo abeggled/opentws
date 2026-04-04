@@ -6,16 +6,18 @@ const props = defineProps<{ modelValue: Record<string, unknown> }>()
 const emit = defineEmits<{ (e: 'update:modelValue', val: Record<string, unknown>): void }>()
 
 const cfg = reactive({
-  label:               (props.modelValue.label               as string)  ?? '',
-  mode:                (props.modelValue.mode                as string)  ?? 'rolladen',
-  invert:              (props.modelValue.invert              as boolean) ?? false,
-  dp_move_up:          (props.modelValue.dp_move_up          as string)  ?? '',
-  dp_move_down:        (props.modelValue.dp_move_down        as string)  ?? '',
-  dp_stop:             (props.modelValue.dp_stop             as string)  ?? '',
-  dp_position:         (props.modelValue.dp_position         as string)  ?? '',
-  dp_position_status:  (props.modelValue.dp_position_status  as string)  ?? '',
-  dp_slat:             (props.modelValue.dp_slat             as string)  ?? '',
-  dp_slat_status:      (props.modelValue.dp_slat_status      as string)  ?? '',
+  label:                (props.modelValue.label                as string)  ?? '',
+  mode:                 (props.modelValue.mode                 as string)  ?? 'rolladen',
+  invert:               (props.modelValue.invert               as boolean) ?? false,
+  invert_move_up:       (props.modelValue.invert_move_up       as boolean) ?? false,
+  invert_move_down:     (props.modelValue.invert_move_down     as boolean) ?? false,
+  dp_move_up:           (props.modelValue.dp_move_up           as string)  ?? '',
+  dp_move_down:         (props.modelValue.dp_move_down         as string)  ?? '',
+  dp_stop:              (props.modelValue.dp_stop              as string)  ?? '',
+  dp_position:          (props.modelValue.dp_position          as string)  ?? '',
+  dp_position_status:   (props.modelValue.dp_position_status   as string)  ?? '',
+  dp_slat:              (props.modelValue.dp_slat              as string)  ?? '',
+  dp_slat_status:       (props.modelValue.dp_slat_status       as string)  ?? '',
 })
 
 const isJalousie = computed(() => cfg.mode === 'jalousie')
@@ -71,11 +73,25 @@ watch(cfg, () => emit('update:modelValue', { ...cfg }), { deep: true })
       label="Hoch fahren"
       :compatible-types="['BOOLEAN']"
     />
+    <div class="flex items-center gap-2 pl-1">
+      <input id="cfg-inv-up" v-model="cfg.invert_move_up" type="checkbox" class="rounded accent-blue-500" />
+      <label for="cfg-inv-up" class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+        Boolean invertieren (false = aktiv)
+      </label>
+    </div>
+
     <DataPointPicker
       v-model="cfg.dp_move_down"
       label="Runter fahren"
       :compatible-types="['BOOLEAN']"
     />
+    <div class="flex items-center gap-2 pl-1">
+      <input id="cfg-inv-down" v-model="cfg.invert_move_down" type="checkbox" class="rounded accent-blue-500" />
+      <label for="cfg-inv-down" class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+        Boolean invertieren (false = aktiv)
+      </label>
+    </div>
+
     <DataPointPicker
       v-model="cfg.dp_stop"
       label="Stop"
