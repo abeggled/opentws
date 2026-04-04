@@ -28,6 +28,7 @@ WidgetRegistry.register({
     dp_status_2: '',
     dp_status_3: '',
     dp_status_4: '',
+    label_status_1: '',
     label_status_2: '',
     label_status_3: '',
     label_status_4: '',

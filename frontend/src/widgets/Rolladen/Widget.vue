@@ -46,6 +46,7 @@ const dpStatus2 = computed(() => (props.config.dp_status_2 as string) || null)
 const dpStatus3 = computed(() => (props.config.dp_status_3 as string) || null)
 const dpStatus4 = computed(() => (props.config.dp_status_4 as string) || null)
 
+const labelStatus1 = computed(() => (props.config.label_status_1 as string) || 'Manuelle Sperre')
 const labelStatus2 = computed(() => (props.config.label_status_2 as string) || 'Status 2')
 const labelStatus3 = computed(() => (props.config.label_status_3 as string) || 'Status 3')
 const labelStatus4 = computed(() => (props.config.label_status_4 as string) || 'Status 4')
@@ -437,30 +438,29 @@ onUnmounted(() => {
         <!-- Statuszeile: Sperre (Ausgang) + 4 read-only Indikatoren -->
         <div v-if="hasLockOrStatus" class="flex gap-1 items-center shrink-0">
 
-          <!-- Sperre (schaltbarer Ausgang) -->
+          <!-- Sperre (schaltbarer Ausgang) — nur Dot, kein Icon -->
           <button
             v-if="dpLock"
-            class="relative w-7 h-7 rounded flex flex-col items-center justify-center gap-px transition-colors shrink-0
-                   bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300
+            class="w-7 h-7 rounded flex items-center justify-center transition-colors shrink-0
+                   bg-gray-200 dark:bg-gray-700
                    hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-40"
             :disabled="editorMode || readonly"
             title="Sperre umschalten"
             @click="toggleLock"
           >
-            <span class="text-[9px] leading-none">🔒</span>
             <span
-              class="w-2 h-2 rounded-full"
+              class="w-3 h-3 rounded-full"
               :class="lockValue === null ? 'bg-gray-400 dark:bg-gray-500'
                                         : lockValue ? 'bg-red-500' : 'bg-green-500'"
             />
           </button>
 
-          <!-- Status 1: «Manuelle Sperre» (fester Name) -->
+          <!-- Status 1 (konfigurierbarer Name) -->
           <div
             v-if="dpStatus1"
             class="w-7 h-7 rounded flex items-center justify-center shrink-0 cursor-default
                    bg-gray-200 dark:bg-gray-700"
-            title="Manuelle Sperre"
+            :title="labelStatus1"
           >
             <span
               class="w-3 h-3 rounded-full"

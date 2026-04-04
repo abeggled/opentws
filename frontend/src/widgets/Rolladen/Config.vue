@@ -24,6 +24,7 @@ const cfg = reactive({
   dp_status_2:          (props.modelValue.dp_status_2          as string)  ?? '',
   dp_status_3:          (props.modelValue.dp_status_3          as string)  ?? '',
   dp_status_4:          (props.modelValue.dp_status_4          as string)  ?? '',
+  label_status_1:       (props.modelValue.label_status_1       as string)  ?? '',
   label_status_2:       (props.modelValue.label_status_2       as string)  ?? '',
   label_status_3:       (props.modelValue.label_status_3       as string)  ?? '',
   label_status_4:       (props.modelValue.label_status_4       as string)  ?? '',
@@ -152,10 +153,19 @@ watch(cfg, () => emit('update:modelValue', { ...cfg }), { deep: true })
       :compatible-types="['BOOLEAN']"
     />
 
-    <!-- Status 1: Manuelle Sperre (Name fix) -->
+    <!-- Status 1 -->
+    <div>
+      <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Indikator 1 — Bezeichnung</label>
+      <input
+        v-model="cfg.label_status_1"
+        type="text"
+        placeholder="Manuelle Sperre"
+        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500"
+      />
+    </div>
     <DataPointPicker
       v-model="cfg.dp_status_1"
-      label="Indikator 1 — «Manuelle Sperre» (Eingang, read-only)"
+      label="Indikator 1 (Eingang, read-only)"
       :compatible-types="['BOOLEAN']"
     />
 
