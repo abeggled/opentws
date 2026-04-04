@@ -18,6 +18,13 @@ body {
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #ffffff;
+  color: #111827;
+}
+
+.dark body {
+  background: #030712;
+  color: #f3f4f6;
 }
 
 /* Gridstack-Überschreibungen */
@@ -28,6 +35,11 @@ body {
 .grid-stack-item-content {
   border-radius: 12px;
   overflow: hidden;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.dark .grid-stack-item-content {
   background: #1f2937;
   border: 1px solid #374151;
 }
