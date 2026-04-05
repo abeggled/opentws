@@ -10,6 +10,6 @@ WidgetRegistry.register({
   defaultW: 3, defaultH: 2,
   component: Widget,
   configComponent: Config,
-  defaultConfig: { label: '', decimals: 1 },
+  defaultConfig: { label: '', decimals: 1, value_formula: '', value_map: {} },
   compatibleTypes: ['FLOAT', 'INTEGER', 'BOOLEAN', 'STRING'],
 })

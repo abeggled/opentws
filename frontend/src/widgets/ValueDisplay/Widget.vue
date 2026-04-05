@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { DataPointValue } from '@/types'
+import { applyFormula, applyValueMap } from '@/utils/transformation'
 
 const props = defineProps<{
   config: Record<string, unknown>
@@ -11,11 +12,33 @@ const props = defineProps<{
 
 const label = computed(() => (props.config.label as string | undefined) ?? '—')
 const decimals = computed(() => (props.config.decimals as number | undefined) ?? 1)
+const valueFormula = computed(() => (props.config.value_formula as string | undefined) ?? '')
+const valueMap = computed(
+  () => (props.config.value_map as Record<string, string> | undefined) ?? {},
+)
+
+/** Raw value after formula + value_map transformations */
+const transformedValue = computed(() => {
+  if (props.value === null) return null
+  let v: unknown = props.value.v
+
+  // 1. Apply formula (numeric only)
+  if (valueFormula.value && typeof v === 'number') {
+    v = applyFormula(valueFormula.value, v)
+  }
+
+  // 2. Apply value map
+  if (Object.keys(valueMap.value).length > 0) {
+    v = applyValueMap(valueMap.value, v)
+  }
+
+  return v
+})
 
 const displayValue = computed(() => {
   if (props.editorMode) return '—'
-  if (props.value === null) return '…'
-  const v = props.value.v
+  if (transformedValue.value === null) return '…'
+  const v = transformedValue.value
   if (typeof v === 'number') return v.toFixed(decimals.value)
   if (typeof v === 'boolean') return v ? 'EIN' : 'AUS'
   return String(v ?? '—')
@@ -33,8 +56,8 @@ const thresholds = computed<Threshold[]>(
 )
 
 const colorClass = computed(() => {
-  if (props.value === null || typeof props.value.v !== 'number') return 'text-gray-900 dark:text-gray-100'
-  const v = props.value.v as number
+  if (transformedValue.value === null || typeof transformedValue.value !== 'number') return 'text-gray-900 dark:text-gray-100'
+  const v = transformedValue.value as number
   const active = [...thresholds.value]
     .reverse()
     .find((t) => v >= t.value)
