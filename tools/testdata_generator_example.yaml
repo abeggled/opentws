@@ -22,7 +22,7 @@
 # ---------------------------------------------------------------------------
 knx:
   host: 0.0.0.0          # listen on all interfaces (127.0.0.1 for loopback only)
-  port: 3671             # standard KNX/IP port; use 3672+ if 3671 is taken
+  port: 4001             # non standard KNX/IP port
 
   telegrams:
     # Temperature (DPT 9.001 = 2-byte float, °C)
@@ -69,7 +69,7 @@ knx:
 # ---------------------------------------------------------------------------
 modbus:
   host: 0.0.0.0               # listen on all interfaces
-  port: 5020                  # use 5020 to avoid needing root; openTWS connects here
+  port: 5001                  # use 5001 to avoid needing root; openTWS connects here
   unit_id: 1
 
   registers:
@@ -134,7 +134,7 @@ mqtt:
 
   topics:
     # Temperature as plain float
-    - topic: test/temperature
+    - topic: _testdata/temperature
       interval: 5.0
       mode: sine
       min: 18.0
@@ -142,20 +142,20 @@ mqtt:
       period: 120.0
 
     # Humidity as plain float
-    - topic: test/humidity
+    - topic: _testdata/humidity
       interval: 7.0
       mode: random
       min: 40.0
       max: 80.0
 
     # On/Off switch
-    - topic: test/switch
+    - topic: _testdata/switch
       interval: 10.0
       mode: toggle
       retain: true
 
     # JSON payload with nested value (configure json_key: "value" in openTWS binding)
-    - topic: test/sensor/json
+    - topic: _testdata/sensor/json
       interval: 4.0
       mode: ramp
       min: 0.0
@@ -164,7 +164,7 @@ mqtt:
       payload_template: '{"sensor":"test","value":###DP###,"unit":"%"}'
 
     # Sequence — cycles through predefined steps
-    - topic: test/setpoint
+    - topic: _testdata/setpoint
       interval: 15.0
       mode: sequence
       values: [16.0, 18.0, 20.0, 22.0, 24.0]
