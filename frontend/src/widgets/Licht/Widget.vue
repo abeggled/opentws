@@ -18,7 +18,6 @@ const dpStore = useDatapointsStore()
 // ── Config ────────────────────────────────────────────────────────────────────
 const label     = computed(() => (props.config.label as string) ?? '—')
 const mode      = computed(() => (props.config.mode  as string) ?? 'on_off')
-const hasDim    = computed(() => ['dimm', 'tw', 'rgb', 'rgbw'].includes(mode.value))
 const hasTw     = computed(() => mode.value === 'tw')
 const hasColor  = computed(() => ['rgb', 'rgbw'].includes(mode.value))
 const hasWhite  = computed(() => mode.value === 'rgbw')
