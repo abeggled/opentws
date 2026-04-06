@@ -1,0 +1,530 @@
+\ufeffDemo 01 - Binaersignale;;;1;;;;;Demo 01 - Binaersignale /;;Auto
+;Schalten;;1;1;;;;Demo 01 - Binaersignale / Schalten /;;Auto
+;;Licht EG Schalten;1;1;1;;;Demo 01 - Binaersignale / Schalten / Licht EG Schalten;DPST-1-1;Auto
+;;Licht OG Schalten;1;1;2;;;Demo 01 - Binaersignale / Schalten / Licht OG Schalten;DPST-1-1;Auto
+;;Licht Keller Schalten;1;1;3;;;Demo 01 - Binaersignale / Schalten / Licht Keller Schalten;DPST-1-1;Auto
+;;Licht Garten Schalten;1;1;4;;;Demo 01 - Binaersignale / Schalten / Licht Garten Schalten;DPST-1-1;Auto
+;;Licht Garage Schalten;1;1;5;;;Demo 01 - Binaersignale / Schalten / Licht Garage Schalten;DPST-1-1;Auto
+;;Licht Flur Schalten;1;1;6;;;Demo 01 - Binaersignale / Schalten / Licht Flur Schalten;DPST-1-1;Auto
+;;Licht Bad Schalten;1;1;7;;;Demo 01 - Binaersignale / Schalten / Licht Bad Schalten;DPST-1-1;Auto
+;;Licht Kueche Schalten;1;1;8;;;Demo 01 - Binaersignale / Schalten / Licht Kueche Schalten;DPST-1-1;Auto
+;;Licht Wohnzimmer Schalten;1;1;9;;;Demo 01 - Binaersignale / Schalten / Licht Wohnzimmer Schalten;DPST-1-1;Auto
+;;Licht Schlafzimmer Schalten;1;1;10;;;Demo 01 - Binaersignale / Schalten / Licht Schlafzimmer Schalten;DPST-1-1;Auto
+;;Steckdose EG Schalten;1;1;11;;;Demo 01 - Binaersignale / Schalten / Steckdose EG Schalten;DPST-1-1;Auto
+;;Steckdose OG Schalten;1;1;12;;;Demo 01 - Binaersignale / Schalten / Steckdose OG Schalten;DPST-1-1;Auto
+;;Ventilator Schalten;1;1;13;;;Demo 01 - Binaersignale / Schalten / Ventilator Schalten;DPST-1-1;Auto
+;;Pumpe Schalten;1;1;14;;;Demo 01 - Binaersignale / Schalten / Pumpe Schalten;DPST-1-1;Auto
+;;Aussenbeleuchtung Schalten;1;1;15;;;Demo 01 - Binaersignale / Schalten / Aussenbeleuchtung Schalten;DPST-1-1;Auto
+;;Garagentor Schalten;1;1;16;;;Demo 01 - Binaersignale / Schalten / Garagentor Schalten;DPST-1-1;Auto
+;;Tuerklingel Schalten;1;1;17;;;Demo 01 - Binaersignale / Schalten / Tuerklingel Schalten;DPST-1-1;Auto
+;;Alarm Schalten;1;1;18;;;Demo 01 - Binaersignale / Schalten / Alarm Schalten;DPST-1-1;Auto
+;;Heizung Schalten;1;1;19;;;Demo 01 - Binaersignale / Schalten / Heizung Schalten;DPST-1-1;Auto
+;;Klimaanlage Schalten;1;1;20;;;Demo 01 - Binaersignale / Schalten / Klimaanlage Schalten;DPST-1-1;Auto
+;Meldungen;;1;2;;;;Demo 01 - Binaersignale / Meldungen /;;Auto
+;;Rauchmelder EG;1;2;1;;;Demo 01 - Binaersignale / Meldungen / Rauchmelder EG;DPST-1-5;Auto
+;;Rauchmelder OG;1;2;2;;;Demo 01 - Binaersignale / Meldungen / Rauchmelder OG;DPST-1-5;Auto
+;;Rauchmelder Keller;1;2;3;;;Demo 01 - Binaersignale / Meldungen / Rauchmelder Keller;DPST-1-5;Auto
+;;Gasmelder;1;2;4;;;Demo 01 - Binaersignale / Meldungen / Gasmelder;DPST-1-5;Auto
+;;Windalarm;1;2;5;;;Demo 01 - Binaersignale / Meldungen / Windalarm;DPST-1-5;Auto
+;;Regenalarm;1;2;6;;;Demo 01 - Binaersignale / Meldungen / Regenalarm;DPST-1-5;Auto
+;;Frostmelder;1;2;7;;;Demo 01 - Binaersignale / Meldungen / Frostmelder;DPST-1-5;Auto
+;;Daemmerungsmelder;1;2;8;;;Demo 01 - Binaersignale / Meldungen / Daemmerungsmelder;DPST-1-5;Auto
+;;Wassermelder Keller;1;2;9;;;Demo 01 - Binaersignale / Meldungen / Wassermelder Keller;DPST-1-5;Auto
+;;Wassermelder Bad;1;2;10;;;Demo 01 - Binaersignale / Meldungen / Wassermelder Bad;DPST-1-5;Auto
+;;Bewegungsmelder EG;1;2;11;;;Demo 01 - Binaersignale / Meldungen / Bewegungsmelder EG;DPST-1-18;Auto
+;;Bewegungsmelder OG;1;2;12;;;Demo 01 - Binaersignale / Meldungen / Bewegungsmelder OG;DPST-1-18;Auto
+;;Bewegungsmelder Garten;1;2;13;;;Demo 01 - Binaersignale / Meldungen / Bewegungsmelder Garten;DPST-1-18;Auto
+;;Praesenzmelder Buero;1;2;14;;;Demo 01 - Binaersignale / Meldungen / Praesenzmelder Buero;DPST-1-18;Auto
+;;Anwesenheit;1;2;15;;;Demo 01 - Binaersignale / Meldungen / Anwesenheit;DPST-1-18;Auto
+;;Fensterkontakt Wohnzimmer;1;2;16;;;Demo 01 - Binaersignale / Meldungen / Fensterkontakt Wohnzimmer;DPST-1-19;Auto
+;;Fensterkontakt Schlafzimmer;1;2;17;;;Demo 01 - Binaersignale / Meldungen / Fensterkontakt Schlafzimmer;DPST-1-19;Auto
+;;Tuerkontakt Haupteingang;1;2;18;;;Demo 01 - Binaersignale / Meldungen / Tuerkontakt Haupteingang;DPST-1-19;Auto
+;;Tuerkontakt Garage;1;2;19;;;Demo 01 - Binaersignale / Meldungen / Tuerkontakt Garage;DPST-1-19;Auto
+;;Tuerkontakt Keller;1;2;20;;;Demo 01 - Binaersignale / Meldungen / Tuerkontakt Keller;DPST-1-19;Auto
+;Steuerung;;1;3;;;;Demo 01 - Binaersignale / Steuerung /;;Auto
+;;Jalousie Wohnzimmer Auf/Ab;1;3;1;;;Demo 01 - Binaersignale / Steuerung / Jalousie Wohnzimmer Auf/Ab;DPST-1-8;Auto
+;;Jalousie Schlafzimmer Auf/Ab;1;3;2;;;Demo 01 - Binaersignale / Steuerung / Jalousie Schlafzimmer Auf/Ab;DPST-1-8;Auto
+;;Jalousie Bad Auf/Ab;1;3;3;;;Demo 01 - Binaersignale / Steuerung / Jalousie Bad Auf/Ab;DPST-1-8;Auto
+;;Jalousie Kueche Auf/Ab;1;3;4;;;Demo 01 - Binaersignale / Steuerung / Jalousie Kueche Auf/Ab;DPST-1-8;Auto
+;;Rolladen EG Auf/Ab;1;3;5;;;Demo 01 - Binaersignale / Steuerung / Rolladen EG Auf/Ab;DPST-1-8;Auto
+;;Rolladen OG Auf/Ab;1;3;6;;;Demo 01 - Binaersignale / Steuerung / Rolladen OG Auf/Ab;DPST-1-8;Auto
+;;Markise Auf/Ab;1;3;7;;;Demo 01 - Binaersignale / Steuerung / Markise Auf/Ab;DPST-1-8;Auto
+;;Carport Jalousie Auf/Ab;1;3;8;;;Demo 01 - Binaersignale / Steuerung / Carport Jalousie Auf/Ab;DPST-1-8;Auto
+;;Dachfenster Auf/Ab;1;3;9;;;Demo 01 - Binaersignale / Steuerung / Dachfenster Auf/Ab;DPST-1-8;Auto
+;;Tor Auf/Ab;1;3;10;;;Demo 01 - Binaersignale / Steuerung / Tor Auf/Ab;DPST-1-8;Auto
+;;Garagentor Oeffnen/Schliessen;1;3;11;;;Demo 01 - Binaersignale / Steuerung / Garagentor Oeffnen/Schliessen;DPST-1-9;Auto
+;;Dachfenster Oeffnen/Schliessen;1;3;12;;;Demo 01 - Binaersignale / Steuerung / Dachfenster Oeffnen/Schliessen;DPST-1-9;Auto
+;;Schloss Oeffnen/Schliessen;1;3;13;;;Demo 01 - Binaersignale / Steuerung / Schloss Oeffnen/Schliessen;DPST-1-9;Auto
+;;Regenwasserventil Oeffnen/Schliessen;1;3;14;;;Demo 01 - Binaersignale / Steuerung / Regenwasserventil Oeffnen/Schliessen;DPST-1-9;Auto
+;;Zonenventil Heizkreis Oeffnen/Schliessen;1;3;15;;;Demo 01 - Binaersignale / Steuerung / Zonenventil Heizkreis Oeffnen/Schliessen;DPST-1-9;Auto
+;;Lueftung Starten/Stoppen;1;3;16;;;Demo 01 - Binaersignale / Steuerung / Lueftung Starten/Stoppen;DPST-1-10;Auto
+;;Pumpe Starten/Stoppen;1;3;17;;;Demo 01 - Binaersignale / Steuerung / Pumpe Starten/Stoppen;DPST-1-10;Auto
+;;Bewaesserung Starten/Stoppen;1;3;18;;;Demo 01 - Binaersignale / Steuerung / Bewaesserung Starten/Stoppen;DPST-1-10;Auto
+;;WRG Starten/Stoppen;1;3;19;;;Demo 01 - Binaersignale / Steuerung / WRG Starten/Stoppen;DPST-1-10;Auto
+;;Heizkreispumpe Starten/Stoppen;1;3;20;;;Demo 01 - Binaersignale / Steuerung / Heizkreispumpe Starten/Stoppen;DPST-1-10;Auto
+;Status Rueckmeldung;;1;4;;;;Demo 01 - Binaersignale / Status Rueckmeldung /;;Auto
+;;Licht EG Status;1;4;1;;;Demo 01 - Binaersignale / Status Rueckmeldung / Licht EG Status;DPST-1-11;Auto
+;;Licht OG Status;1;4;2;;;Demo 01 - Binaersignale / Status Rueckmeldung / Licht OG Status;DPST-1-11;Auto
+;;Jalousie Wohnzimmer Status;1;4;3;;;Demo 01 - Binaersignale / Status Rueckmeldung / Jalousie Wohnzimmer Status;DPST-1-11;Auto
+;;Jalousie Schlafzimmer Status;1;4;4;;;Demo 01 - Binaersignale / Status Rueckmeldung / Jalousie Schlafzimmer Status;DPST-1-11;Auto
+;;Heizung Status;1;4;5;;;Demo 01 - Binaersignale / Status Rueckmeldung / Heizung Status;DPST-1-11;Auto
+;;Klimaanlage Status;1;4;6;;;Demo 01 - Binaersignale / Status Rueckmeldung / Klimaanlage Status;DPST-1-11;Auto
+;;Lueftung Status;1;4;7;;;Demo 01 - Binaersignale / Status Rueckmeldung / Lueftung Status;DPST-1-11;Auto
+;;Pumpe Status;1;4;8;;;Demo 01 - Binaersignale / Status Rueckmeldung / Pumpe Status;DPST-1-11;Auto
+;;Garagentor Status;1;4;9;;;Demo 01 - Binaersignale / Status Rueckmeldung / Garagentor Status;DPST-1-11;Auto
+;;Alarm Status;1;4;10;;;Demo 01 - Binaersignale / Status Rueckmeldung / Alarm Status;DPST-1-11;Auto
+;;Anwesenheit Status;1;4;11;;;Demo 01 - Binaersignale / Status Rueckmeldung / Anwesenheit Status;DPST-1-11;Auto
+;;Nacht-Modus Status;1;4;12;;;Demo 01 - Binaersignale / Status Rueckmeldung / Nacht-Modus Status;DPST-1-11;Auto
+;;Urlaub-Modus Status;1;4;13;;;Demo 01 - Binaersignale / Status Rueckmeldung / Urlaub-Modus Status;DPST-1-11;Auto
+;;Energie-Sparmodus Status;1;4;14;;;Demo 01 - Binaersignale / Status Rueckmeldung / Energie-Sparmodus Status;DPST-1-11;Auto
+;;Solar Status;1;4;15;;;Demo 01 - Binaersignale / Status Rueckmeldung / Solar Status;DPST-1-11;Auto
+;;Tag/Nacht;1;4;16;;;Demo 01 - Binaersignale / Status Rueckmeldung / Tag/Nacht;DPST-1-24;Auto
+;;Sommerbetrieb;1;4;17;;;Demo 01 - Binaersignale / Status Rueckmeldung / Sommerbetrieb;DPST-1-24;Auto
+;;Winterbetrieb;1;4;18;;;Demo 01 - Binaersignale / Status Rueckmeldung / Winterbetrieb;DPST-1-24;Auto
+;;Komfortmodus aktiv;1;4;19;;;Demo 01 - Binaersignale / Status Rueckmeldung / Komfortmodus aktiv;DPST-1-24;Auto
+;;Absenkbetrieb aktiv;1;4;20;;;Demo 01 - Binaersignale / Status Rueckmeldung / Absenkbetrieb aktiv;DPST-1-24;Auto
+;Kontrollwerte 2-Bit;;1;5;;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit /;;Auto
+;;Licht EG Kontrollwert;1;5;1;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Licht EG Kontrollwert;DPST-2-1;Auto
+;;Licht OG Kontrollwert;1;5;2;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Licht OG Kontrollwert;DPST-2-1;Auto
+;;Jalousie Kontrollwert;1;5;3;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Jalousie Kontrollwert;DPST-2-1;Auto
+;;Heizung Kontrollwert;1;5;4;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Heizung Kontrollwert;DPST-2-1;Auto
+;;Lueftung Kontrollwert;1;5;5;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Lueftung Kontrollwert;DPST-2-1;Auto
+;;Klimaanlage Kontrollwert;1;5;6;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Klimaanlage Kontrollwert;DPST-2-1;Auto
+;;Pumpe Kontrollwert;1;5;7;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Pumpe Kontrollwert;DPST-2-1;Auto
+;;Alarm Kontrollwert;1;5;8;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Alarm Kontrollwert;DPST-2-1;Auto
+;;Tor Kontrollwert;1;5;9;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Tor Kontrollwert;DPST-2-1;Auto
+;;Szene Kontrollwert;1;5;10;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Szene Kontrollwert;DPST-2-1;Auto
+;;Dimmer EG Kontrollwert;1;5;11;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Dimmer EG Kontrollwert;DPST-2-2;Auto
+;;Dimmer OG Kontrollwert;1;5;12;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Dimmer OG Kontrollwert;DPST-2-2;Auto
+;;Markise Kontrollwert;1;5;13;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Markise Kontrollwert;DPST-2-2;Auto
+;;Rolladen Kontrollwert;1;5;14;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Rolladen Kontrollwert;DPST-2-2;Auto
+;;Garten Kontrollwert;1;5;15;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Garten Kontrollwert;DPST-2-2;Auto
+;;Keller Kontrollwert;1;5;16;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Keller Kontrollwert;DPST-2-2;Auto
+;;Buero Kontrollwert;1;5;17;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Buero Kontrollwert;DPST-2-2;Auto
+;;Bad Kontrollwert;1;5;18;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Bad Kontrollwert;DPST-2-2;Auto
+;;Kueche Kontrollwert;1;5;19;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Kueche Kontrollwert;DPST-2-2;Auto
+;;Flur Kontrollwert;1;5;20;;;Demo 01 - Binaersignale / Kontrollwerte 2-Bit / Flur Kontrollwert;DPST-2-2;Auto
+Demo 02 - Klima und Wetter;;;2;;;;;Demo 02 - Klima und Wetter /;;Auto
+;Temperaturen;;2;1;;;;Demo 02 - Klima und Wetter / Temperaturen /;;Auto
+;;Aussentemperatur;2;1;1;;;Demo 02 - Klima und Wetter / Temperaturen / Aussentemperatur;DPST-9-1;Auto
+;;Temperatur Wohnzimmer Ist;2;1;2;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Wohnzimmer Ist;DPST-9-1;Auto
+;;Temperatur Schlafzimmer Ist;2;1;3;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Schlafzimmer Ist;DPST-9-1;Auto
+;;Temperatur Kueche Ist;2;1;4;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Kueche Ist;DPST-9-1;Auto
+;;Temperatur Bad Ist;2;1;5;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Bad Ist;DPST-9-1;Auto
+;;Temperatur Keller Ist;2;1;6;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Keller Ist;DPST-9-1;Auto
+;;Temperatur Buero Ist;2;1;7;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Buero Ist;DPST-9-1;Auto
+;;Temperatur Flur Ist;2;1;8;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Flur Ist;DPST-9-1;Auto
+;;Temperatur Dachboden;2;1;9;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Dachboden;DPST-9-1;Auto
+;;Temperatur Garage;2;1;10;;;Demo 02 - Klima und Wetter / Temperaturen / Temperatur Garage;DPST-9-1;Auto
+;;Vorlauftemperatur Heizung;2;1;11;;;Demo 02 - Klima und Wetter / Temperaturen / Vorlauftemperatur Heizung;DPST-9-1;Auto
+;;Ruecklauftemperatur Heizung;2;1;12;;;Demo 02 - Klima und Wetter / Temperaturen / Ruecklauftemperatur Heizung;DPST-9-1;Auto
+;;Warmwasser Temperatur;2;1;13;;;Demo 02 - Klima und Wetter / Temperaturen / Warmwasser Temperatur;DPST-9-1;Auto
+;;Pufferspeicher Temp oben;2;1;14;;;Demo 02 - Klima und Wetter / Temperaturen / Pufferspeicher Temp oben;DPST-9-1;Auto
+;;Pufferspeicher Temp unten;2;1;15;;;Demo 02 - Klima und Wetter / Temperaturen / Pufferspeicher Temp unten;DPST-9-1;Auto
+;;Solarkollektor Temperatur;2;1;16;;;Demo 02 - Klima und Wetter / Temperaturen / Solarkollektor Temperatur;DPST-9-1;Auto
+;;Waermepumpe Vorlauf;2;1;17;;;Demo 02 - Klima und Wetter / Temperaturen / Waermepumpe Vorlauf;DPST-9-1;Auto
+;;Waermepumpe Ruecklauf;2;1;18;;;Demo 02 - Klima und Wetter / Temperaturen / Waermepumpe Ruecklauf;DPST-9-1;Auto
+;;Taupunkttemperatur;2;1;19;;;Demo 02 - Klima und Wetter / Temperaturen / Taupunkttemperatur;DPST-9-1;Auto
+;;Gefuehlte Aussentemperatur;2;1;20;;;Demo 02 - Klima und Wetter / Temperaturen / Gefuehlte Aussentemperatur;DPST-9-1;Auto
+;Sollwerte und Differenzen;;2;2;;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen /;;Auto
+;;Sollwert Wohnzimmer;2;2;1;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Wohnzimmer;DPST-9-1;Auto
+;;Sollwert Schlafzimmer;2;2;2;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Schlafzimmer;DPST-9-1;Auto
+;;Sollwert Kueche;2;2;3;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Kueche;DPST-9-1;Auto
+;;Sollwert Bad;2;2;4;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Bad;DPST-9-1;Auto
+;;Sollwert Buero;2;2;5;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Buero;DPST-9-1;Auto
+;;Sollwert Keller;2;2;6;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Keller;DPST-9-1;Auto
+;;Sollwert Kuehlung;2;2;7;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Kuehlung;DPST-9-1;Auto
+;;Sollwert Warmwasser;2;2;8;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Sollwert Warmwasser;DPST-9-1;Auto
+;;Komfort-Offset;2;2;9;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Komfort-Offset;DPST-9-2;Auto
+;;Nacht-Absenkung;2;2;10;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Nacht-Absenkung;DPST-9-2;Auto
+;;Temperaturband Heizung;2;2;11;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Temperaturband Heizung;DPST-9-2;Auto
+;;Temperaturband Kuehlung;2;2;12;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Temperaturband Kuehlung;DPST-9-2;Auto
+;;Differenz Vorlauf/Ruecklauf;2;2;13;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Differenz Vorlauf/Ruecklauf;DPST-9-2;Auto
+;;Regelabweichung Wohnzimmer;2;2;14;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Regelabweichung Wohnzimmer;DPST-9-2;Auto
+;;Regelabweichung Schlafzimmer;2;2;15;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Regelabweichung Schlafzimmer;DPST-9-2;Auto
+;;Regelabweichung Kueche;2;2;16;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Regelabweichung Kueche;DPST-9-2;Auto
+;;Ueberhitzung Solarkollektor;2;2;17;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Ueberhitzung Solarkollektor;DPST-9-2;Auto
+;;Delta-T Warmwasser;2;2;18;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Delta-T Warmwasser;DPST-9-2;Auto
+;;Frostschutz-Sollwert;2;2;19;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Frostschutz-Sollwert;DPST-9-1;Auto
+;;Kuehl-Sollwert Sommer;2;2;20;;;Demo 02 - Klima und Wetter / Sollwerte und Differenzen / Kuehl-Sollwert Sommer;DPST-9-1;Auto
+;Luftqualitaet und Feuchte;;2;3;;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte /;;Auto
+;;Relative Feuchte Wohnzimmer;2;3;1;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Relative Feuchte Wohnzimmer;DPST-9-7;Auto
+;;Relative Feuchte Schlafzimmer;2;3;2;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Relative Feuchte Schlafzimmer;DPST-9-7;Auto
+;;Relative Feuchte Bad;2;3;3;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Relative Feuchte Bad;DPST-9-7;Auto
+;;Relative Feuchte Keller;2;3;4;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Relative Feuchte Keller;DPST-9-7;Auto
+;;Relative Feuchte Aussen;2;3;5;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Relative Feuchte Aussen;DPST-9-7;Auto
+;;CO2-Gehalt Wohnzimmer;2;3;6;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / CO2-Gehalt Wohnzimmer;DPST-9-8;Auto
+;;CO2-Gehalt Schlafzimmer;2;3;7;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / CO2-Gehalt Schlafzimmer;DPST-9-8;Auto
+;;CO2-Gehalt Buero;2;3;8;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / CO2-Gehalt Buero;DPST-9-8;Auto
+;;CO2-Gehalt Kueche;2;3;9;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / CO2-Gehalt Kueche;DPST-9-8;Auto
+;;Luftvolumenstrom Zuluft;2;3;10;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Luftvolumenstrom Zuluft;DPST-9-9;Auto
+;;Luftvolumenstrom Abluft;2;3;11;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Luftvolumenstrom Abluft;DPST-9-9;Auto
+;;Luftvolumenstrom WRG;2;3;12;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Luftvolumenstrom WRG;DPST-9-9;Auto
+;;Absolute Feuchte Aussen;2;3;13;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Absolute Feuchte Aussen;DPST-9-29;Auto
+;;Absolute Feuchte Innen;2;3;14;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Absolute Feuchte Innen;DPST-9-29;Auto
+;;Entfeuchtungsleistung;2;3;15;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Entfeuchtungsleistung;DPST-9-29;Auto
+;;Staubpartikel PM2.5;2;3;16;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Staubpartikel PM2.5;DPST-9-30;Auto
+;;Staubpartikel PM10;2;3;17;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Staubpartikel PM10;DPST-9-30;Auto
+;;Temperaenderungsrate WZ;2;3;18;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Temperaenderungsrate WZ;DPST-9-3;Auto
+;;Temperaenderungsrate SZ;2;3;19;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Temperaenderungsrate SZ;DPST-9-3;Auto
+;;Waermerueckgewinnung Effizienz;2;3;20;;;Demo 02 - Klima und Wetter / Luftqualitaet und Feuchte / Waermerueckgewinnung Effizienz;DPST-9-3;Auto
+;Wetterdaten;;2;4;;;;Demo 02 - Klima und Wetter / Wetterdaten /;;Auto
+;;Helligkeit Sued;2;4;1;;;Demo 02 - Klima und Wetter / Wetterdaten / Helligkeit Sued;DPST-9-4;Auto
+;;Helligkeit Ost;2;4;2;;;Demo 02 - Klima und Wetter / Wetterdaten / Helligkeit Ost;DPST-9-4;Auto
+;;Helligkeit West;2;4;3;;;Demo 02 - Klima und Wetter / Wetterdaten / Helligkeit West;DPST-9-4;Auto
+;;Globalstrahlung;2;4;4;;;Demo 02 - Klima und Wetter / Wetterdaten / Globalstrahlung;DPST-9-4;Auto
+;;Windgeschwindigkeit m/s;2;4;5;;;Demo 02 - Klima und Wetter / Wetterdaten / Windgeschwindigkeit m/s;DPST-9-5;Auto
+;;Windboee m/s;2;4;6;;;Demo 02 - Klima und Wetter / Wetterdaten / Windboee m/s;DPST-9-5;Auto
+;;Luftdruck absolut;2;4;7;;;Demo 02 - Klima und Wetter / Wetterdaten / Luftdruck absolut;DPST-9-6;Auto
+;;Luftdruck Tendenz;2;4;8;;;Demo 02 - Klima und Wetter / Wetterdaten / Luftdruck Tendenz;DPST-9-6;Auto
+;;Niederschlagsmenge;2;4;9;;;Demo 02 - Klima und Wetter / Wetterdaten / Niederschlagsmenge;DPST-9-26;Auto
+;;Regenintensitaet;2;4;10;;;Demo 02 - Klima und Wetter / Wetterdaten / Regenintensitaet;DPST-9-26;Auto
+;;Globalstrahlungsleistung;2;4;11;;;Demo 02 - Klima und Wetter / Wetterdaten / Globalstrahlungsleistung;DPST-9-22;Auto
+;;UV-Strahlungsleistung;2;4;12;;;Demo 02 - Klima und Wetter / Wetterdaten / UV-Strahlungsleistung;DPST-9-22;Auto
+;;Windgeschwindigkeit km/h;2;4;13;;;Demo 02 - Klima und Wetter / Wetterdaten / Windgeschwindigkeit km/h;DPST-9-28;Auto
+;;Windboee km/h;2;4;14;;;Demo 02 - Klima und Wetter / Wetterdaten / Windboee km/h;DPST-9-28;Auto
+;;Aussentemperatur Fahrenheit;2;4;15;;;Demo 02 - Klima und Wetter / Wetterdaten / Aussentemperatur Fahrenheit;DPST-9-27;Auto
+;;Taupunkt Fahrenheit;2;4;16;;;Demo 02 - Klima und Wetter / Wetterdaten / Taupunkt Fahrenheit;DPST-9-27;Auto
+;;Wetterstation Versorgungsspannung;2;4;17;;;Demo 02 - Klima und Wetter / Wetterdaten / Wetterstation Versorgungsspannung;DPST-9-20;Auto
+;;Sensorstrom Wetterstation;2;4;18;;;Demo 02 - Klima und Wetter / Wetterdaten / Sensorstrom Wetterstation;DPST-9-21;Auto
+;;Ladestrom Wetterstation;2;4;19;;;Demo 02 - Klima und Wetter / Wetterdaten / Ladestrom Wetterstation;DPST-9-21;Auto
+;;Regenwasserdurchfluss;2;4;20;;;Demo 02 - Klima und Wetter / Wetterdaten / Regenwasserdurchfluss;DPST-9-25;Auto
+;Betriebsmodi HVAC;;2;5;;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC /;;Auto
+;;HVAC-Modus Wohnzimmer;2;5;1;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / HVAC-Modus Wohnzimmer;DPST-20-102;Auto
+;;HVAC-Modus Schlafzimmer;2;5;2;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / HVAC-Modus Schlafzimmer;DPST-20-102;Auto
+;;HVAC-Modus Bad;2;5;3;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / HVAC-Modus Bad;DPST-20-102;Auto
+;;HVAC-Modus Buero;2;5;4;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / HVAC-Modus Buero;DPST-20-102;Auto
+;;Belegungsmodus Wohnzimmer;2;5;5;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Belegungsmodus Wohnzimmer;DPST-20-3;Auto
+;;Belegungsmodus Schlafzimmer;2;5;6;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Belegungsmodus Schlafzimmer;DPST-20-3;Auto
+;;Belegungsmodus Buero;2;5;7;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Belegungsmodus Buero;DPST-20-3;Auto
+;;Gebaeudemodus;2;5;8;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Gebaeudemodus;DPST-20-2;Auto
+;;HVAC Controller Modus;2;5;9;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / HVAC Controller Modus;DPST-20-105;Auto
+;;HVAC Emergency Modus;2;5;10;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / HVAC Emergency Modus;DPST-20-106;Auto
+;;DHW-Modus;2;5;11;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / DHW-Modus;DPST-20-103;Auto
+;;Ventilmodus Heizkreis;2;5;12;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Ventilmodus Heizkreis;DPST-20-108;Auto
+;;Daempfermodus Lueftung;2;5;13;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Daempfermodus Lueftung;DPST-20-109;Auto
+;;Lueftermodus;2;5;14;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Lueftermodus;DPST-20-111;Auto
+;;Heizbetrieb Modus;2;5;15;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Heizbetrieb Modus;DPST-20-110;Auto
+;;Wechselmodus Heizen/Kuehlen;2;5;16;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Wechselmodus Heizen/Kuehlen;DPST-20-107;Auto
+;;Raumsollwert-Status;2;5;17;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Raumsollwert-Status;DPST-20-113;Auto
+;;Master/Slave-Modus;2;5;18;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Master/Slave-Modus;DPST-20-112;Auto
+;;Lastprioritaet;2;5;19;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Lastprioritaet;DPST-20-104;Auto
+;;Brennstofftyp;2;5;20;;;Demo 02 - Klima und Wetter / Betriebsmodi HVAC / Brennstofftyp;DPST-20-100;Auto
+Demo 03 - Licht und Beschattung;;;3;;;;;Demo 03 - Licht und Beschattung /;;Auto
+;Dimmen;;3;1;;;;Demo 03 - Licht und Beschattung / Dimmen /;;Auto
+;;Dimmer Wohnzimmer Wert;3;1;1;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Wohnzimmer Wert;DPST-5-1;Auto
+;;Dimmer Schlafzimmer Wert;3;1;2;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Schlafzimmer Wert;DPST-5-1;Auto
+;;Dimmer Kueche Wert;3;1;3;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Kueche Wert;DPST-5-1;Auto
+;;Dimmer Bad Wert;3;1;4;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Bad Wert;DPST-5-1;Auto
+;;Dimmer Buero Wert;3;1;5;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Buero Wert;DPST-5-1;Auto
+;;Dimmer Flur EG Wert;3;1;6;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Flur EG Wert;DPST-5-1;Auto
+;;Dimmer Flur OG Wert;3;1;7;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Flur OG Wert;DPST-5-1;Auto
+;;Dimmer Keller Wert;3;1;8;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Keller Wert;DPST-5-1;Auto
+;;Dimmer Garten Wert;3;1;9;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Garten Wert;DPST-5-1;Auto
+;;Dimmer Aussen Wert;3;1;10;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Aussen Wert;DPST-5-1;Auto
+;;Dimmer Wohnzimmer Steuern;3;1;11;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Wohnzimmer Steuern;DPST-3-7;Auto
+;;Dimmer Schlafzimmer Steuern;3;1;12;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Schlafzimmer Steuern;DPST-3-7;Auto
+;;Dimmer Kueche Steuern;3;1;13;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Kueche Steuern;DPST-3-7;Auto
+;;Dimmer Bad Steuern;3;1;14;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Bad Steuern;DPST-3-7;Auto
+;;Dimmer Buero Steuern;3;1;15;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Buero Steuern;DPST-3-7;Auto
+;;Dimmer Flur EG Steuern;3;1;16;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Flur EG Steuern;DPST-3-7;Auto
+;;Dimmer Flur OG Steuern;3;1;17;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Flur OG Steuern;DPST-3-7;Auto
+;;Dimmer Keller Steuern;3;1;18;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Keller Steuern;DPST-3-7;Auto
+;;Dimmer Garten Steuern;3;1;19;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Garten Steuern;DPST-3-7;Auto
+;;Dimmer Aussen Steuern;3;1;20;;;Demo 03 - Licht und Beschattung / Dimmen / Dimmer Aussen Steuern;DPST-3-7;Auto
+;Jalousie Positionen;;3;2;;;;Demo 03 - Licht und Beschattung / Jalousie Positionen /;;Auto
+;;Position Jalousie Wohnzimmer;3;2;1;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Jalousie Wohnzimmer;DPST-5-1;Auto
+;;Position Jalousie Schlafzimmer;3;2;2;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Jalousie Schlafzimmer;DPST-5-1;Auto
+;;Position Jalousie Bad;3;2;3;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Jalousie Bad;DPST-5-1;Auto
+;;Position Jalousie Kueche;3;2;4;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Jalousie Kueche;DPST-5-1;Auto
+;;Position Jalousie Buero;3;2;5;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Jalousie Buero;DPST-5-1;Auto
+;;Position Rolladen EG;3;2;6;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Rolladen EG;DPST-5-1;Auto
+;;Position Rolladen OG;3;2;7;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Rolladen OG;DPST-5-1;Auto
+;;Position Markise;3;2;8;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Markise;DPST-5-1;Auto
+;;Position Dachfenster;3;2;9;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Dachfenster;DPST-5-1;Auto
+;;Position Garagentor;3;2;10;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Position Garagentor;DPST-5-1;Auto
+;;Lamellenwinkel Jalousie WZ;3;2;11;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Lamellenwinkel Jalousie WZ;DPST-5-1;Auto
+;;Lamellenwinkel Jalousie SZ;3;2;12;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Lamellenwinkel Jalousie SZ;DPST-5-1;Auto
+;;Lamellenwinkel Jalousie Bad;3;2;13;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Lamellenwinkel Jalousie Bad;DPST-5-1;Auto
+;;Lamellenwinkel Jalousie Buero;3;2;14;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Lamellenwinkel Jalousie Buero;DPST-5-1;Auto
+;;Lamellenwinkel Jalousie Kueche;3;2;15;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Lamellenwinkel Jalousie Kueche;DPST-5-1;Auto
+;;Jalousie WZ Schrittsteuerung;3;2;16;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Jalousie WZ Schrittsteuerung;DPST-3-8;Auto
+;;Jalousie SZ Schrittsteuerung;3;2;17;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Jalousie SZ Schrittsteuerung;DPST-3-8;Auto
+;;Rolladen EG Schrittsteuerung;3;2;18;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Rolladen EG Schrittsteuerung;DPST-3-8;Auto
+;;Markise Schrittsteuerung;3;2;19;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Markise Schrittsteuerung;DPST-3-8;Auto
+;;Carport Jalousie Schrittsteuerung;3;2;20;;;Demo 03 - Licht und Beschattung / Jalousie Positionen / Carport Jalousie Schrittsteuerung;DPST-3-8;Auto
+;Farbe und Helligkeit;;3;3;;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit /;;Auto
+;;Farbtemperatur Wohnzimmer;3;3;1;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Wohnzimmer;DPST-7-600;Auto
+;;Farbtemperatur Schlafzimmer;3;3;2;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Schlafzimmer;DPST-7-600;Auto
+;;Farbtemperatur Bad;3;3;3;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Bad;DPST-7-600;Auto
+;;Farbtemperatur Buero;3;3;4;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Buero;DPST-7-600;Auto
+;;Farbtemperatur Kueche;3;3;5;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Kueche;DPST-7-600;Auto
+;;Farbtemperatur Flur EG;3;3;6;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Flur EG;DPST-7-600;Auto
+;;Farbtemperatur Flur OG;3;3;7;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Flur OG;DPST-7-600;Auto
+;;Farbtemperatur Garten;3;3;8;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Farbtemperatur Garten;DPST-7-600;Auto
+;;Helligkeit Sensor Innen;3;3;9;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Helligkeit Sensor Innen;DPST-7-13;Auto
+;;Helligkeit Sensor Garten;3;3;10;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Helligkeit Sensor Garten;DPST-7-13;Auto
+;;Relative Helligkeit Wohnzimmer;3;3;11;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Relative Helligkeit Wohnzimmer;DPST-5-1;Auto
+;;Relative Helligkeit Schlafzimmer;3;3;12;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Relative Helligkeit Schlafzimmer;DPST-5-1;Auto
+;;Relative Helligkeit Bad;3;3;13;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Relative Helligkeit Bad;DPST-5-1;Auto
+;;Relative Helligkeit Buero;3;3;14;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Relative Helligkeit Buero;DPST-5-1;Auto
+;;Relative Helligkeit Kueche;3;3;15;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Relative Helligkeit Kueche;DPST-5-1;Auto
+;;Betriebsstunden Licht EG;3;3;16;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Betriebsstunden Licht EG;DPST-7-1;Auto
+;;Betriebsstunden Licht OG;3;3;17;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Betriebsstunden Licht OG;DPST-7-1;Auto
+;;Betriebsstunden Licht Buero;3;3;18;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Betriebsstunden Licht Buero;DPST-7-1;Auto
+;;Betriebsstunden Licht Garten;3;3;19;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Betriebsstunden Licht Garten;DPST-7-1;Auto
+;;Betriebsstunden Licht Keller;3;3;20;;;Demo 03 - Licht und Beschattung / Farbe und Helligkeit / Betriebsstunden Licht Keller;DPST-7-1;Auto
+;Szenensteuerung;;3;4;;;;Demo 03 - Licht und Beschattung / Szenensteuerung /;;Auto
+;;Szene Wohnzimmer aufrufen;3;4;1;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Wohnzimmer aufrufen;DPST-17-1;Auto
+;;Szene Schlafzimmer aufrufen;3;4;2;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Schlafzimmer aufrufen;DPST-17-1;Auto
+;;Szene Kueche aufrufen;3;4;3;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Kueche aufrufen;DPST-17-1;Auto
+;;Szene Bad aufrufen;3;4;4;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Bad aufrufen;DPST-17-1;Auto
+;;Szene Buero aufrufen;3;4;5;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Buero aufrufen;DPST-17-1;Auto
+;;Szene Flur aufrufen;3;4;6;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Flur aufrufen;DPST-17-1;Auto
+;;Szene Garten aufrufen;3;4;7;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Garten aufrufen;DPST-17-1;Auto
+;;Szene Alle aus aufrufen;3;4;8;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Alle aus aufrufen;DPST-17-1;Auto
+;;Szene Party aufrufen;3;4;9;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Party aufrufen;DPST-17-1;Auto
+;;Szene Film aufrufen;3;4;10;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Film aufrufen;DPST-17-1;Auto
+;;Szene Wohnzimmer speichern;3;4;11;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Wohnzimmer speichern;DPST-18-1;Auto
+;;Szene Schlafzimmer speichern;3;4;12;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Schlafzimmer speichern;DPST-18-1;Auto
+;;Szene Kueche speichern;3;4;13;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Kueche speichern;DPST-18-1;Auto
+;;Szene Bad speichern;3;4;14;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Bad speichern;DPST-18-1;Auto
+;;Szene Buero speichern;3;4;15;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Buero speichern;DPST-18-1;Auto
+;;Szene Flur speichern;3;4;16;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Flur speichern;DPST-18-1;Auto
+;;Szene Garten speichern;3;4;17;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Garten speichern;DPST-18-1;Auto
+;;Szene Alle aus speichern;3;4;18;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Alle aus speichern;DPST-18-1;Auto
+;;Szene Party speichern;3;4;19;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Party speichern;DPST-18-1;Auto
+;;Szene Film speichern;3;4;20;;;Demo 03 - Licht und Beschattung / Szenensteuerung / Szene Film speichern;DPST-18-1;Auto
+;Winkel und Rohwerte;;3;5;;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte /;;Auto
+;;Lamellenwinkel Absolut WZ;3;5;1;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Lamellenwinkel Absolut WZ;DPST-5-3;Auto
+;;Lamellenwinkel Absolut SZ;3;5;2;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Lamellenwinkel Absolut SZ;DPST-5-3;Auto
+;;Lamellenwinkel Absolut Bad;3;5;3;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Lamellenwinkel Absolut Bad;DPST-5-3;Auto
+;;Lamellenwinkel Absolut Buero;3;5;4;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Lamellenwinkel Absolut Buero;DPST-5-3;Auto
+;;Lamellenwinkel Absolut Kueche;3;5;5;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Lamellenwinkel Absolut Kueche;DPST-5-3;Auto
+;;Sonnenschutz Schwelle;3;5;6;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Sonnenschutz Schwelle;DPST-5-1;Auto
+;;Einschaltwert Dimmer WZ;3;5;7;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Einschaltwert Dimmer WZ;DPST-5-1;Auto
+;;Einschaltwert Dimmer SZ;3;5;8;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Einschaltwert Dimmer SZ;DPST-5-1;Auto
+;;Einschaltwert Dimmer Bad;3;5;9;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Einschaltwert Dimmer Bad;DPST-5-1;Auto
+;;Einschaltwert Dimmer Buero;3;5;10;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Einschaltwert Dimmer Buero;DPST-5-1;Auto
+;;Minimalwert Dimmer WZ;3;5;11;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Minimalwert Dimmer WZ;DPST-5-1;Auto
+;;Dimmzeit Rohwert;3;5;12;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Dimmzeit Rohwert;DPST-5-4;Auto
+;;Reaktionszeit Sensor Rohwert;3;5;13;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Reaktionszeit Sensor Rohwert;DPST-5-4;Auto
+;;Max Dimmhelligkeit Rohwert;3;5;14;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Max Dimmhelligkeit Rohwert;DPST-5-4;Auto
+;;Min Dimmhelligkeit Rohwert;3;5;15;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Min Dimmhelligkeit Rohwert;DPST-5-4;Auto
+;;Dimmwert Stufe 1;3;5;16;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Dimmwert Stufe 1;DPST-5-4;Auto
+;;Dimmwert Stufe 2;3;5;17;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Dimmwert Stufe 2;DPST-5-4;Auto
+;;Dimmwert Stufe 3;3;5;18;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Dimmwert Stufe 3;DPST-5-4;Auto
+;;Dimmwert Stufe 4;3;5;19;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Dimmwert Stufe 4;DPST-5-4;Auto
+;;Dimmwert Stufe 5;3;5;20;;;Demo 03 - Licht und Beschattung / Winkel und Rohwerte / Dimmwert Stufe 5;DPST-5-4;Auto
+Demo 04 - Energie und Zaehler;;;4;;;;;Demo 04 - Energie und Zaehler /;;Auto
+;Elektrische Groessen;;4;1;;;;Demo 04 - Energie und Zaehler / Elektrische Groessen /;;Auto
+;;Netzspannung L1;4;1;1;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Netzspannung L1;DPST-14-27;Auto
+;;Netzspannung L2;4;1;2;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Netzspannung L2;DPST-14-27;Auto
+;;Netzspannung L3;4;1;3;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Netzspannung L3;DPST-14-27;Auto
+;;Strom L1;4;1;4;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Strom L1;DPST-14-19;Auto
+;;Strom L2;4;1;5;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Strom L2;DPST-14-19;Auto
+;;Strom L3;4;1;6;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Strom L3;DPST-14-19;Auto
+;;Wirkleistung L1;4;1;7;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Wirkleistung L1;DPST-14-56;Auto
+;;Wirkleistung L2;4;1;8;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Wirkleistung L2;DPST-14-56;Auto
+;;Wirkleistung L3;4;1;9;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Wirkleistung L3;DPST-14-56;Auto
+;;Wirkleistung Gesamt;4;1;10;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Wirkleistung Gesamt;DPST-14-56;Auto
+;;Scheinleistung Gesamt;4;1;11;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Scheinleistung Gesamt;DPST-14-80;Auto
+;;Leistungsfaktor;4;1;12;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Leistungsfaktor;DPST-14-57;Auto
+;;Netzfrequenz;4;1;13;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Netzfrequenz;DPST-14-33;Auto
+;;Spannung PV-Anlage;4;1;14;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Spannung PV-Anlage;DPST-14-27;Auto
+;;Spannung Batterie;4;1;15;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Spannung Batterie;DPST-14-27;Auto
+;;Spannung Wechselrichter;4;1;16;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Spannung Wechselrichter;DPST-14-27;Auto
+;;Strom PV-Anlage;4;1;17;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Strom PV-Anlage;DPST-14-19;Auto
+;;Strom Batterie;4;1;18;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Strom Batterie;DPST-14-19;Auto
+;;Strom Waermepumpe;4;1;19;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Strom Waermepumpe;DPST-14-19;Auto
+;;Wirkleistung Waermepumpe;4;1;20;;;Demo 04 - Energie und Zaehler / Elektrische Groessen / Wirkleistung Waermepumpe;DPST-14-56;Auto
+;Energiezaehler;;4;2;;;;Demo 04 - Energie und Zaehler / Energiezaehler /;;Auto
+;;Wirkenergie Bezug;4;2;1;;;Demo 04 - Energie und Zaehler / Energiezaehler / Wirkenergie Bezug;DPST-13-10;Auto
+;;Wirkenergie Einspeisung;4;2;2;;;Demo 04 - Energie und Zaehler / Energiezaehler / Wirkenergie Einspeisung;DPST-13-10;Auto
+;;Wirkenergie Gesamt kWh;4;2;3;;;Demo 04 - Energie und Zaehler / Energiezaehler / Wirkenergie Gesamt kWh;DPST-13-13;Auto
+;;Wirkenergie Einspeisung kWh;4;2;4;;;Demo 04 - Energie und Zaehler / Energiezaehler / Wirkenergie Einspeisung kWh;DPST-13-13;Auto
+;;Bezugsenergie Tarif 1;4;2;5;;;Demo 04 - Energie und Zaehler / Energiezaehler / Bezugsenergie Tarif 1;DPST-13-13;Auto
+;;Bezugsenergie Tarif 2;4;2;6;;;Demo 04 - Energie und Zaehler / Energiezaehler / Bezugsenergie Tarif 2;DPST-13-13;Auto
+;;PV-Erzeugung heute kWh;4;2;7;;;Demo 04 - Energie und Zaehler / Energiezaehler / PV-Erzeugung heute kWh;DPST-13-13;Auto
+;;PV-Erzeugung gesamt kWh;4;2;8;;;Demo 04 - Energie und Zaehler / Energiezaehler / PV-Erzeugung gesamt kWh;DPST-13-13;Auto
+;;Eigenverbrauch heute kWh;4;2;9;;;Demo 04 - Energie und Zaehler / Energiezaehler / Eigenverbrauch heute kWh;DPST-13-1;Auto
+;;Batterie Ladestand Wh;4;2;10;;;Demo 04 - Energie und Zaehler / Energiezaehler / Batterie Ladestand Wh;DPST-13-10;Auto
+;;Wirkenergie 64-Bit Bezug;4;2;11;;;Demo 04 - Energie und Zaehler / Energiezaehler / Wirkenergie 64-Bit Bezug;DPST-29-10;Auto
+;;Scheinenergie 64-Bit;4;2;12;;;Demo 04 - Energie und Zaehler / Energiezaehler / Scheinenergie 64-Bit;DPST-29-11;Auto
+;;Blindenergie 64-Bit;4;2;13;;;Demo 04 - Energie und Zaehler / Energiezaehler / Blindenergie 64-Bit;DPST-29-12;Auto
+;;Waermeenergie gesamt kWh;4;2;14;;;Demo 04 - Energie und Zaehler / Energiezaehler / Waermeenergie gesamt kWh;DPST-13-13;Auto
+;;Warmwasserenergie kWh;4;2;15;;;Demo 04 - Energie und Zaehler / Energiezaehler / Warmwasserenergie kWh;DPST-13-13;Auto
+;;Kuehlenergie gesamt kWh;4;2;16;;;Demo 04 - Energie und Zaehler / Energiezaehler / Kuehlenergie gesamt kWh;DPST-13-13;Auto
+;;Gasverbrauch kWh;4;2;17;;;Demo 04 - Energie und Zaehler / Energiezaehler / Gasverbrauch kWh;DPST-13-13;Auto
+;;Energie Heizung heute kWh;4;2;18;;;Demo 04 - Energie und Zaehler / Energiezaehler / Energie Heizung heute kWh;DPST-13-13;Auto
+;;Energie Kuehlung heute kWh;4;2;19;;;Demo 04 - Energie und Zaehler / Energiezaehler / Energie Kuehlung heute kWh;DPST-13-13;Auto
+;;Energie Lueftung heute kWh;4;2;20;;;Demo 04 - Energie und Zaehler / Energiezaehler / Energie Lueftung heute kWh;DPST-13-13;Auto
+;Zaehlerimpulse und Durchfluss;;4;3;;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss /;;Auto
+;;Wasserverbrauch gesamt;4;3;1;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Wasserverbrauch gesamt;DPST-12-1;Auto
+;;Gasverbrauch gesamt;4;3;2;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Gasverbrauch gesamt;DPST-12-1;Auto
+;;Waermemengenzaehler;4;3;3;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Waermemengenzaehler;DPST-12-1;Auto
+;;Kaeltezaehler;4;3;4;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Kaeltezaehler;DPST-12-1;Auto
+;;Impulszaehler Solar;4;3;5;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Impulszaehler Solar;DPST-12-1;Auto
+;;Impulszaehler Brunnen;4;3;6;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Impulszaehler Brunnen;DPST-12-1;Auto
+;;Impulszaehler Regen;4;3;7;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Impulszaehler Regen;DPST-12-1;Auto
+;;Tageszaehler Wasser;4;3;8;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Tageszaehler Wasser;DPST-12-1;Auto
+;;Tageszaehler Gas;4;3;9;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Tageszaehler Gas;DPST-12-1;Auto
+;;Tageszaehler Waerme;4;3;10;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Tageszaehler Waerme;DPST-12-1;Auto
+;;Durchfluss Heizkreis;4;3;11;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Durchfluss Heizkreis;DPST-9-25;Auto
+;;Durchfluss Warmwasser;4;3;12;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Durchfluss Warmwasser;DPST-9-25;Auto
+;;Durchfluss Solar;4;3;13;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Durchfluss Solar;DPST-9-25;Auto
+;;Durchfluss Brunnen;4;3;14;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Durchfluss Brunnen;DPST-9-25;Auto
+;;Durchfluss Kuehlkreis;4;3;15;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Durchfluss Kuehlkreis;DPST-9-25;Auto
+;;Durchfluss Kaelte;4;3;16;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Durchfluss Kaelte;DPST-9-25;Auto
+;;Betriebsstunden Anlage;4;3;17;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Betriebsstunden Anlage;DPST-7-1;Auto
+;;Betriebsstunden Kompressor;4;3;18;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Betriebsstunden Kompressor;DPST-7-1;Auto
+;;Anzahl Starts Kompressor;4;3;19;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Anzahl Starts Kompressor;DPST-7-1;Auto
+;;Zaehlerstand Stromzaehler;4;3;20;;;Demo 04 - Energie und Zaehler / Zaehlerimpulse und Durchfluss / Zaehlerstand Stromzaehler;DPST-12-1;Auto
+;Solar und PV;;4;4;;;;Demo 04 - Energie und Zaehler / Solar und PV /;;Auto
+;;PV Leistung aktuell;4;4;1;;;Demo 04 - Energie und Zaehler / Solar und PV / PV Leistung aktuell;DPST-9-24;Auto
+;;PV Ertrag heute;4;4;2;;;Demo 04 - Energie und Zaehler / Solar und PV / PV Ertrag heute;DPST-9-24;Auto
+;;Solarkollektor Temperatur;4;4;3;;;Demo 04 - Energie und Zaehler / Solar und PV / Solarkollektor Temperatur;DPST-9-1;Auto
+;;Solarspeicher Temp oben;4;4;4;;;Demo 04 - Energie und Zaehler / Solar und PV / Solarspeicher Temp oben;DPST-9-1;Auto
+;;Solarspeicher Temp unten;4;4;5;;;Demo 04 - Energie und Zaehler / Solar und PV / Solarspeicher Temp unten;DPST-9-1;Auto
+;;Waermepumpe Vorlauf;4;4;6;;;Demo 04 - Energie und Zaehler / Solar und PV / Waermepumpe Vorlauf;DPST-9-1;Auto
+;;Solarpumpe Drehzahl;4;4;7;;;Demo 04 - Energie und Zaehler / Solar und PV / Solarpumpe Drehzahl;DPST-5-1;Auto
+;;Batterie SOC;4;4;8;;;Demo 04 - Energie und Zaehler / Solar und PV / Batterie SOC;DPST-5-1;Auto
+;;Eigenverbrauchsquote;4;4;9;;;Demo 04 - Energie und Zaehler / Solar und PV / Eigenverbrauchsquote;DPST-5-1;Auto
+;;Autarkiequote;4;4;10;;;Demo 04 - Energie und Zaehler / Solar und PV / Autarkiequote;DPST-5-1;Auto
+;;PV Effizienz;4;4;11;;;Demo 04 - Energie und Zaehler / Solar und PV / PV Effizienz;DPST-5-1;Auto
+;;Batterie Ladezustand;4;4;12;;;Demo 04 - Energie und Zaehler / Solar und PV / Batterie Ladezustand;DPST-5-1;Auto
+;;Waermepumpe COP;4;4;13;;;Demo 04 - Energie und Zaehler / Solar und PV / Waermepumpe COP;DPST-9-24;Auto
+;;Waermepumpe Leistungszahl;4;4;14;;;Demo 04 - Energie und Zaehler / Solar und PV / Waermepumpe Leistungszahl;DPST-9-24;Auto
+;;Waermepumpe Waermeleistung;4;4;15;;;Demo 04 - Energie und Zaehler / Solar und PV / Waermepumpe Waermeleistung;DPST-14-56;Auto
+;;Waermepumpe Kaelteleistung;4;4;16;;;Demo 04 - Energie und Zaehler / Solar und PV / Waermepumpe Kaelteleistung;DPST-14-56;Auto
+;;Druckdifferenz Heizkreis;4;4;17;;;Demo 04 - Energie und Zaehler / Solar und PV / Druckdifferenz Heizkreis;DPST-14-58;Auto
+;;Druckdifferenz Kuehlkreis;4;4;18;;;Demo 04 - Energie und Zaehler / Solar und PV / Druckdifferenz Kuehlkreis;DPST-14-58;Auto
+;;Volumenstrom Heizkreis;4;4;19;;;Demo 04 - Energie und Zaehler / Solar und PV / Volumenstrom Heizkreis;DPST-9-25;Auto
+;;Volumenstrom Kuehlkreis;4;4;20;;;Demo 04 - Energie und Zaehler / Solar und PV / Volumenstrom Kuehlkreis;DPST-9-25;Auto
+;Verbraucheranalyse;;4;5;;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse /;;Auto
+;;Verbrauch Beleuchtung EG;4;5;1;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Beleuchtung EG;DPST-9-24;Auto
+;;Verbrauch Beleuchtung OG;4;5;2;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Beleuchtung OG;DPST-9-24;Auto
+;;Verbrauch Waermepumpe;4;5;3;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Waermepumpe;DPST-9-24;Auto
+;;Verbrauch Klimaanlage;4;5;4;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Klimaanlage;DPST-9-24;Auto
+;;Verbrauch Kuehlschrank;4;5;5;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Kuehlschrank;DPST-9-24;Auto
+;;Verbrauch Waschmaschine;4;5;6;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Waschmaschine;DPST-9-24;Auto
+;;Verbrauch Geschirrspueler;4;5;7;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Geschirrspueler;DPST-9-24;Auto
+;;Verbrauch E-Herd;4;5;8;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch E-Herd;DPST-9-24;Auto
+;;Verbrauch Wallbox E-Auto;4;5;9;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Wallbox E-Auto;DPST-9-24;Auto
+;;Verbrauch Lueftungsanlage;4;5;10;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Verbrauch Lueftungsanlage;DPST-9-24;Auto
+;;Tagesverbrauch Beleuchtung;4;5;11;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Tagesverbrauch Beleuchtung;DPST-13-13;Auto
+;;Tagesverbrauch Waermepumpe;4;5;12;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Tagesverbrauch Waermepumpe;DPST-13-13;Auto
+;;Tagesverbrauch Klimaanlage;4;5;13;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Tagesverbrauch Klimaanlage;DPST-13-13;Auto
+;;Tagesverbrauch E-Auto;4;5;14;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Tagesverbrauch E-Auto;DPST-13-13;Auto
+;;Monatsverbrauch Gesamt;4;5;15;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Monatsverbrauch Gesamt;DPST-13-13;Auto
+;;Jahresverbrauch Gesamt;4;5;16;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Jahresverbrauch Gesamt;DPST-13-13;Auto
+;;CO2-Emissionen heute;4;5;17;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / CO2-Emissionen heute;DPST-14-51;Auto
+;;CO2-Emissionen Monat;4;5;18;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / CO2-Emissionen Monat;DPST-14-51;Auto
+;;Eingespartes CO2 PV;4;5;19;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Eingespartes CO2 PV;DPST-14-51;Auto
+;;Energiekosten heute Cent;4;5;20;;;Demo 04 - Energie und Zaehler / Verbraucheranalyse / Energiekosten heute Cent;DPST-13-1;Auto
+Demo 05 - System und Sonderfunktionen;;;5;;;;;Demo 05 - System und Sonderfunktionen /;;Auto
+;Zeit und Datum;;5;1;;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum /;;Auto
+;;Aktuelle Uhrzeit;5;1;1;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Aktuelle Uhrzeit;DPST-10-1;Auto
+;;Aktuelles Datum;5;1;2;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Aktuelles Datum;DPST-11-1;Auto
+;;Datum und Uhrzeit;5;1;3;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Datum und Uhrzeit;DPST-19-1;Auto
+;;Sonnenaufgang Uhrzeit;5;1;4;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Sonnenaufgang Uhrzeit;DPST-10-1;Auto
+;;Sonnenuntergang Uhrzeit;5;1;5;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Sonnenuntergang Uhrzeit;DPST-10-1;Auto
+;;Uhrzeit Schaltaktor 1;5;1;6;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Uhrzeit Schaltaktor 1;DPST-10-1;Auto
+;;Uhrzeit Schaltaktor 2;5;1;7;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Uhrzeit Schaltaktor 2;DPST-10-1;Auto
+;;Datum letzte Wartung;5;1;8;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Datum letzte Wartung;DPST-11-1;Auto
+;;Datum naechste Wartung;5;1;9;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Datum naechste Wartung;DPST-11-1;Auto
+;;Datum letzter Alarm;5;1;10;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Datum letzter Alarm;DPST-11-1;Auto
+;;Betriebszeit Anlage;5;1;11;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Betriebszeit Anlage;DPST-7-7;Auto
+;;Betriebszeit Heizung;5;1;12;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Betriebszeit Heizung;DPST-7-7;Auto
+;;Betriebszeit Waermepumpe;5;1;13;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Betriebszeit Waermepumpe;DPST-7-7;Auto
+;;Betriebszeit Lueftung;5;1;14;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Betriebszeit Lueftung;DPST-7-7;Auto
+;;Betriebszeit Solar;5;1;15;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Betriebszeit Solar;DPST-7-7;Auto
+;;Datum letzte Aenderung;5;1;16;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Datum letzte Aenderung;DPST-19-1;Auto
+;;Datum Inbetriebnahme;5;1;17;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Datum Inbetriebnahme;DPST-19-1;Auto
+;;Datum letztes Update;5;1;18;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Datum letztes Update;DPST-19-1;Auto
+;;Sommerzeit aktiv;5;1;19;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Sommerzeit aktiv;DPST-1-1;Auto
+;;Zeitsynchronisation aktiv;5;1;20;;;Demo 05 - System und Sonderfunktionen / Zeit und Datum / Zeitsynchronisation aktiv;DPST-1-1;Auto
+;Texte und Zeichenketten;;5;2;;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten /;;Auto
+;;Statustext Heizung;5;2;1;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Heizung;DPST-16-0;Auto
+;;Statustext Lueftung;5;2;2;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Lueftung;DPST-16-0;Auto
+;;Statustext Alarm;5;2;3;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Alarm;DPST-16-0;Auto
+;;Statustext Wetter;5;2;4;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Wetter;DPST-16-0;Auto
+;;Statustext Energie;5;2;5;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Energie;DPST-16-0;Auto
+;;Statustext Solar;5;2;6;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Solar;DPST-16-0;Auto
+;;Statustext Waermepumpe;5;2;7;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Waermepumpe;DPST-16-0;Auto
+;;Statustext Garten;5;2;8;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Statustext Garten;DPST-16-0;Auto
+;;Geraetebezeichnung Sensor 1;5;2;9;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Geraetebezeichnung Sensor 1;DPST-16-0;Auto
+;;Geraetebezeichnung Sensor 2;5;2;10;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Geraetebezeichnung Sensor 2;DPST-16-0;Auto
+;;Fehlertext Heizung;5;2;11;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Fehlertext Heizung;DPST-16-1;Auto
+;;Fehlertext Lueftung;5;2;12;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Fehlertext Lueftung;DPST-16-1;Auto
+;;Fehlertext Waermepumpe;5;2;13;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Fehlertext Waermepumpe;DPST-16-1;Auto
+;;Fehlertext Solar;5;2;14;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Fehlertext Solar;DPST-16-1;Auto
+;;Fehlertext Alarm;5;2;15;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Fehlertext Alarm;DPST-16-1;Auto
+;;Systemname;5;2;16;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Systemname;DPST-16-1;Auto
+;;Benutzertext 1;5;2;17;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Benutzertext 1;DPST-16-1;Auto
+;;Benutzertext 2;5;2;18;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Benutzertext 2;DPST-16-1;Auto
+;;Benutzertext 3;5;2;19;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Benutzertext 3;DPST-16-1;Auto
+;;Benutzertext 4;5;2;20;;;Demo 05 - System und Sonderfunktionen / Texte und Zeichenketten / Benutzertext 4;DPST-16-1;Auto
+;Ganzzahlen;;5;3;;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen /;;Auto
+;;Offsetkorrektur Temperatur;5;3;1;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Offsetkorrektur Temperatur;DPST-6-1;Auto
+;;Offsetkorrektur Feuchte;5;3;2;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Offsetkorrektur Feuchte;DPST-6-1;Auto
+;;Korrekturwert Helligkeit;5;3;3;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Korrekturwert Helligkeit;DPST-6-1;Auto
+;;Korrekturwert CO2;5;3;4;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Korrekturwert CO2;DPST-6-1;Auto
+;;Betriebsstunden uint16;5;3;5;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Betriebsstunden uint16;DPST-7-1;Auto
+;;Zyklen Kompressor;5;3;6;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Zyklen Kompressor;DPST-7-1;Auto
+;;Fehlercode aktuell;5;3;7;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Fehlercode aktuell;DPST-7-1;Auto
+;;Farbtemperatur Preset;5;3;8;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Farbtemperatur Preset;DPST-7-600;Auto
+;;Zeitverzoegerung Pumpe ms;5;3;9;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Zeitverzoegerung Pumpe ms;DPST-7-2;Auto
+;;Zeitverzoegerung Schaltung ms;5;3;10;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Zeitverzoegerung Schaltung ms;DPST-7-2;Auto
+;;Delta-T Vorlauf/Ruecklauf;5;3;11;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Delta-T Vorlauf/Ruecklauf;DPST-8-1;Auto
+;;Delta-T Innen/Aussen;5;3;12;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Delta-T Innen/Aussen;DPST-8-1;Auto
+;;Delta-T Soll/Ist WZ;5;3;13;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Delta-T Soll/Ist WZ;DPST-8-1;Auto
+;;Delta-T Soll/Ist SZ;5;3;14;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Delta-T Soll/Ist SZ;DPST-8-1;Auto
+;;Delta-T Soll/Ist Bad;5;3;15;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Delta-T Soll/Ist Bad;DPST-8-1;Auto
+;;Laufzeit letzter Zyklus s;5;3;16;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Laufzeit letzter Zyklus s;DPST-7-5;Auto
+;;Nachlaufzeit Pumpe s;5;3;17;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Nachlaufzeit Pumpe s;DPST-7-5;Auto
+;;Zaehler Alarme heute;5;3;18;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Zaehler Alarme heute;DPST-6-10;Auto
+;;Zaehler Schaltungen heute;5;3;19;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Zaehler Schaltungen heute;DPST-6-10;Auto
+;;Signalstaerke WLAN dBm;5;3;20;;;Demo 05 - System und Sonderfunktionen / Ganzzahlen / Signalstaerke WLAN dBm;DPST-6-10;Auto
+;Diagnose und Alarm;;5;4;;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm /;;Auto
+;;Alarminfo Sensor 1;5;4;1;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Sensor 1;;Auto
+;;Alarminfo Sensor 2;5;4;2;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Sensor 2;;Auto
+;;Alarminfo Sensor 3;5;4;3;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Sensor 3;;Auto
+;;Alarminfo Sensor 4;5;4;4;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Sensor 4;;Auto
+;;Alarminfo Sensor 5;5;4;5;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Sensor 5;;Auto
+;;Alarminfo Heizung;5;4;6;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Heizung;;Auto
+;;Alarminfo Lueftung;5;4;7;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Lueftung;;Auto
+;;Alarminfo Waermepumpe;5;4;8;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Waermepumpe;;Auto
+;;Alarminfo Solar;5;4;9;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Solar;;Auto
+;;Alarminfo Energiezaehler;5;4;10;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Alarminfo Energiezaehler;;Auto
+;;Impulszaehler Kanal 1;5;4;11;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Impulszaehler Kanal 1;DPST-5-10;Auto
+;;Impulszaehler Kanal 2;5;4;12;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Impulszaehler Kanal 2;DPST-5-10;Auto
+;;Impulszaehler Kanal 3;5;4;13;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Impulszaehler Kanal 3;DPST-5-10;Auto
+;;Impulszaehler Kanal 4;5;4;14;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Impulszaehler Kanal 4;DPST-5-10;Auto
+;;Impulszaehler Kanal 5;5;4;15;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Impulszaehler Kanal 5;DPST-5-10;Auto
+;;Statusbyte Anlage;5;4;16;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Statusbyte Anlage;DPST-5-4;Auto
+;;Statusbyte Heizung;5;4;17;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Statusbyte Heizung;DPST-5-4;Auto
+;;Statusbyte Lueftung;5;4;18;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Statusbyte Lueftung;DPST-5-4;Auto
+;;Statusbyte Waermepumpe;5;4;19;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Statusbyte Waermepumpe;DPST-5-4;Auto
+;;Statusbyte Solar;5;4;20;;;Demo 05 - System und Sonderfunktionen / Diagnose und Alarm / Statusbyte Solar;DPST-5-4;Auto
+;Kombinierte Groessen;;5;5;;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen /;;Auto
+;;Kombinierte Position Jalousie WZ;5;5;1;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Kombinierte Position Jalousie WZ;;Auto
+;;Kombinierte Position Jalousie SZ;5;5;2;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Kombinierte Position Jalousie SZ;;Auto
+;;Kombinierte Position Jalousie Bad;5;5;3;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Kombinierte Position Jalousie Bad;;Auto
+;;Kombinierte Position Jalousie Buero;5;5;4;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Kombinierte Position Jalousie Buero;;Auto
+;;Kombinierte Position Jalousie Kueche;5;5;5;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Kombinierte Position Jalousie Kueche;;Auto
+;;HVAC Modus Gesamt;5;5;6;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / HVAC Modus Gesamt;DPST-20-102;Auto
+;;HVAC Modus Heizung;5;5;7;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / HVAC Modus Heizung;DPST-20-102;Auto
+;;Beaufort Windskala;5;5;8;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Beaufort Windskala;DPST-20-14;Auto
+;;DALI Fade Time;5;5;9;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / DALI Fade Time;DPST-20-602;Auto
+;;Blinkbetrieb Modus;5;5;10;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Blinkbetrieb Modus;DPST-20-603;Auto
+;;Lichtsteuerungsmodus;5;5;11;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Lichtsteuerungsmodus;DPST-20-604;Auto
+;;Belegungsmodus Gesamt;5;5;12;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Belegungsmodus Gesamt;DPST-20-3;Auto
+;;Gebaeudemodus Status;5;5;13;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Gebaeudemodus Status;DPST-20-2;Auto
+;;Bewoelkungsgrad;5;5;14;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Bewoelkungsgrad;DPST-20-21;Auto
+;;PSU Modus;5;5;15;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / PSU Modus;DPST-20-8;Auto
+;;Verhalten Bus PowerUp;5;5;16;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Verhalten Bus PowerUp;DPST-20-601;Auto
+;;Fehlerklasse System;5;5;17;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Fehlerklasse System;DPST-20-11;Auto
+;;Fehlerklasse HVAC;5;5;18;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Fehlerklasse HVAC;DPST-20-12;Auto
+;;Prioritaet Raumregler;5;5;19;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Prioritaet Raumregler;DPST-20-4;Auto
+;;Applikationsbereich;5;5;20;;;Demo 05 - System und Sonderfunktionen / Kombinierte Groessen / Applikationsbereich;DPST-20-6;Auto
