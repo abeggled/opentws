@@ -1,0 +1,491 @@
+# open bridge server Test Data Generator — Demo Configuration
+# Generated from tools/ets6_group_addresses_demo.csv
+# Run with: python tools/testdata_generator.py tools/testdata_generator_demo.yaml
+#
+# KNX-only configuration — covers all 5 demo groups with representative
+# group addresses for each DPT type present in the demo CSV.
+# The generator acts as a KNX/IP tunneling SERVER (gateway simulator).
+# Configure the open bridge server KNX adapter with:
+#   connection_type: tunneling
+#   host: 127.0.0.1
+#   port: 4001
+
+knx:
+  host: 0.0.0.0
+  port: 4001
+
+  telegrams:
+
+    # =========================================================================
+    # Demo 01 - Binaersignale
+    # =========================================================================
+
+    # --- 1/1 Schalten (DPT1.001 = Switch) ---
+    - group_address: "1/1/1"      # Licht EG Schalten
+      dpt_id: "DPT1.001"
+      interval: 10.0
+      mode: toggle
+
+    - group_address: "1/1/7"      # Licht Bad Schalten
+      dpt_id: "DPT1.001"
+      interval: 13.0
+      mode: toggle
+
+    - group_address: "1/1/19"     # Heizung Schalten
+      dpt_id: "DPT1.001"
+      interval: 30.0
+      mode: toggle
+
+    # --- 1/2 Meldungen (DPT1.005 = Alarm, DPT1.018 = Occupancy, DPT1.019 = Window/Door) ---
+    - group_address: "1/2/1"      # Rauchmelder EG
+      dpt_id: "DPT1.005"
+      interval: 60.0
+      mode: toggle
+
+    - group_address: "1/2/11"     # Bewegungsmelder EG
+      dpt_id: "DPT1.018"
+      interval: 8.0
+      mode: toggle
+
+    - group_address: "1/2/16"     # Fensterkontakt Wohnzimmer
+      dpt_id: "DPT1.019"
+      interval: 20.0
+      mode: toggle
+
+    # --- 1/3 Steuerung (DPT1.008 = Up/Down, DPT1.009 = Open/Close, DPT1.010 = Start/Stop) ---
+    - group_address: "1/3/1"      # Jalousie Wohnzimmer Auf/Ab
+      dpt_id: "DPT1.008"
+      interval: 15.0
+      mode: toggle
+
+    - group_address: "1/3/11"     # Garagentor Oeffnen/Schliessen
+      dpt_id: "DPT1.009"
+      interval: 60.0
+      mode: toggle
+
+    - group_address: "1/3/16"     # Lueftung Starten/Stoppen
+      dpt_id: "DPT1.010"
+      interval: 25.0
+      mode: toggle
+
+    # --- 1/4 Status Rueckmeldung (DPT1.011 = State, DPT1.024 = Day/Night) ---
+    - group_address: "1/4/1"      # Licht EG Status
+      dpt_id: "DPT1.011"
+      interval: 10.0
+      mode: toggle
+
+    - group_address: "1/4/16"     # Tag/Nacht
+      dpt_id: "DPT1.024"
+      interval: 60.0
+      mode: toggle
+
+    # --- 1/5 Kontrollwerte 2-Bit (DPT2.001 = Controlled Switch, DPT2.002 = Controlled Dimming) ---
+    - group_address: "1/5/1"      # Licht EG Kontrollwert
+      dpt_id: "DPT2.001"
+      interval: 12.0
+      mode: sequence
+      values: [0, 1, 2, 3]
+
+    - group_address: "1/5/11"     # Dimmer EG Kontrollwert
+      dpt_id: "DPT2.002"
+      interval: 12.0
+      mode: sequence
+      values: [0, 1, 2, 3]
+
+    # =========================================================================
+    # Demo 02 - Klima und Wetter
+    # =========================================================================
+
+    # --- 2/1 Temperaturen (DPT9.001 = °C) ---
+    - group_address: "2/1/1"      # Aussentemperatur
+      dpt_id: "DPT9.001"
+      interval: 5.0
+      mode: sine
+      min: -10.0
+      max: 35.0
+      period: 120.0
+
+    - group_address: "2/1/2"      # Temperatur Wohnzimmer Ist
+      dpt_id: "DPT9.001"
+      interval: 5.0
+      mode: sine
+      min: 18.0
+      max: 24.0
+      period: 180.0
+
+    - group_address: "2/1/3"      # Temperatur Schlafzimmer Ist
+      dpt_id: "DPT9.001"
+      interval: 5.0
+      mode: sine
+      min: 16.0
+      max: 22.0
+      period: 180.0
+
+    - group_address: "2/1/11"     # Vorlauftemperatur Heizung
+      dpt_id: "DPT9.001"
+      interval: 5.0
+      mode: sine
+      min: 30.0
+      max: 60.0
+      period: 90.0
+
+    # --- 2/2 Sollwerte und Differenzen (DPT9.001 = °C, DPT9.002 = K diff) ---
+    - group_address: "2/2/1"      # Sollwert Wohnzimmer
+      dpt_id: "DPT9.001"
+      interval: 30.0
+      mode: sequence
+      values: [20.0, 21.0, 22.0, 23.0]
+
+    - group_address: "2/2/9"      # Komfort-Offset
+      dpt_id: "DPT9.002"
+      interval: 20.0
+      mode: sine
+      min: -2.0
+      max: 2.0
+      period: 120.0
+
+    # --- 2/3 Luftqualitaet und Feuchte ---
+    - group_address: "2/3/1"      # Relative Feuchte Wohnzimmer (DPT9.007 = %)
+      dpt_id: "DPT9.007"
+      interval: 7.0
+      mode: random
+      min: 35.0
+      max: 75.0
+
+    - group_address: "2/3/6"      # CO2-Gehalt Wohnzimmer (DPT9.008 = ppm)
+      dpt_id: "DPT9.008"
+      interval: 10.0
+      mode: random
+      min: 400.0
+      max: 1200.0
+
+    - group_address: "2/3/10"     # Luftvolumenstrom Zuluft (DPT9.009 = m³/h)
+      dpt_id: "DPT9.009"
+      interval: 10.0
+      mode: random
+      min: 50.0
+      max: 300.0
+
+    - group_address: "2/3/18"     # Temperaenderungsrate WZ (DPT9.003 = K/h)
+      dpt_id: "DPT9.003"
+      interval: 15.0
+      mode: sine
+      min: -1.5
+      max: 1.5
+      period: 120.0
+
+    # --- 2/4 Wetterdaten ---
+    - group_address: "2/4/1"      # Helligkeit Sued (DPT9.004 = lx)
+      dpt_id: "DPT9.004"
+      interval: 5.0
+      mode: sine
+      min: 0.0
+      max: 80000.0
+      period: 180.0
+
+    - group_address: "2/4/5"      # Windgeschwindigkeit m/s (DPT9.005 = m/s)
+      dpt_id: "DPT9.005"
+      interval: 5.0
+      mode: random
+      min: 0.0
+      max: 15.0
+
+    - group_address: "2/4/7"      # Luftdruck absolut (DPT9.006 = Pa)
+      dpt_id: "DPT9.006"
+      interval: 10.0
+      mode: sine
+      min: 95000.0
+      max: 103000.0
+      period: 300.0
+
+    - group_address: "2/4/9"      # Niederschlagsmenge (DPT9.026 = l/h)
+      dpt_id: "DPT9.026"
+      interval: 15.0
+      mode: random
+      min: 0.0
+      max: 30.0
+
+    - group_address: "2/4/11"     # Globalstrahlungsleistung (DPT9.022 = W/m²)
+      dpt_id: "DPT9.022"
+      interval: 5.0
+      mode: sine
+      min: 0.0
+      max: 1000.0
+      period: 120.0
+
+    - group_address: "2/4/13"     # Windgeschwindigkeit km/h (DPT9.028 = km/h)
+      dpt_id: "DPT9.028"
+      interval: 5.0
+      mode: random
+      min: 0.0
+      max: 54.0
+
+    # --- 2/5 Betriebsmodi HVAC (DPT20.102 = HVAC Operating Mode) ---
+    - group_address: "2/5/1"      # HVAC-Modus Wohnzimmer (0=auto, 1=comfort, 2=standby, 3=eco, 4=protect)
+      dpt_id: "DPT20.102"
+      interval: 30.0
+      mode: sequence
+      values: [0, 1, 2, 3, 4]
+
+    - group_address: "2/5/5"      # Belegungsmodus Wohnzimmer (DPT20.003)
+      dpt_id: "DPT20.003"
+      interval: 20.0
+      mode: sequence
+      values: [0, 1, 2, 3]
+
+    # =========================================================================
+    # Demo 03 - Licht und Beschattung
+    # =========================================================================
+
+    # --- 3/1 Dimmen Wert (DPT5.001 = %) ---
+    - group_address: "3/1/1"      # Dimmer Wohnzimmer Wert
+      dpt_id: "DPT5.001"
+      interval: 3.0
+      mode: ramp
+      min: 0
+      max: 100
+      period: 60.0
+
+    - group_address: "3/1/3"      # Dimmer Kueche Wert
+      dpt_id: "DPT5.001"
+      interval: 5.0
+      mode: sine
+      min: 20
+      max: 100
+      period: 120.0
+
+    # --- 3/1 Dimmen Steuern (DPT3.007 = 4-bit relative dimming: 0=stop, 1-7=down, 9-15=up) ---
+    - group_address: "3/1/11"     # Dimmer Wohnzimmer Steuern
+      dpt_id: "DPT3.007"
+      interval: 8.0
+      mode: sequence
+      values: [0, 9, 13, 15, 0, 5, 3, 0]
+
+    # --- 3/2 Jalousie Positionen (DPT5.001 = %) ---
+    - group_address: "3/2/1"      # Position Jalousie Wohnzimmer
+      dpt_id: "DPT5.001"
+      interval: 5.0
+      mode: ramp
+      min: 0
+      max: 100
+      period: 90.0
+
+    - group_address: "3/2/6"      # Position Rolladen EG
+      dpt_id: "DPT5.001"
+      interval: 5.0
+      mode: ramp
+      min: 0
+      max: 100
+      period: 120.0
+
+    - group_address: "3/2/11"     # Lamellenwinkel Jalousie WZ (DPT5.001 = %)
+      dpt_id: "DPT5.001"
+      interval: 7.0
+      mode: ramp
+      min: 0
+      max: 100
+      period: 90.0
+
+    # --- 3/2 Jalousie Schrittsteuerung (DPT3.008 = 4-bit blinds: 0=stop, 1-7=down, 9-15=up) ---
+    - group_address: "3/2/16"     # Jalousie WZ Schrittsteuerung
+      dpt_id: "DPT3.008"
+      interval: 10.0
+      mode: sequence
+      values: [0, 9, 15, 0, 5, 0]
+
+    # --- 3/3 Farbe und Helligkeit ---
+    - group_address: "3/3/1"      # Farbtemperatur Wohnzimmer (DPT7.600 = K)
+      dpt_id: "DPT7.600"
+      interval: 10.0
+      mode: ramp
+      min: 2700
+      max: 6500
+      period: 120.0
+
+    - group_address: "3/3/9"      # Helligkeit Sensor Innen (DPT7.013 = lx)
+      dpt_id: "DPT7.013"
+      interval: 5.0
+      mode: sine
+      min: 0
+      max: 10000
+      period: 120.0
+
+    - group_address: "3/3/11"     # Relative Helligkeit Wohnzimmer (DPT5.001 = %)
+      dpt_id: "DPT5.001"
+      interval: 5.0
+      mode: sine
+      min: 0
+      max: 100
+      period: 120.0
+
+    - group_address: "3/3/16"     # Betriebsstunden Licht EG (DPT7.001 = h)
+      dpt_id: "DPT7.001"
+      interval: 60.0
+      mode: ramp
+      min: 0
+      max: 65535
+      period: 3600.0
+
+    # --- 3/4 Szenensteuerung ---
+    - group_address: "3/4/1"      # Szene Wohnzimmer aufrufen (DPT17.001 = scene number 0–63)
+      dpt_id: "DPT17.001"
+      interval: 20.0
+      mode: sequence
+      values: [0, 1, 2, 3, 4, 5]
+
+    - group_address: "3/4/11"     # Szene Wohnzimmer speichern (DPT18.001 = scene control)
+      dpt_id: "DPT18.001"
+      interval: 30.0
+      mode: sequence
+      values: [0, 1, 2, 3]
+
+    # --- 3/5 Winkel und Rohwerte (DPT5.003 = angle 0–360°, DPT5.004 = %, DPT5.001 = %) ---
+    - group_address: "3/5/1"      # Lamellenwinkel Absolut WZ (DPT5.003 = angle)
+      dpt_id: "DPT5.003"
+      interval: 7.0
+      mode: ramp
+      min: 0
+      max: 180
+      period: 90.0
+
+    # =========================================================================
+    # Demo 04 - Energie und Zaehler
+    # =========================================================================
+
+    # --- 4/1 Elektrische Groessen (DPT14.x = 32-bit IEEE float) ---
+    - group_address: "4/1/1"      # Netzspannung L1 (DPT14.027 = V)
+      dpt_id: "DPT14.027"
+      interval: 5.0
+      mode: sine
+      min: 218.0
+      max: 242.0
+      period: 60.0
+
+    - group_address: "4/1/2"      # Netzspannung L2 (DPT14.027 = V)
+      dpt_id: "DPT14.027"
+      interval: 5.0
+      mode: sine
+      min: 217.0
+      max: 241.0
+      period: 65.0
+
+    - group_address: "4/1/4"      # Strom L1 (DPT14.019 = A)
+      dpt_id: "DPT14.019"
+      interval: 3.0
+      mode: random
+      min: 0.0
+      max: 16.0
+
+    - group_address: "4/1/7"      # Wirkleistung L1 (DPT14.056 = W)
+      dpt_id: "DPT14.056"
+      interval: 3.0
+      mode: random
+      min: 0.0
+      max: 3500.0
+
+    - group_address: "4/1/10"     # Wirkleistung Gesamt (DPT14.056 = W)
+      dpt_id: "DPT14.056"
+      interval: 3.0
+      mode: random
+      min: 100.0
+      max: 8000.0
+
+    - group_address: "4/1/12"     # Leistungsfaktor (DPT14.057)
+      dpt_id: "DPT14.057"
+      interval: 10.0
+      mode: random
+      min: 0.7
+      max: 1.0
+
+    - group_address: "4/1/13"     # Netzfrequenz (DPT14.033 = Hz)
+      dpt_id: "DPT14.033"
+      interval: 5.0
+      mode: sine
+      min: 49.85
+      max: 50.15
+      period: 30.0
+
+    # --- 4/2 Energiezaehler (DPT13.010 = Ws, DPT13.013 = kWh) ---
+    - group_address: "4/2/1"      # Wirkenergie Bezug (DPT13.010 = Ws)
+      dpt_id: "DPT13.010"
+      interval: 5.0
+      mode: ramp
+      min: 0
+      max: 86400000
+      period: 3600.0
+
+    - group_address: "4/2/3"      # Wirkenergie Gesamt kWh (DPT13.013 = kWh)
+      dpt_id: "DPT13.013"
+      interval: 10.0
+      mode: ramp
+      min: 0
+      max: 50000
+      period: 3600.0
+
+    - group_address: "4/2/7"      # PV-Erzeugung heute kWh (DPT13.013 = kWh)
+      dpt_id: "DPT13.013"
+      interval: 10.0
+      mode: ramp
+      min: 0
+      max: 30
+      period: 3600.0
+
+    # =========================================================================
+    # Demo 05 - System und Sonderfunktionen
+    # =========================================================================
+
+    # --- 5/1 Zeit und Datum ---
+    - group_address: "5/1/19"     # Sommerzeit aktiv (DPT1.001)
+      dpt_id: "DPT1.001"
+      interval: 60.0
+      mode: toggle
+
+    # --- 5/2 Texte und Zeichenketten (DPT16.000 = ISO 8859-1, max 14 chars) ---
+    - group_address: "5/2/1"      # Statustext Heizung
+      dpt_id: "DPT16.000"
+      interval: 30.0
+      mode: sequence
+      values: ["Heizung OK", "Standby", "Komfort", "Absenken", "Frost"]
+
+    - group_address: "5/2/3"      # Statustext Alarm
+      dpt_id: "DPT16.000"
+      interval: 45.0
+      mode: sequence
+      values: ["Kein Alarm", "Rauch EG", "Wasser Bad", "Gas Alarm"]
+
+    # --- 5/3 Ganzzahlen ---
+    - group_address: "5/3/1"      # Offsetkorrektur Temperatur (DPT6.001 = 8-bit signed)
+      dpt_id: "DPT6.001"
+      interval: 30.0
+      mode: sequence
+      values: [-2, -1, 0, 1, 2]
+
+    - group_address: "5/3/5"      # Betriebsstunden uint16 (DPT7.001 = h)
+      dpt_id: "DPT7.001"
+      interval: 15.0
+      mode: ramp
+      min: 0
+      max: 65535
+      period: 3600.0
+
+    - group_address: "5/3/9"      # Zeitverzoegerung Pumpe ms (DPT7.002 = ms)
+      dpt_id: "DPT7.002"
+      interval: 20.0
+      mode: sequence
+      values: [100, 200, 500, 1000, 2000]
+
+    - group_address: "5/3/11"     # Delta-T Vorlauf/Ruecklauf (DPT8.001 = 16-bit signed)
+      dpt_id: "DPT8.001"
+      interval: 5.0
+      mode: sine
+      min: -10
+      max: 30
+      period: 120.0
+
+    - group_address: "5/3/18"     # Zaehler Alarme heute (DPT6.010 = 8-bit signed counter)
+      dpt_id: "DPT6.010"
+      interval: 60.0
+      mode: ramp
+      min: 0
+      max: 50
+      period: 600.0
