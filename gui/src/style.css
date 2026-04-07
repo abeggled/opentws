@@ -1,6 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Class-based dark mode (replaces darkMode: 'class' in tailwind.config.js) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom design tokens (replaces theme.extend in tailwind.config.js) */
+@theme inline {
+  --color-surface-950: var(--surface-950);
+  --color-surface-900: var(--surface-900);
+  --color-surface-800: var(--surface-800);
+  --color-surface-700: var(--surface-700);
+}
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
 
 /* ── Theme tokens ─────────────────────────────────────────────────────────── */
 :root {
