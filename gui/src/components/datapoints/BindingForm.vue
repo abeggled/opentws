@@ -1201,6 +1201,7 @@ async function submit() {
 </script>
 
 <style scoped>
+@reference "tailwindcss";
 .tab-btn {
   @apply flex items-center px-4 py-2 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent
          hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition-colors cursor-pointer;
