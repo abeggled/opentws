@@ -6,7 +6,7 @@
         <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">Objekte</h2>
         <p class="text-sm text-slate-500 mt-0.5">{{ store.total }} Einträge</p>
       </div>
-      <button @click="openCreate" class="btn-primary">
+      <button @click="openCreate" class="btn-primary" data-testid="btn-new-datapoint">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Neu
       </button>
@@ -36,7 +36,7 @@
       <div v-if="store.loading" class="flex justify-center py-12"><Spinner size="lg" /></div>
       <div v-else-if="!store.items.length" class="text-center text-slate-500 py-12 text-sm">Keine Objekte gefunden</div>
       <div v-else class="table-wrap">
-        <table class="table">
+        <table class="table" data-testid="datapoint-list">
           <thead>
             <tr>
               <th @click="store.setSort('name')" class="cursor-pointer select-none hover:text-blue-500 transition-colors">
@@ -53,7 +53,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="dp in store.items" :key="dp.id">
+            <tr v-for="dp in store.items" :key="dp.id" :data-testid="'dp-row-' + dp.id">
               <td class="font-medium">
                 <RouterLink :to="`/datapoints/${dp.id}`" class="hover:text-blue-400 transition-colors">{{ dp.name }}</RouterLink>
               </td>

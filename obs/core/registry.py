@@ -295,6 +295,12 @@ def get_registry() -> DataPointRegistry:
     return _registry
 
 
+def reset_registry() -> None:
+    """Reset the DataPointRegistry singleton. For testing only."""
+    global _registry
+    _registry = None
+
+
 async def init_registry(db: Any, mqtt_client: Any, event_bus: Any) -> DataPointRegistry:
     global _registry
     _registry = DataPointRegistry(db, mqtt_client, event_bus)

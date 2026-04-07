@@ -316,6 +316,12 @@ def get_ringbuffer() -> RingBuffer:
     return _rb
 
 
+def reset_ringbuffer() -> None:
+    """Reset the RingBuffer singleton. For testing only."""
+    global _rb
+    _rb = None
+
+
 async def init_ringbuffer(storage: str, max_entries: int, disk_path: str) -> RingBuffer:
     global _rb
     _rb = RingBuffer(storage, max_entries, disk_path)

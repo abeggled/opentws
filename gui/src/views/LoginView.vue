@@ -37,12 +37,12 @@
         <form @submit.prevent="submit" class="flex flex-col gap-4">
           <div class="form-group">
             <label class="label">Benutzername</label>
-            <input v-model="form.username" type="text" class="input" placeholder="admin" autocomplete="username" required autofocus />
+            <input v-model="form.username" type="text" class="input" placeholder="admin" autocomplete="username" required autofocus data-testid="input-username" />
           </div>
 
           <div class="form-group">
             <label class="label">Passwort</label>
-            <input v-model="form.password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required />
+            <input v-model="form.password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required data-testid="input-password" />
           </div>
 
           <div v-if="auth.error" class="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
@@ -50,7 +50,7 @@
             {{ auth.error }}
           </div>
 
-          <button type="submit" class="btn-primary w-full justify-center py-2.5" :disabled="auth.loading">
+          <button type="submit" class="btn-primary w-full justify-center py-2.5" :disabled="auth.loading" data-testid="btn-login">
             <Spinner v-if="auth.loading" size="sm" color="white" />
             <span>{{ auth.loading ? 'Anmelden …' : 'Anmelden' }}</span>
           </button>

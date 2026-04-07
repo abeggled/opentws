@@ -2,19 +2,19 @@
   <form @submit.prevent="submit" class="flex flex-col gap-4">
     <div class="form-group">
       <label class="label">Name *</label>
-      <input v-model="form.name" type="text" class="input" placeholder="z.B. Wohnzimmer Temperatur" required autofocus />
+      <input v-model="form.name" type="text" class="input" placeholder="z.B. Wohnzimmer Temperatur" required autofocus data-testid="input-name" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div class="form-group">
         <label class="label">Datentyp *</label>
-        <select v-model="form.data_type" class="input" required>
+        <select v-model="form.data_type" class="input" required data-testid="select-datatype">
           <option v-for="dt in datatypes" :key="dt.name" :value="dt.name">{{ dt.name }}</option>
         </select>
       </div>
       <div class="form-group">
         <label class="label">Einheit</label>
-        <select v-model="unitSelect" class="input">
+        <select v-model="unitSelect" class="input" data-testid="select-unit">
           <option value="">— keine —</option>
           <optgroup v-for="cat in UNIT_CATEGORIES" :key="cat.label" :label="cat.label">
             <option v-for="u in cat.units" :key="u" :value="u">{{ u }}</option>
@@ -28,6 +28,7 @@
           class="input mt-1"
           placeholder="Einheit eingeben …"
           autofocus
+          data-testid="input-unit-custom"
         />
       </div>
     </div>
@@ -52,8 +53,8 @@
     </div>
 
     <div class="flex justify-end gap-3 pt-2">
-      <button type="button" @click="$emit('cancel')" class="btn-secondary">Abbrechen</button>
-      <button type="submit" class="btn-primary" :disabled="saving">
+      <button type="button" @click="$emit('cancel')" class="btn-secondary" data-testid="btn-cancel">Abbrechen</button>
+      <button type="submit" class="btn-primary" :disabled="saving" data-testid="btn-save">
         <Spinner v-if="saving" size="sm" color="white" />
         {{ saving ? 'Speichern …' : 'Speichern' }}
       </button>

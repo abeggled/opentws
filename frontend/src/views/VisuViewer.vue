@@ -207,6 +207,7 @@ function gridStyle(w: WidgetInstance) {
           :key="w.id"
           class="bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
           :style="gridStyle(w)"
+          :data-dp="w.datapoint_id"
         >
           <component
             :is="WidgetRegistry.get(w.type)?.component"

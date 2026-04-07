@@ -72,7 +72,7 @@ const quality = computed(() => props.value?.q ?? null)
   <div class="flex flex-col justify-between h-full p-3 select-none">
     <span class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ label }}</span>
     <div class="flex items-baseline gap-1 mt-1">
-      <span class="text-2xl font-semibold tabular-nums leading-none" :class="colorClass">
+      <span class="text-2xl font-semibold tabular-nums leading-none" :class="colorClass" data-testid="widget-value">
         {{ displayValue }}
       </span>
       <span v-if="unit" class="text-sm text-gray-400 dark:text-gray-400">{{ unit }}</span>

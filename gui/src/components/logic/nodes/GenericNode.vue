@@ -34,7 +34,7 @@
       </div>
 
       <!-- Debug value strip -->
-      <div v-if="data._dbg" class="gn-debug">{{ data._dbg }}</div>
+      <div v-if="data._dbg" class="gn-debug" data-testid="debug-band">{{ data._dbg }}</div>
     </div>
 
     <!-- Output handles (RIGHT) -->

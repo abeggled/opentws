@@ -236,6 +236,12 @@ def get_mqtt_client() -> MqttClient:
     return _mqtt
 
 
+def reset_mqtt_client() -> None:
+    """Reset the MqttClient singleton. For testing only."""
+    global _mqtt
+    _mqtt = None
+
+
 def init_mqtt_client(host: str, port: int, username: str | None, password: str | None) -> MqttClient:
     global _mqtt
     _mqtt = MqttClient(host, port, username, password)

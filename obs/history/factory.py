@@ -36,6 +36,12 @@ _plugin: HistoryPlugin | None = None
 # Public API
 # ---------------------------------------------------------------------------
 
+def reset_history_plugin() -> None:
+    """Reset the history plugin singleton. For testing only."""
+    global _plugin
+    _plugin = None
+
+
 def get_history_plugin() -> HistoryPlugin:
     """Return the active history plugin. Raises RuntimeError if not initialized."""
     if _plugin is None:

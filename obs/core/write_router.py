@@ -220,6 +220,12 @@ def get_write_router() -> WriteRouter:
     return _write_router
 
 
+def reset_write_router() -> None:
+    """Reset the WriteRouter singleton. For testing only."""
+    global _write_router
+    _write_router = None
+
+
 def init_write_router(db: Any, registry: Any) -> WriteRouter:
     global _write_router
     _write_router = WriteRouter(db, registry)

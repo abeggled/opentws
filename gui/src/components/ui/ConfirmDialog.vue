@@ -3,7 +3,7 @@
     <p class="text-slate-600 dark:text-slate-300 text-sm">{{ message }}</p>
     <template #footer>
       <button @click="$emit('update:modelValue', false)" class="btn-secondary btn-sm">Abbrechen</button>
-      <button @click="confirm" :class="['btn-sm', danger ? 'btn-danger' : 'btn-primary']">{{ confirmLabel }}</button>
+      <button @click="confirm" :class="['btn-sm', danger ? 'btn-danger' : 'btn-primary']" data-testid="btn-confirm">{{ confirmLabel }}</button>
     </template>
   </Modal>
 </template>

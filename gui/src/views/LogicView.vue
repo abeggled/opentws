@@ -6,7 +6,7 @@
       <div class="flex-1" />
       <!-- Graph selector -->
       <select v-model="activeGraphId" @change="loadGraph"
-        class="input text-xs py-1 px-2 max-w-[200px]">
+        class="input text-xs py-1 px-2 max-w-[200px]" data-testid="select-graph">
         <option value="">— Graph wählen —</option>
         <option v-for="g in store.graphs" :key="g.id" :value="g.id">{{ g.name }}</option>
       </select>
@@ -15,12 +15,12 @@
         <Spinner v-if="saving" size="sm" color="white" />
         Speichern
       </button>
-      <button v-if="activeGraphId" @click="runGraph" class="btn-secondary btn-sm text-green-400">
+      <button v-if="activeGraphId" @click="runGraph" class="btn-secondary btn-sm text-green-400" data-testid="btn-run">
         &#9654; Ausführen
       </button>
       <button v-if="activeGraphId" @click="toggleDebug"
         :class="['btn-secondary btn-sm', debugMode ? 'text-amber-400 ring-1 ring-amber-400/50' : 'text-slate-400']"
-        title="Debug-Modus: zeigt Werte nach Ausführen">
+        title="Debug-Modus: zeigt Werte nach Ausführen" data-testid="btn-debug">
         &#128270; Debug
       </button>
       <button v-if="activeGraphId" @click="confirmDeleteGraph" class="btn-icon text-red-400">

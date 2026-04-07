@@ -8,7 +8,8 @@
       <button @click="showConfig = true" class="btn-secondary btn-sm">⚙ Konfigurieren</button>
       <button @click="load" class="btn-secondary btn-sm">↻ Aktualisieren</button>
       <span :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium',
-        wsConnected ? 'bg-teal-500/15 text-teal-600 dark:text-teal-400' : 'bg-slate-200/50 dark:bg-slate-700/50 text-slate-500']">
+        wsConnected ? 'bg-teal-500/15 text-teal-600 dark:text-teal-400' : 'bg-slate-200/50 dark:bg-slate-700/50 text-slate-500']"
+        data-testid="status-badge">
         <span :class="['w-1.5 h-1.5 rounded-full', wsConnected ? 'bg-teal-400 animate-pulse' : 'bg-slate-600']" />
         {{ wsConnected ? 'Live' : 'Offline' }}
       </span>
@@ -58,7 +59,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(e, i) in entries" :key="i">
+            <tr v-for="(e, i) in entries" :key="i" data-testid="ringbuffer-entry">
               <td class="font-mono text-xs text-slate-400 whitespace-nowrap">{{ fmtDateTime(e.ts) }}</td>
               <td class="text-sm">
                 <RouterLink :to="`/datapoints/${e.datapoint_id}`" class="text-blue-400 hover:underline font-mono text-xs">
