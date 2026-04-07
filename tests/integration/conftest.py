@@ -119,24 +119,27 @@ async def app(mosquitto_port):
     async with LifespanManager(_app):
         yield _app
 
-    # Reset all singletons so other test sessions (if any) start clean
-    from obs.db.database import reset_db
-    from obs.core.registry import reset_registry
-    from obs.core.event_bus import reset_event_bus
-    from obs.core.mqtt_client import reset_mqtt_client
-    from obs.core.write_router import reset_write_router
-    from obs.ringbuffer.ringbuffer import reset_ringbuffer
-    from obs.history.factory import reset_history_plugin
-    from obs.api.v1.websocket import reset_ws_manager
-
-    reset_ws_manager()
-    reset_write_router()
-    reset_mqtt_client()
-    reset_history_plugin()
-    reset_ringbuffer()
-    reset_registry()
-    reset_event_bus()
-    reset_db()
+    # Reset all singletons so the test session ends in a clean state.
+    # Each import is attempted individually so that a missing reset helper
+    # (e.g. on a server whose code is slightly behind) does not abort the
+    # teardown and cause a noisy ERROR report for every other test.
+    _reset_targets = [
+        ("obs.api.v1.websocket",    "reset_ws_manager"),
+        ("obs.core.write_router",   "reset_write_router"),
+        ("obs.core.mqtt_client",    "reset_mqtt_client"),
+        ("obs.history.factory",     "reset_history_plugin"),
+        ("obs.ringbuffer.ringbuffer", "reset_ringbuffer"),
+        ("obs.core.registry",       "reset_registry"),
+        ("obs.core.event_bus",      "reset_event_bus"),
+        ("obs.db.database",         "reset_db"),
+    ]
+    for module_path, fn_name in _reset_targets:
+        try:
+            import importlib
+            mod = importlib.import_module(module_path)
+            getattr(mod, fn_name)()
+        except Exception:
+            pass  # best-effort — never fail teardown
 
 
 @pytest_asyncio.fixture(scope="session")

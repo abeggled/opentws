@@ -96,17 +96,18 @@ async def test_refresh_token(client):
     assert new_body["access_token"] != refresh_token
 
 
-async def test_refresh_with_access_token_rejected(client):
-    """Using an *access* token as a refresh token → 401 (wrong token type)."""
-    login = await client.post(
-        "/api/v1/auth/login",
-        json={"username": "admin", "password": "admin"},
-    )
-    access_token = login.json()["access_token"]
+async def test_refresh_with_access_token_rejected(client, auth_headers):
+    """Using an *access* token as a refresh token → 401 (wrong token type).
+
+    We reuse the already-available access token from the session fixture to
+    avoid triggering the /login rate limiter (5/minute) again.
+    """
+    # Extract the raw JWT from the header dict — no new login call needed
+    access_token = auth_headers["Authorization"].removeprefix("Bearer ")
 
     resp = await client.post(
         "/api/v1/auth/refresh",
-        json={"refresh_token": access_token},  # wrong type!
+        json={"refresh_token": access_token},  # wrong type — must be rejected
     )
     assert resp.status_code == 401
 
