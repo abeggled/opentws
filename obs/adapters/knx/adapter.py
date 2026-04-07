@@ -22,6 +22,7 @@ Adapter-Konfiguration (adapter_configs.config in DB):
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Literal
 
@@ -81,6 +82,8 @@ class KnxAdapter(AdapterBase):
         self._ga_source_map: dict[str, list[tuple[Any, Any]]] = {}
         self._ga_respond_map: dict[str, list[tuple[Any, Any]]] = {}
         self._value_getter: Any = None
+        self._reconnect_task: asyncio.Task | None = None
+        self._stopped: bool = False
 
     def set_value_getter(self, getter: Any) -> None:
         """Set a callable that returns ValueState | None for a datapoint UUID."""
@@ -91,6 +94,13 @@ class KnxAdapter(AdapterBase):
     # ------------------------------------------------------------------
 
     async def connect(self) -> None:
+        self._stopped = False
+        await self._do_connect()
+        if self._reconnect_task is None or self._reconnect_task.done():
+            self._reconnect_task = asyncio.ensure_future(self._reconnect_loop())
+
+    async def _do_connect(self) -> None:
+        """Internal connect attempt — creates a fresh xknx instance and starts it."""
         try:
             from xknx import XKNX
             from xknx.io import ConnectionConfig, ConnectionType
@@ -98,6 +108,15 @@ class KnxAdapter(AdapterBase):
             logger.error("xknx not installed — KNX adapter disabled")
             await self._publish_status(False, "xknx not installed")
             return
+
+        # Clean up any previous xknx instance before creating a new one
+        self._sniffer = None
+        if self._xknx:
+            try:
+                await self._xknx.stop()
+            except Exception:
+                pass
+            self._xknx = None
 
         cfg = KnxAdapterConfig(**self._config)
         conn_type = (
@@ -118,11 +137,31 @@ class KnxAdapter(AdapterBase):
             await self._xknx.start()
             await self._publish_status(True, f"Connected to {cfg.host}:{cfg.port}")
             logger.info("KNX adapter connected: %s:%d (%s)", cfg.host, cfg.port, cfg.connection_type)
+            # Rebuild sniffer on the new xknx instance
+            await self._on_bindings_reloaded()
         except Exception as exc:
             await self._publish_status(False, str(exc))
-            logger.exception("KNX connect failed")
+            logger.warning("KNX connect failed: %s", exc)
+
+    async def _reconnect_loop(self) -> None:
+        """Background task: reconnect every 30 s when not connected."""
+        while not self._stopped:
+            await asyncio.sleep(30)
+            if self._stopped:
+                break
+            if not self._connected:
+                logger.info("KNX: not connected — attempting reconnect …")
+                await self._do_connect()
 
     async def disconnect(self) -> None:
+        self._stopped = True
+        if self._reconnect_task and not self._reconnect_task.done():
+            self._reconnect_task.cancel()
+            try:
+                await self._reconnect_task
+            except asyncio.CancelledError:
+                pass
+        self._reconnect_task = None
         self._sniffer = None
         if self._xknx:
             try:
