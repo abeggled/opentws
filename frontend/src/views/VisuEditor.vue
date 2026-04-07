@@ -13,7 +13,7 @@
  * - Keine externe Grid-Bibliothek (pure Vue + CSS)
  */
 import {
-  computed, onMounted, onUnmounted, ref, nextTick,
+  computed, onMounted, onUnmounted, ref, shallowRef, nextTick,
 } from 'vue'
 
 /** UUID-Generator mit Fallback für non-HTTPS Umgebungen */
@@ -120,13 +120,13 @@ interface DragState {
   startX: number;  startY: number   // Grid-Einheiten
   startW: number;  startH: number
 }
-let drag: DragState | null = null
+const drag = shallowRef<DragState | null>(null)
 
 function startDrag(e: MouseEvent, w: WidgetInstance) {
   if (e.button !== 0) return
   e.preventDefault()
   selectedId.value = w.id
-  drag = {
+  drag.value = {
     type: 'move', widgetId: w.id,
     startMX: e.clientX, startMY: e.clientY,
     startX: w.x, startY: w.y, startW: w.w, startH: w.h,
@@ -138,7 +138,7 @@ function startResize(e: MouseEvent, w: WidgetInstance) {
   e.preventDefault()
   e.stopPropagation()
   selectedId.value = w.id
-  drag = {
+  drag.value = {
     type: 'resize', widgetId: w.id,
     startMX: e.clientX, startMY: e.clientY,
     startX: w.x, startY: w.y, startW: w.w, startH: w.h,
@@ -146,27 +146,27 @@ function startResize(e: MouseEvent, w: WidgetInstance) {
 }
 
 function onMouseMove(e: MouseEvent) {
-  if (!drag) return
-  const w = config.value.widgets.find(x => x.id === drag!.widgetId)
+  if (!drag.value) return
+  const w = config.value.widgets.find(x => x.id === drag.value!.widgetId)
   if (!w) return
 
-  const dx = Math.round((e.clientX - drag.startMX) / CELL_W.value)
-  const dy = Math.round((e.clientY - drag.startMY) / CELL_H.value)
+  const dx = Math.round((e.clientX - drag.value.startMX) / CELL_W.value)
+  const dy = Math.round((e.clientY - drag.value.startMY) / CELL_H.value)
   const def = WidgetRegistry.get(w.type)
   const minW = def?.minW ?? 1
   const minH = def?.minH ?? 1
 
-  if (drag.type === 'move') {
-    w.x = Math.max(0, Math.min(COLS.value - w.w, drag.startX + dx))
-    w.y = Math.max(0, drag.startY + dy)
+  if (drag.value.type === 'move') {
+    w.x = Math.max(0, Math.min(COLS.value - w.w, drag.value.startX + dx))
+    w.y = Math.max(0, drag.value.startY + dy)
   } else {
-    w.w = Math.max(minW, Math.min(COLS.value - w.x, drag.startW + dx))
-    w.h = Math.max(minH, drag.startH + dy)
+    w.w = Math.max(minW, Math.min(COLS.value - w.x, drag.value.startW + dx))
+    w.h = Math.max(minH, drag.value.startH + dy)
   }
 }
 
 function onMouseUp() {
-  drag = null
+  drag.value = null
 }
 
 // ── Tastatur ──────────────────────────────────────────────────────────────────
