@@ -1,20 +1,49 @@
 /**
  * API helpers for E2E tests.
  *
- * Credentials come from E2E_USER / E2E_PASS env vars (default: admin / admin).
- * The token is cached per worker process so login is called at most once per
- * worker, avoiding the server's login rate-limiter (HTTP 429).
+ * Token strategy (avoids hitting the server's login rate-limiter):
+ *   1. Read the access_token from .auth/admin.json — the storageState file
+ *      that auth.setup.ts writes before any spec runs.
+ *   2. Fall back to a fresh login only if the file is missing (e.g. running
+ *      a single spec in isolation without auth setup).
+ *
+ * The resolved token is cached at module level (one value per worker process).
  */
+
+import * as fs from 'fs'
+import * as path from 'path'
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:8080'
 const E2E_USER = process.env.E2E_USER ?? 'admin'
 const E2E_PASS = process.env.E2E_PASS ?? 'admin'
 
-// Module-level cache: one login per Playwright worker process.
+// Resolved once per worker process.
 let _cachedToken: string | null = null
+
+function _readTokenFromStorageState(): string | null {
+  try {
+    // Path relative to this helpers.ts file: ../.auth/admin.json
+    // helpers.ts lives in tests/gui/ — .auth/admin.json is in the same directory
+    const stateFile = path.resolve(__dirname, '.auth/admin.json')
+    if (!fs.existsSync(stateFile)) return null
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'))
+    for (const origin of state.origins ?? []) {
+      for (const item of (origin.localStorage ?? []) as Array<{ name: string; value: string }>) {
+        if (item.name === 'access_token') return item.value
+      }
+    }
+  } catch {
+    // Ignore read/parse errors → fall through to fresh login
+  }
+  return null
+}
 
 async function getToken(): Promise<string> {
   if (_cachedToken) return _cachedToken
+  // Prefer the token saved by auth.setup.ts (no network call, no rate-limit risk)
+  _cachedToken = _readTokenFromStorageState()
+  if (_cachedToken) return _cachedToken
+  // Fallback: fresh login (e.g. isolated run without auth setup)
   const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
