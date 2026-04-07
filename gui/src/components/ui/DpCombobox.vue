@@ -33,7 +33,7 @@
       </div>
 
       <!-- No results -->
-      <div v-else-if="noResults" class="px-3 py-2 text-xs text-slate-500">Keine DataPoints gefunden</div>
+      <div v-else-if="noResults" class="px-3 py-2 text-xs text-slate-500">Keine Objekte gefunden</div>
 
       <!-- Suggestions -->
       <ul v-else>
@@ -60,7 +60,7 @@ import { searchApi } from '@/api/client'
 const props = defineProps({
   modelValue: { type: String, default: '' },   // selected DP id
   displayName: { type: String, default: '' },  // shown in the input when an item is selected
-  placeholder: { type: String, default: 'DataPoint suchen …' },
+  placeholder: { type: String, default: 'Objekt suchen …' },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 

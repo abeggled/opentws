@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <p class="text-center text-xs text-slate-600 mt-6">open bridge server v0.1.0 · MIT License</p>
+    <p class="text-center text-xs text-slate-600 mt-6">open bridge server v{{ appVersion }} · MIT License</p>
   </div>
 </template>
 
@@ -68,6 +68,8 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
 import Spinner from '@/components/ui/Spinner.vue'
+
+const appVersion = __APP_VERSION__
 
 const auth   = useAuthStore()
 const ws     = useWebSocketStore()

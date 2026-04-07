@@ -360,6 +360,27 @@ class KnxTunnelingServer:
 
 
 # ---------------------------------------------------------------------------
+# Rate limiter — token-bucket style, max N calls per second
+# ---------------------------------------------------------------------------
+
+class _RateLimiter:
+    """Serialises async callers to at most `rate` calls per second."""
+
+    def __init__(self, rate: float) -> None:
+        self._min_interval = 1.0 / rate
+        self._last: float = 0.0
+        self._lock = asyncio.Lock()
+
+    async def acquire(self) -> None:
+        async with self._lock:
+            now = time.monotonic()
+            wait = self._min_interval - (now - self._last)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self._last = time.monotonic()
+
+
+# ---------------------------------------------------------------------------
 # KNX generator — starts the tunneling server and sends configured telegrams
 # ---------------------------------------------------------------------------
 
@@ -384,6 +405,9 @@ async def knx_generator(cfg: dict) -> None:
         logger.exception("KNX/IP server failed to start")
         return
 
+    max_rate = float(cfg.get("max_events_per_second", 3.0))
+    limiter = _RateLimiter(max_rate)
+
     async def send_loop(tel_cfg: dict) -> None:
         ga_str = tel_cfg["group_address"]
         dpt_id = tel_cfg.get("dpt_id", "DPT9.001")
@@ -397,6 +421,7 @@ async def knx_generator(cfg: dict) -> None:
             value = gen.next()
             try:
                 raw = dpt.encoder(value)
+                await limiter.acquire()
                 server.send_telegram(ga_str, raw, is_boolean)
                 logger.info(
                     "KNX  GA=%-10s DPT=%-12s value=%-10s  clients=%d",

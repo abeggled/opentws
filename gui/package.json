@@ -1,6 +1,6 @@
 {
   "name": "obs-gui",
-  "version": "0.1.0",
+  "version": "2026.4.1-beta",
   "description": "open bridge server Web GUI",
   "type": "module",
   "scripts": {

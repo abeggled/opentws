@@ -222,7 +222,7 @@
           <!-- DataPoints anlegen -->
           <label class="flex items-center gap-2 cursor-pointer select-none mt-1">
             <input type="checkbox" v-model="knxCreateDps" class="w-4 h-4 rounded accent-blue-500" />
-            <span class="text-sm text-slate-600 dark:text-slate-300">DataPoints anlegen / aktualisieren</span>
+            <span class="text-sm text-slate-600 dark:text-slate-300">Objekte anlegen / aktualisieren</span>
           </label>
 
           <div v-if="knxCreateDps" class="flex flex-col gap-2 pl-6 border-l-2 border-blue-500/30">

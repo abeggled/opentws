@@ -74,6 +74,7 @@ function getBool(id: string | null): boolean | null {
 }
 
 const lockValue    = computed(() => getBool(dpLock.value))
+const isLocked     = computed(() => lockValue.value === true)
 const status1Value = computed(() => getBool(dpStatus1.value))
 const status2Value = computed(() => getBool(dpStatus2.value))
 const status3Value = computed(() => getBool(dpStatus3.value))
@@ -153,7 +154,7 @@ async function sendStop() {
  * Viele Aktoren interpretieren 0 auf dem Down-DP als „fahr hoch" (DPT 1.008).
  */
 async function onMoveUpStart() {
-  if (props.editorMode || props.readonly) return
+  if (props.editorMode || props.readonly || isLocked.value) return
   upState.value = 'pressing'
   // Richtungsbefehl erst nach LONG_PRESS_MS senden — erst dann ist Langdruck bestätigt.
   // Beim Kurzklick wird kein Richtungsbefehl gesendet → kein ungewollter Impuls beim Stop.
@@ -180,7 +181,7 @@ async function onMoveUpEnd() {
 
 // ── Runter-Taste ─────────────────────────────────────────────────────────────
 async function onMoveDownStart() {
-  if (props.editorMode || props.readonly) return
+  if (props.editorMode || props.readonly || isLocked.value) return
   downState.value = 'pressing'
   downTimer = setTimeout(async () => {
     downState.value = 'moving'
@@ -238,7 +239,7 @@ async function onSlatChange(e: Event) {
 
 // ── Lamellen-Schrittfunktionen ───────────────────────────────────────────────
 async function slatStep(dir: 'open' | 'close') {
-  if (props.editorMode || props.readonly) return
+  if (props.editorMode || props.readonly || isLocked.value) return
   const current = localSlat.value ?? rawSlat.value ?? 0
   const next = Math.max(0, Math.min(100, dir === 'open' ? current - SLAT_STEP : current + SLAT_STEP))
   localSlat.value = next
@@ -322,7 +323,7 @@ onUnmounted(() => {
             'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 \
              hover:bg-blue-100 dark:hover:bg-blue-900 disabled:opacity-40':               upState === 'idle',
           }"
-          :disabled="editorMode || readonly"
+          :disabled="editorMode || readonly || isLocked"
           :title="tooltipUp"
           @pointerdown.prevent="onMoveUpStart"
           @pointerup="onMoveUpEnd"
@@ -357,7 +358,7 @@ onUnmounted(() => {
           class="w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors shrink-0
                  bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300
                  hover:bg-red-200 dark:hover:bg-red-900 disabled:opacity-40"
-          :disabled="editorMode || readonly"
+          :disabled="editorMode || readonly || isLocked"
           :title="tooltipStop"
           @click="onStop"
         >■</button>
@@ -371,7 +372,7 @@ onUnmounted(() => {
             'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 \
              hover:bg-blue-100 dark:hover:bg-blue-900 disabled:opacity-40':                 downState === 'idle',
           }"
-          :disabled="editorMode || readonly"
+          :disabled="editorMode || readonly || isLocked"
           :title="tooltipDown"
           @pointerdown.prevent="onMoveDownStart"
           @pointerup="onMoveDownEnd"
@@ -402,7 +403,7 @@ onUnmounted(() => {
             <input
               type="range" min="0" max="100" step="1"
               :value="shownPosition"
-              :disabled="editorMode || readonly"
+              :disabled="editorMode || readonly || isLocked"
               class="w-full accent-blue-500 cursor-pointer disabled:cursor-default disabled:opacity-40"
               @input="onPositionInput"
               @change="onPositionChange"
@@ -423,7 +424,7 @@ onUnmounted(() => {
             <input
               type="range" min="0" max="100" step="1"
               :value="shownSlat"
-              :disabled="editorMode || readonly"
+              :disabled="editorMode || readonly || isLocked"
               class="w-full accent-amber-500 cursor-pointer disabled:cursor-default disabled:opacity-40"
               @input="onSlatInput"
               @change="onSlatChange"
@@ -524,7 +525,7 @@ onUnmounted(() => {
           class="w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shrink-0
                  bg-gray-200 dark:bg-gray-700 text-yellow-500
                  hover:bg-amber-100 dark:hover:bg-amber-900 disabled:opacity-40"
-          :disabled="editorMode || readonly"
+          :disabled="editorMode || readonly || isLocked"
           title="Lamellen öffnen (hell)"
           @click="slatStep('open')"
         >☀</button>
@@ -561,7 +562,7 @@ onUnmounted(() => {
           class="w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shrink-0
                  bg-gray-200 dark:bg-gray-700 text-blue-400
                  hover:bg-blue-100 dark:hover:bg-blue-900 disabled:opacity-40"
-          :disabled="editorMode || readonly"
+          :disabled="editorMode || readonly || isLocked"
           title="Lamellen schliessen (dunkel)"
           @click="slatStep('close')"
         >🌙</button>

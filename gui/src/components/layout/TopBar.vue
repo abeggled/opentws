@@ -57,7 +57,7 @@ const auth   = useAuthStore()
 const ws     = useWebSocketStore()
 const menuOpen  = ref(false)
 const menuRef   = ref(null)
-const version   = ref('0.1.0')
+const version   = ref(__APP_VERSION__)
 
 const titles = {
   'Dashboard':       'Übersicht',

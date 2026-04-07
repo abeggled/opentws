@@ -82,7 +82,7 @@
             >Antworte auf Leseanfragen</label>
             <p class="hint">
               Sendet den aktuellen Wert als GroupValueResponse wenn eine Leseanfrage eingeht.
-              <template v-if="!props.dpPersistValue"> Erfordert aktiviertes „Letzten Wert speichern" am DataPoint.</template>
+              <template v-if="!props.dpPersistValue"> Erfordert aktiviertes „Letzten Wert speichern" am Objekt.</template>
             </p>
           </div>
         </div>
@@ -244,7 +244,7 @@
           </div>
           <p class="hint">
             Wie der eingehende Payload interpretiert wird.
-            DataPoint-Typ: <code class="text-blue-400">{{ props.dpDataType }}</code>
+            Objekt-Typ: <code class="text-blue-400">{{ props.dpDataType }}</code>
           </p>
 
           <!-- JSON key extraction panel -->

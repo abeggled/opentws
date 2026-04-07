@@ -88,7 +88,7 @@ const ws    = useWebSocketStore()
 
 const navItems = [
   { to: '/',           label: 'Übersicht',     icon: '&#9783;' },
-  { to: '/datapoints', label: 'Objekte',        icon: '&#9636;' },
+  { to: '/datapoints', label: 'Objekte',          icon: '&#9636;' },
   { to: '/adapters',   label: 'Adapter',        icon: '&#9741;' },
   { to: '/history',    label: 'Historie',       icon: '&#9685;' },
   { to: '/ringbuffer', label: 'Monitor',        icon: '&#9706;' },

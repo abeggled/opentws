@@ -18,6 +18,8 @@ from typing import AsyncGenerator
 
 import uvicorn
 from fastapi import FastAPI
+
+from obs import __version__
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -45,7 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         level=getattr(logging, settings.server.log_level.upper(), logging.INFO),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    logger.info("open bridge server v0.1.0 starting …")
+    logger.info(f"open bridge server v{__version__} starting …")
 
     # 1. Database
     db = await init_db(settings.database.path)
@@ -146,7 +148,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="open bridge server",
         description="Open-Source Multiprotocol Server for Building Automation",
-        version="0.1.0",
+        version=__version__,
         license_info={"name": "MIT"},
         lifespan=lifespan,
     )

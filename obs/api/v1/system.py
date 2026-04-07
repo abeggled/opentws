@@ -17,6 +17,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from obs import __version__
 from obs.api.auth import get_current_user, get_admin_user
 from obs.adapters import registry as adapter_registry
 from obs.db.database import get_db, Database
@@ -109,7 +110,7 @@ async def health() -> HealthOut:
 
     return HealthOut(
         status="ok",
-        version="0.1.0",
+        version=__version__,
         datapoints=dp_count,
         adapters_running=running,
     )

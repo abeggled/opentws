@@ -17,7 +17,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', val: Record<string, unknown>): void
 }>()
 
-const MAX_EXTRA = 4
+const MAX_EXTRA = 6
 
 function makeExtra(src?: Partial<ExtraDatapoint>): ExtraDatapoint {
   return {
