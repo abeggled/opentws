@@ -11,7 +11,7 @@
     <h1 class="font-semibold text-slate-800 dark:text-slate-100 text-base flex-1">{{ pageTitle }}</h1>
 
     <!-- Version badge -->
-    <span class="hidden sm:inline text-xs text-slate-400 dark:text-slate-500 font-mono">v{{ version }}</span>
+    <span class="hidden sm:inline text-xs text-slate-400 dark:text-slate-500 font-mono">{{ version }}</span>
 
     <!-- User menu -->
     <div class="relative" ref="menuRef">

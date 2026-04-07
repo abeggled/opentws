@@ -1,12 +1,18 @@
 <template>
   <div class="flex flex-col gap-5">
+    <!-- Demo-Modus Banner -->
+    <div v-if="isDemo" class="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-600 dark:text-amber-400">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-11a7 7 0 110 14A7 7 0 0112 4z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4"/></svg>
+      Demo-Modus — Ansicht ist schreibgeschützt.
+    </div>
+
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">Adapter Instanzen</h2>
         <p class="text-sm text-slate-500 mt-0.5">Protokoll-Adapter konfigurieren und verwalten</p>
       </div>
-      <button @click="openCreate" class="btn-primary btn-sm">
+      <button v-if="!isDemo" @click="openCreate" class="btn-primary btn-sm">
         + Neue Instanz
       </button>
     </div>
@@ -96,23 +102,25 @@
 
         <!-- Expanded Config Panel -->
         <div v-if="expanded[a.id]" class="border-t border-slate-200 dark:border-slate-700/60 p-5 flex flex-col gap-4">
-          <div class="form-group">
-            <label class="label">Name</label>
-            <input v-model="drafts[a.id].name" type="text" class="input" />
-          </div>
+          <div :class="{ 'pointer-events-none select-none opacity-50': isDemo }">
+            <div class="form-group">
+              <label class="label">Name</label>
+              <input v-model="drafts[a.id].name" type="text" class="input" />
+            </div>
 
-          <!-- Schema-based config form -->
-          <div v-if="schemas[a.adapter_type]">
-            <label class="label mb-2">Konfiguration</label>
-            <SchemaForm :schema="schemas[a.adapter_type]" v-model="drafts[a.id].config" />
-          </div>
-          <div v-else class="flex items-center gap-2 text-sm text-slate-500">
-            <Spinner size="xs" /> Schema wird geladen…
-          </div>
+            <!-- Schema-based config form -->
+            <div v-if="schemas[a.adapter_type]" class="mt-4">
+              <label class="label mb-2">Konfiguration</label>
+              <SchemaForm :schema="schemas[a.adapter_type]" v-model="drafts[a.id].config" />
+            </div>
+            <div v-else class="flex items-center gap-2 text-sm text-slate-500 mt-4">
+              <Spinner size="xs" /> Schema wird geladen…
+            </div>
 
-          <div class="flex items-center gap-2">
-            <input type="checkbox" :id="'enabled-' + a.id" v-model="drafts[a.id].enabled" class="w-4 h-4 rounded" />
-            <label :for="'enabled-' + a.id" class="text-sm text-slate-600 dark:text-slate-300">Aktiviert</label>
+            <div class="flex items-center gap-2 mt-4">
+              <input type="checkbox" :id="'enabled-' + a.id" v-model="drafts[a.id].enabled" class="w-4 h-4 rounded" />
+              <label :for="'enabled-' + a.id" class="text-sm text-slate-600 dark:text-slate-300">Aktiviert</label>
+            </div>
           </div>
 
           <!-- Feedback -->
@@ -127,7 +135,7 @@
             {{ feedback[a.id].detail }}
           </div>
 
-          <div class="flex gap-3 flex-wrap">
+          <div v-if="!isDemo" class="flex gap-3 flex-wrap">
             <button @click="testConnection(a)" class="btn-secondary btn-sm" :disabled="busy[a.id] === 'test'"
               title="Prüft die Verbindung mit der aktuellen Konfiguration ohne zu speichern">
               <Spinner v-if="busy[a.id] === 'test'" size="xs" color="slate" />
@@ -165,15 +173,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { adapterApi } from '@/api/client'
 import { useAdapterStore } from '@/stores/adapters'
+import { useAuthStore } from '@/stores/auth'
 import Badge         from '@/components/ui/Badge.vue'
 import Spinner       from '@/components/ui/Spinner.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import SchemaForm    from '@/components/adapters/SchemaForm.vue'
 
 const store          = useAdapterStore()
+const auth           = useAuthStore()
+const isDemo         = computed(() => auth.username === 'demo')
 const expanded       = reactive({})
 const drafts         = reactive({})   // id → { name, config, enabled }
 const feedback       = reactive({})   // id → { success, detail }

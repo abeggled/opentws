@@ -428,6 +428,7 @@ const showSettings = ref(false)
                 :value="null"
                 :status-value="null"
                 :editor-mode="true"
+                :h="w.h"
               />
               <div v-else class="flex items-center justify-center h-full text-gray-400 dark:text-gray-600 text-xs">
                 {{ w.type }}

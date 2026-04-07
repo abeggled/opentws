@@ -15,6 +15,7 @@ const props = defineProps<{
   datapointId: string | null
   value: DataPointValue | null
   editorMode: boolean
+  h?: number
 }>()
 
 const dpStore = useDatapointsStore()
@@ -50,9 +51,12 @@ interface ExtraEntry {
   quality: 'good' | 'bad' | 'uncertain' | null
 }
 
+const maxExtra = computed(() => (props.h ?? 3) <= 2 ? 3 : 6)
+
 const extraEntries = computed<ExtraEntry[]>(() => {
   return extraDatapoints.value
     .filter((e) => !!e.id)
+    .slice(0, maxExtra.value)
     .map((e) => {
       if (props.editorMode) {
         return { label: e.label || '—', value: '—', unit: e.unit ?? '', quality: null }

@@ -17,11 +17,17 @@
       </button>
     </div>
 
+    <!-- Demo-Modus Banner -->
+    <div v-if="isDemo && activeTab !== 'general'" class="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-600 dark:text-amber-400">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M12 3a9 9 0 110 18A9 9 0 0112 3z"/></svg>
+      Demo-Modus — dieser Bereich ist schreibgeschützt.
+    </div>
+
     <!-- ── Allgemein ── -->
     <div v-if="activeTab === 'general'" class="flex flex-col gap-4 max-w-md">
 
       <!-- Zeitzone -->
-      <div class="card">
+      <div v-if="!isDemo" class="card">
         <div class="card-header"><h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Allgemeine Einstellungen</h3></div>
         <div class="card-body flex flex-col gap-4">
           <div class="form-group">
@@ -94,7 +100,7 @@
     </div>
 
     <!-- ── Passwort ── -->
-    <div v-if="activeTab === 'password'" class="card max-w-md">
+    <div v-if="activeTab === 'password' && !isDemo" class="card max-w-md">
       <div class="card-header"><h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Passwort ändern</h3></div>
       <div class="card-body">
         <form @submit.prevent="changePassword" class="flex flex-col gap-4">
@@ -120,7 +126,7 @@
     </div>
 
     <!-- ── Benutzer (Admin only) ── -->
-    <div v-if="activeTab === 'users' && auth.isAdmin">
+    <div v-if="activeTab === 'users' && auth.isAdmin && !isDemo">
       <div class="flex items-center gap-3 mb-4">
         <span class="flex-1 text-sm text-slate-400">{{ users.length }} Benutzer</span>
         <button @click="openCreateUser" class="btn-primary btn-sm">+ Benutzer</button>
@@ -157,7 +163,7 @@
     </div>
 
     <!-- ── API Keys ── -->
-    <div v-if="activeTab === 'apikeys'">
+    <div v-if="activeTab === 'apikeys' && !isDemo">
       <div class="flex items-center gap-3 mb-4">
         <span class="flex-1 text-sm text-slate-400">{{ apiKeys.length }} API Keys</span>
         <button @click="createApiKey" class="btn-primary btn-sm">+ API Key</button>
@@ -183,7 +189,7 @@
     </div>
 
     <!-- ── Datenmanagement ── -->
-    <div v-if="activeTab === 'importexport'" class="flex flex-col gap-4 max-w-lg">
+    <div v-if="activeTab === 'importexport' && !isDemo" class="flex flex-col gap-4 max-w-lg">
       <div class="card p-5 flex flex-col gap-3">
         <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Konfiguration sichern</h3>
         <p class="text-sm text-slate-400">Alle Objekte, Verknüpfungen, Adapter-Instanzen, KNX-Gruppenadressen und Logikblätter als JSON-Datei sichern.</p>
@@ -261,7 +267,7 @@
     </div>
 
     <!-- ── History Backend ── -->
-    <div v-if="activeTab === 'history'" class="flex flex-col gap-4 max-w-lg">
+    <div v-if="activeTab === 'history' && !isDemo" class="flex flex-col gap-4 max-w-lg">
       <div class="card">
         <div class="card-header">
           <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">Historie DB</h3>
@@ -380,7 +386,7 @@
     </div>
 
     <!-- ── Danger Zone ── -->
-    <div v-if="activeTab === 'dangerzone' && auth.isAdmin" class="flex flex-col gap-4 max-w-lg">
+    <div v-if="activeTab === 'dangerzone' && auth.isAdmin && !isDemo" class="flex flex-col gap-4 max-w-lg">
       <div class="rounded-lg border border-red-500/40 bg-red-500/5 overflow-hidden">
         <div class="px-5 py-3 border-b border-red-500/30 flex items-center gap-2">
           <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -539,6 +545,7 @@ const auth     = useAuthStore()
 const settings = useSettingsStore()
 const { fmtDate } = useTz()
 const activeTab = ref('general')
+const isDemo   = computed(() => auth.username === 'demo')
 
 // ── Timezone ──────────────────────────────────────────────────────────────
 // Build full IANA timezone list from browser API (modern browsers support this)

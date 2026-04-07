@@ -217,6 +217,7 @@ function gridStyle(w: WidgetInstance) {
             :status-value="w.status_datapoint_id ? dpStore.getValue(w.status_datapoint_id) : null"
             :editor-mode="false"
             :readonly="isReadOnly"
+            :h="w.h"
           />
           <div v-else class="flex items-center justify-center h-full text-gray-400 dark:text-gray-600 text-xs">
             Unbekannter Widget-Typ: {{ w.type }}

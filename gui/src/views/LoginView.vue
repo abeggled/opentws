@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <p class="text-center text-xs text-slate-600 mt-6">open bridge server v{{ appVersion }} · MIT License</p>
+    <p class="text-center text-xs text-slate-600 mt-6">open bridge server {{ appVersion }} · MIT License</p>
   </div>
 </template>
 
