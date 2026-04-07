@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # ── Stage 1: build Vue Admin-GUI + Visu-Frontend ────────────────────────────
-FROM node:20-slim AS node-builder
+FROM node:24-slim AS node-builder
 
 # Admin-GUI (gui/ → ../gui_dist)
 WORKDIR /gui-src
