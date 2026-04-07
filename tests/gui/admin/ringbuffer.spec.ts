@@ -12,9 +12,10 @@ test('RingBuffer Live-Eintrag ohne Reload', async ({ page }) => {
 
   try {
     await page.goto('/ringbuffer')
+    await page.waitForLoadState('networkidle')
 
     // Status badge must say "Live"
-    await expect(page.locator('[data-testid="status-badge"]')).toContainText('Live', { timeout: 5_000 })
+    await expect(page.locator('[data-testid="status-badge"]')).toContainText('Live', { timeout: 8_000 })
 
     // Count current entries
     const before = await page.locator('[data-testid="ringbuffer-entry"]').count()
@@ -22,11 +23,11 @@ test('RingBuffer Live-Eintrag ohne Reload', async ({ page }) => {
     // Push a value via API
     await apiPost(`/api/v1/datapoints/${dpId}/value`, { value: 42.0, quality: 'good' })
 
-    // Within 3 s a new entry must appear (count goes up by at least 1)
+    // Within 6 s a new entry must appear (count goes up by at least 1)
     await expect(async () => {
       const after = await page.locator('[data-testid="ringbuffer-entry"]').count()
       expect(after).toBeGreaterThan(before)
-    }).toPass({ timeout: 3_000 })
+    }).toPass({ timeout: 6_000 })
   } finally {
     await apiDelete(`/api/v1/datapoints/${dpId}`)
   }

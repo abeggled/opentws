@@ -53,6 +53,10 @@ test('DataPoint löschen über ConfirmDialog', async ({ page }) => {
 
   try {
     await page.goto('/datapoints')
+    // Search by name so the row appears on page 1 regardless of total DP count
+    await page.waitForSelector('[data-testid="input-search"]', { timeout: 10_000 })
+    await page.fill('[data-testid="input-search"]', name)
+    await page.waitForTimeout(500) // debounce is ~350 ms
     await expect(page.locator(`[data-testid="dp-row-${dpId}"]`)).toBeVisible({ timeout: 5_000 })
 
     // Click delete button inside the row

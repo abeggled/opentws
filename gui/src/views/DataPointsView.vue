@@ -14,7 +14,7 @@
 
     <!-- Search bar -->
     <div class="flex flex-wrap gap-3">
-      <input v-model="filters.q" @input="onSearch" type="text" class="input flex-1 min-w-48" placeholder="Suche nach Name …" />
+      <input v-model="filters.q" @input="onSearch" type="text" class="input flex-1 min-w-48" placeholder="Suche nach Name …" data-testid="input-search" />
       <input v-model="filters.tag" @input="onSearch" type="text" class="input w-36" placeholder="Tag" />
       <select v-model="filters.type" @change="onSearch" class="input w-36">
         <option value="">Alle Typen</option>

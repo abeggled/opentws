@@ -177,7 +177,10 @@
       "Bash(python -m pytest tests/adapters/test_modbus_base.py -v)",
       "Bash(python -c \"import subprocess; r = subprocess.run\\([''python'', ''-m'', ''pytest'', ''tests/adapters/test_modbus_base.py'', ''-v'', ''--tb=short''], capture_output=True, text=True\\); open\\(''C:/Temp/obs_out.txt'', ''w''\\).write\\(r.stdout + r.stderr\\)\")",
       "Bash(python -c \"import subprocess; r = subprocess.run\\([''where'', ''pytest''], capture_output=True, text=True\\); open\\(''C:/Temp/obs_out.txt'', ''w''\\).write\\(r.stdout + r.stderr\\)\")",
-      "Bash(python -c \"import subprocess; r = subprocess.run\\([''where'', ''python''], capture_output=True, text=True\\); open\\(''C:/Temp/obs_out.txt'', ''w''\\).write\\(r.stdout + r.stderr\\)\")"
+      "Bash(python -c \"import subprocess; r = subprocess.run\\([''where'', ''python''], capture_output=True, text=True\\); open\\(''C:/Temp/obs_out.txt'', ''w''\\).write\\(r.stdout + r.stderr\\)\")",
+      "Bash(npm run:*)",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\DanielAbegglen\\\\OneDrive\\\\Hausbau\\\\Elektro\\\\KNX\\\\openbridgeserver\\\\gui''; npm run build 2>&1 | Out-String\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\DanielAbegglen\\\\OneDrive\\\\Hausbau\\\\Elektro\\\\KNX\\\\openbridgeserver\\\\gui_dist'' | Sort-Object LastWriteTime -Descending | Select-Object -First 5 | Format-Table Name, LastWriteTime\")"
     ]
   }
 }

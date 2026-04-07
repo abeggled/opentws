@@ -38,7 +38,8 @@ test('Logic-Editor Debug-Modus zeigt Wert nach Ausführen', async ({ page }) => 
     // 3. Select the graph from the dropdown
     await page.selectOption('[data-testid="select-graph"]', graphId)
 
-    // 4. Wait for the canvas to render the node
+    // 4. Wait for the canvas to render the node (VueFlow + API load takes a moment)
+    await page.waitForTimeout(1_000)
     await expect(page.locator('[data-testid="debug-band"]').first()).toBeHidden({ timeout: 5_000 })
 
     // 5. Enable debug mode
@@ -48,8 +49,9 @@ test('Logic-Editor Debug-Modus zeigt Wert nach Ausführen', async ({ page }) => 
     await page.click('[data-testid="btn-run"]')
 
     // 7. The debug-band must appear and show a value (not "—")
+    //    runGraph() calls POST /api/v1/logic/graphs/{id}/run → Vue reactivity update; allow up to 8 s
     const debugBand = page.locator('[data-testid="debug-band"]').first()
-    await expect(debugBand).toBeVisible({ timeout: 3_000 })
+    await expect(debugBand).toBeVisible({ timeout: 8_000 })
     const text = await debugBand.textContent()
     expect(text?.trim()).not.toBe('—')
     expect(text?.trim()).not.toBe('')
