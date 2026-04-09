@@ -162,7 +162,7 @@ export const iconsApi = {
   import:        (formData)               => api.post('/icons/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   get:           (name)                   => api.get(`/icons/${name}`, { responseType: 'text' }),
   delete:        (names)                  => api.delete('/icons/', { data: { names } }),
-  export:        (names = [])             => api.get('/icons/export', { params: names.length ? { names } : {}, responseType: 'blob' }),
+  export:        (names = [])             => api.get('/icons/export', { params: names.length ? { names } : {}, paramsSerializer: { indexes: null }, responseType: 'blob' }),
   importFa:      (data)                   => api.post('/icons/fontawesome', data),
 }
 
