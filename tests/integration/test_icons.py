@@ -223,7 +223,7 @@ async def test_delete_icons_not_found(client, auth_headers, icons_tmp):
 
 
 # ---------------------------------------------------------------------------
-# GET /icons/export — export ZIP
+# POST /icons/export — export ZIP (POST mit JSON-Body, kein URL-Limit)
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
@@ -231,7 +231,11 @@ async def test_export_all_icons(client, auth_headers, icons_tmp):
     (icons_tmp / "home.svg").write_bytes(_MINIMAL_SVG)
     (icons_tmp / "star.svg").write_bytes(_MINIMAL_SVG2)
 
-    resp = await client.get("/api/v1/icons/export", headers=auth_headers)
+    resp = await client.post(
+        "/api/v1/icons/export",
+        headers=auth_headers,
+        json={"names": []},   # leer = alle
+    )
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/zip"
 
@@ -246,10 +250,10 @@ async def test_export_selected_icons(client, auth_headers, icons_tmp):
     (icons_tmp / "home.svg").write_bytes(_MINIMAL_SVG)
     (icons_tmp / "star.svg").write_bytes(_MINIMAL_SVG2)
 
-    resp = await client.get(
+    resp = await client.post(
         "/api/v1/icons/export",
         headers=auth_headers,
-        params={"names": ["home"]},
+        json={"names": ["home"]},
     )
     assert resp.status_code == 200
     with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
@@ -260,8 +264,31 @@ async def test_export_selected_icons(client, auth_headers, icons_tmp):
 
 @pytest.mark.asyncio
 async def test_export_empty_returns_404(client, auth_headers, icons_tmp):
-    resp = await client.get("/api/v1/icons/export", headers=auth_headers)
+    # Keine Icons im Verzeichnis → 404
+    resp = await client.post(
+        "/api/v1/icons/export",
+        headers=auth_headers,
+        json={"names": []},
+    )
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_export_large_selection(client, auth_headers, icons_tmp):
+    """Grosse Selektion via POST-Body — kein URL-Längenlimit."""
+    # 100 Icons anlegen
+    for i in range(100):
+        (icons_tmp / f"icon_{i:03d}.svg").write_bytes(_MINIMAL_SVG)
+
+    names = [f"icon_{i:03d}" for i in range(100)]
+    resp = await client.post(
+        "/api/v1/icons/export",
+        headers=auth_headers,
+        json={"names": names},
+    )
+    assert resp.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
+        assert len(zf.namelist()) == 100
 
 
 # ---------------------------------------------------------------------------

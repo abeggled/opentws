@@ -240,14 +240,12 @@ async def import_icons(
     )
 
 
-@router.get("/export")
-async def export_icons(
-    names: list[str] = Query(default=[]),
-    _user: str = Depends(get_current_user),
-) -> StreamingResponse:
-    """Export selected icons as ZIP. Exports all icons if no names are given."""
-    icons_dir = _icons_dir()
+class ExportRequest(BaseModel):
+    names: list[str] = []   # leer = alle exportieren
 
+
+def _build_export_zip(icons_dir: Path, names: list[str]) -> io.BytesIO:
+    """Erstelle einen In-Memory-ZIP aus den angegebenen Icons (leer = alle)."""
     if names:
         files = [p for n in names if (p := icons_dir / f"{n}.svg").exists()]
     else:
@@ -264,7 +262,34 @@ async def export_icons(
         for svg_file in files:
             zf.write(svg_file, svg_file.name)
     buf.seek(0)
+    return buf
 
+
+@router.post("/export")
+async def export_icons_post(
+    body: ExportRequest,
+    _user: str = Depends(get_current_user),
+) -> StreamingResponse:
+    """
+    Export Icons als ZIP (POST-Variante, empfohlen).
+    Übergibt die Namen im JSON-Body — kein URL-Längenlimit.
+    Leere Namen-Liste = alle Icons exportieren.
+    """
+    buf = _build_export_zip(_icons_dir(), body.names)
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=obs_icons.zip"},
+    )
+
+
+@router.get("/export")
+async def export_icons(
+    names: list[str] = Query(default=[]),
+    _user: str = Depends(get_current_user),
+) -> StreamingResponse:
+    """Export Icons als ZIP (GET-Variante, nur für kleine Selektionen geeignet)."""
+    buf = _build_export_zip(_icons_dir(), names)
     return StreamingResponse(
         buf,
         media_type="application/zip",
