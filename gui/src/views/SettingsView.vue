@@ -385,6 +385,134 @@
       </div>
     </div>
 
+    <!-- ── Icons Library ── -->
+    <div v-if="activeTab === 'icons' && !isDemo" class="flex flex-col gap-4">
+
+      <!-- Toolbar -->
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-sm text-slate-400">{{ iconsFiltered.length }} Icon(s)</span>
+        <div class="flex-1" />
+        <button v-if="iconsSelected.size > 0" @click="doIconsExport" class="btn-secondary btn-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+          {{ iconsSelected.size }} exportieren
+        </button>
+        <button v-if="iconsSelected.size > 0" @click="doIconsDelete" class="btn-danger btn-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0a1 1 0 011-1h4a1 1 0 011 1m-7 0h8"/></svg>
+          {{ iconsSelected.size }} löschen
+        </button>
+        <button v-if="icons.length > 0" @click="iconsSelectAll" class="btn-secondary btn-sm">
+          {{ iconsSelected.size === icons.length ? 'Alle abwählen' : 'Alle wählen' }}
+        </button>
+        <input v-model="iconsSearch" type="text" class="input text-sm w-40" placeholder="Suchen…" />
+      </div>
+
+      <!-- Feedback -->
+      <div v-if="iconsMsg" :class="['p-3 rounded-lg text-sm border', iconsMsg.ok ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30']">
+        {{ iconsMsg.text }}
+      </div>
+
+      <!-- Icon Grid -->
+      <div v-if="iconsLoading" class="flex justify-center py-10"><Spinner /></div>
+      <div v-else-if="icons.length === 0" class="text-center text-sm text-slate-500 py-10">
+        Noch keine Icons installiert. Lade SVG-Dateien hoch, um zu beginnen.
+      </div>
+      <div v-else class="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+        <label v-for="icon in iconsFiltered" :key="icon.name"
+          :class="['relative flex flex-col items-center gap-1.5 p-3 rounded-lg border cursor-pointer transition-colors select-none',
+            iconsSelected.has(icon.name)
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+              : 'border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800/40']">
+          <input type="checkbox" class="sr-only" :value="icon.name"
+            :checked="iconsSelected.has(icon.name)"
+            @change="iconsToggle(icon.name)" />
+          <!-- SVG rendered in black, fill overridden via CSS -->
+          <div class="w-10 h-10 flex items-center justify-center [&_svg]:w-full [&_svg]:h-full [&_*]:fill-slate-800 dark:[&_*]:fill-slate-100 [&_*]:stroke-none"
+            v-html="icon.content" />
+          <span class="text-xs text-slate-500 dark:text-slate-400 truncate w-full text-center">{{ icon.name }}</span>
+          <div v-if="iconsSelected.has(icon.name)"
+            class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        </label>
+      </div>
+
+      <!-- Upload area -->
+      <div class="card">
+        <div class="card-header"><h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">SVG Icons importieren</h3></div>
+        <div class="card-body flex flex-col gap-4">
+          <p class="text-sm text-slate-400">SVG-Dateien oder ein ZIP-Archiv mit SVG-Icons hochladen. Jede Datei wird auf gültiges SVG-Format geprüft, unabhängig von der Dateiendung.</p>
+
+          <!-- Drag & Drop Zone -->
+          <div
+            class="relative border-2 border-dashed rounded-lg transition-colors cursor-pointer"
+            :class="iconsDragOver
+              ? 'border-blue-500 bg-blue-500/5'
+              : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'"
+            @dragover.prevent="iconsDragOver = true"
+            @dragleave.prevent="iconsDragOver = false"
+            @drop.prevent="onIconsDrop"
+            @click="$refs.iconsFileInput.click()">
+            <div class="flex flex-col items-center gap-2 py-8 px-4 text-center pointer-events-none">
+              <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              <div>
+                <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">SVG oder ZIP hier ablegen</p>
+                <p class="text-xs text-slate-400 mt-0.5">oder klicken zum Auswählen</p>
+              </div>
+            </div>
+            <input ref="iconsFileInput" type="file" accept=".svg,.zip" multiple class="sr-only"
+              @change="onIconsFileSelect" />
+          </div>
+
+          <div v-if="iconsUploading" class="flex items-center gap-2 text-sm text-slate-500">
+            <Spinner size="sm" />
+            Importiere…
+          </div>
+        </div>
+      </div>
+
+      <!-- FontAwesome Import -->
+      <div class="card">
+        <div class="card-header"><h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100">FontAwesome importieren</h3></div>
+        <div class="card-body flex flex-col gap-4">
+          <p class="text-sm text-slate-400">
+            Icons direkt von FontAwesome importieren. Ohne API Key werden kostenlose Icons (Free-Tier) verwendet.
+            Mit API Key stehen PRO-Icons zur Verfügung.
+          </p>
+          <div class="form-group">
+            <label class="label">Icon-Namen (kommagetrennt)</label>
+            <input v-model="faIconNames" type="text" class="input text-sm font-mono"
+              placeholder="home, star, user, arrow-right" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="label">Stil</label>
+              <select v-model="faStyle" class="input text-sm">
+                <option value="solid">Solid</option>
+                <option value="regular">Regular</option>
+                <option value="brands">Brands</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label">API Key (optional, für PRO)</label>
+              <input v-model="faApiKey" type="password" class="input text-sm font-mono"
+                placeholder="Leer = Free Tier" autocomplete="new-password" />
+            </div>
+          </div>
+          <div v-if="faMsg" :class="['p-3 rounded-lg text-sm border', faMsg.ok ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30']">
+            {{ faMsg.text }}
+          </div>
+          <button @click="doFaImport" class="btn-primary btn-sm w-fit" :disabled="faImporting || !faIconNames.trim()">
+            <Spinner v-if="faImporting" size="sm" color="white" />
+            Icons importieren
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Danger Zone ── -->
     <div v-if="activeTab === 'dangerzone' && auth.isAdmin && !isDemo" class="flex flex-col gap-4 max-w-lg">
       <div class="rounded-lg border border-red-500/40 bg-red-500/5 overflow-hidden">
@@ -532,7 +660,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { authApi, adapterApi, configApi, knxprojApi, historySettingsApi } from '@/api/client'
+import { authApi, adapterApi, configApi, knxprojApi, historySettingsApi, iconsApi } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
 import { useTz } from '@/composables/useTz'
@@ -619,6 +747,7 @@ onMounted(async () => {
 
 watch(activeTab, (tab) => {
   if (tab === 'history' && auth.isAdmin) loadHistorySettings()
+  if (tab === 'icons') loadIcons()
 })
 
 onUnmounted(() => {
@@ -643,6 +772,7 @@ const tabs = [
   ...(auth.isAdmin ? [{ id: 'users', label: 'Benutzer' }] : []),
   { id: 'apikeys',      label: 'API Keys' },
   { id: 'importexport', label: 'Datenmanagement' },
+  { id: 'icons',        label: 'Icons' },
   ...(auth.isAdmin ? [{ id: 'history', label: 'Historie DB' }] : []),
   ...(auth.isAdmin ? [{ id: 'dangerzone', label: 'Danger Zone' }] : []),
 ]
@@ -996,6 +1126,132 @@ async function doDzAction() {
     resetResult.value = { ok: true, text }
   } catch (err) {
     resetResult.value = { ok: false, text: err.response?.data?.detail ?? 'Fehler beim Löschen' }
+  }
+}
+
+// ── Icons Library ──────────────────────────────────────────────────────────
+const icons         = ref([])
+const iconsLoading  = ref(false)
+const iconsUploading = ref(false)
+const iconsSelected = ref(new Set())
+const iconsSearch   = ref('')
+const iconsMsg      = ref(null)
+const iconsDragOver = ref(false)
+
+// FontAwesome form
+const faIconNames = ref('')
+const faStyle     = ref('solid')
+const faApiKey    = ref('')
+const faImporting = ref(false)
+const faMsg       = ref(null)
+
+const iconsFiltered = computed(() => {
+  const q = iconsSearch.value.toLowerCase()
+  if (!q) return icons.value
+  return icons.value.filter(i => i.name.toLowerCase().includes(q))
+})
+
+async function loadIcons() {
+  iconsLoading.value = true
+  iconsMsg.value = null
+  try {
+    const { data } = await iconsApi.list()
+    icons.value = data.icons ?? []
+    // Remove stale selections
+    const names = new Set(icons.value.map(i => i.name))
+    iconsSelected.value = new Set([...iconsSelected.value].filter(n => names.has(n)))
+  } catch (e) {
+    iconsMsg.value = { ok: false, text: e.response?.data?.detail ?? 'Fehler beim Laden der Icons' }
+  } finally {
+    iconsLoading.value = false
+  }
+}
+
+function iconsToggle(name) {
+  const sel = new Set(iconsSelected.value)
+  if (sel.has(name)) sel.delete(name)
+  else sel.add(name)
+  iconsSelected.value = sel
+}
+
+function iconsSelectAll() {
+  if (iconsSelected.value.size === icons.value.length) {
+    iconsSelected.value = new Set()
+  } else {
+    iconsSelected.value = new Set(icons.value.map(i => i.name))
+  }
+}
+
+async function _uploadFiles(fileList) {
+  if (!fileList.length) return
+  iconsUploading.value = true
+  iconsMsg.value = null
+  try {
+    const fd = new FormData()
+    for (const file of fileList) fd.append('files', file)
+    const { data } = await iconsApi.import(fd)
+    iconsMsg.value = { ok: true, text: data.message }
+    await loadIcons()
+  } catch (e) {
+    iconsMsg.value = { ok: false, text: e.response?.data?.detail ?? 'Upload fehlgeschlagen' }
+  } finally {
+    iconsUploading.value = false
+  }
+}
+
+function onIconsFileSelect(e) {
+  _uploadFiles([...e.target.files])
+  e.target.value = ''
+}
+
+function onIconsDrop(e) {
+  iconsDragOver.value = false
+  _uploadFiles([...e.dataTransfer.files])
+}
+
+async function doIconsDelete() {
+  if (!iconsSelected.value.size) return
+  iconsMsg.value = null
+  try {
+    const names = [...iconsSelected.value]
+    await iconsApi.delete(names)
+    iconsSelected.value = new Set()
+    iconsMsg.value = { ok: true, text: `${names.length} Icon(s) gelöscht` }
+    await loadIcons()
+  } catch (e) {
+    iconsMsg.value = { ok: false, text: e.response?.data?.detail ?? 'Fehler beim Löschen' }
+  }
+}
+
+async function doIconsExport() {
+  if (!iconsSelected.value.size) return
+  try {
+    const names = [...iconsSelected.value]
+    const { data: blob } = await iconsApi.export(names)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'obs_icons.zip'; a.click()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    iconsMsg.value = { ok: false, text: e.response?.data?.detail ?? 'Fehler beim Exportieren' }
+  }
+}
+
+async function doFaImport() {
+  const names = faIconNames.value.split(',').map(s => s.trim()).filter(Boolean)
+  if (!names.length) return
+  faImporting.value = true; faMsg.value = null
+  try {
+    const payload = { icons: names, style: faStyle.value }
+    if (faApiKey.value.trim()) payload.api_key = faApiKey.value.trim()
+    const { data } = await iconsApi.importFa(payload)
+    faMsg.value = { ok: true, text: data.message }
+    faIconNames.value = ''
+    await loadIcons()
+  } catch (e) {
+    faMsg.value = { ok: false, text: e.response?.data?.detail ?? 'FontAwesome Import fehlgeschlagen' }
+  } finally {
+    faImporting.value = false
   }
 }
 </script>
