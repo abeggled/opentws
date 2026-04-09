@@ -417,7 +417,7 @@
         Noch keine Icons installiert. Lade SVG-Dateien hoch, um zu beginnen.
       </div>
       <div v-else class="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-        <label v-for="icon in iconsFiltered" :key="icon.name"
+        <label v-for="icon in iconsFiltered" :key="icon.name" :title="icon.name"
           :class="['relative flex flex-col items-center gap-1.5 p-3 rounded-lg border cursor-pointer transition-colors select-none',
             iconsSelected.has(icon.name)
               ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
