@@ -300,6 +300,7 @@ async def delete_icons(
 ) -> dict:
     """Delete one or multiple icons by name."""
     icons_dir = _icons_dir()
+    icons_dir_resolved = icons_dir.resolve()
     deleted: list[str] = []
     not_found: list[str] = []
     for name in body.names:
@@ -308,7 +309,12 @@ async def delete_icons(
                 status.HTTP_400_BAD_REQUEST,
                 f"Ungültiger Icon-Name: {name!r}",
             )
-        svg_file = icons_dir / f"{name}.svg"
+        svg_file = (icons_dir / f"{name}.svg").resolve()
+        if not svg_file.is_relative_to(icons_dir_resolved):
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"Ungültiger Icon-Name: {name!r}",
+            )
         if svg_file.exists():
             svg_file.unlink()
             deleted.append(name)
