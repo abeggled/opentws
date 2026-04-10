@@ -197,7 +197,9 @@ async def test_delete_icons(client, auth_headers, icons_tmp):
     (icons_tmp / "home.svg").write_bytes(_MINIMAL_SVG)
     (icons_tmp / "star.svg").write_bytes(_MINIMAL_SVG2)
 
-    resp = await client.delete(
+    # httpx.AsyncClient.delete() hat kein json=-Argument → request() verwenden
+    resp = await client.request(
+        "DELETE",
         "/api/v1/icons/",
         headers=auth_headers,
         json={"names": ["home"]},
@@ -211,7 +213,8 @@ async def test_delete_icons(client, auth_headers, icons_tmp):
 
 @pytest.mark.asyncio
 async def test_delete_icons_not_found(client, auth_headers, icons_tmp):
-    resp = await client.delete(
+    resp = await client.request(
+        "DELETE",
         "/api/v1/icons/",
         headers=auth_headers,
         json={"names": ["ghost"]},

@@ -225,7 +225,7 @@ async def import_icons(
             # --- Single file: validate as SVG ---
             if not _is_svg(content):
                 raise HTTPException(
-                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status.HTTP_422_UNPROCESSABLE_CONTENT,
                     f"'{filename}' enthält kein gültiges SVG (kein <svg> Tag gefunden)",
                 )
             name = _safe_name(filename)
