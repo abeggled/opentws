@@ -90,12 +90,19 @@ watch(
   { immediate: true },
 )
 
-// Replace explicit fill/stroke with currentColor so CSS `color` tints the icon
-const coloredSvg = computed(() =>
-  svgContent.value
-    .replace(/\bfill="(?!none)[^"]*"/g, 'fill="currentColor"')
-    .replace(/\bstroke="(?!none)[^"]*"/g, 'stroke="currentColor"')
-)
+// Tint the SVG with CSS `color` by replacing all fill references with currentColor.
+// Three cases:
+//   1. Root <svg> has no fill attr → add fill="currentColor" so paths inherit it
+//   2. Child elements have explicit fill="..." → replace (except fill="none")
+//   3. Inline style="...fill:...;" → replace (except fill:none)
+const coloredSvg = computed(() => {
+  if (!svgContent.value) return ''
+  return svgContent.value
+    .replace(/<svg\b([^>]*)>/, (_, attrs: string) =>
+      /\bfill=/.test(attrs) ? `<svg${attrs}>` : `<svg${attrs} fill="currentColor">`)
+    .replace(/\bfill="(?!none\b)[^"]*"/g, 'fill="currentColor"')
+    .replace(/(\bstyle="[^"]*\bfill\s*:\s*)(?!none)[^;"]*/g, '$1currentColor')
+})
 
 // ── Display value ──────────────────────────────────────────────────────────────
 
