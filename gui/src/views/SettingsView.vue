@@ -1168,7 +1168,8 @@ const iconsFiltered = computed(() => {
 
 async function loadIcons() {
   iconsLoading.value = true
-  iconsMsg.value = null
+  // iconsMsg wird hier NICHT geleert — jede aufrufende Operation
+  // setzt ihre eigene Meldung und würde sie sonst sofort wieder verlieren.
   try {
     const { data } = await iconsApi.list()
     icons.value = data.icons ?? []
