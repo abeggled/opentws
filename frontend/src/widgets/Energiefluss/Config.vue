@@ -4,12 +4,6 @@ import DataPointPicker from '@/components/DataPointPicker.vue'
 
 type FlowDirection = 'to_house' | 'from_house' | 'bidirectional'
 
-interface HouseConfig {
-  dp: string
-  unit: string
-  decimals: number
-}
-
 interface EntityConfig {
   id: string
   label: string
