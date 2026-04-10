@@ -109,12 +109,17 @@ const coloredSvg = computed(() => {
     })
     // 2. Explicit fill attributes on child elements
     .replace(/\bfill="(?!none\b)[^"]*"/g, 'fill="currentColor"')
-    // 3. fill inside inline style="" attributes
+    // 3. fill + stroke inside inline style="" attributes
+    .replace(/\bstroke="(?!none\b)[^"]*"/g, 'stroke="currentColor"')
     .replace(/\bstyle="([^"]*)"/g, (_, s: string) =>
-      `style="${s.replace(nonNoneFill, 'fill:currentColor ')}"`)
-    // 4. fill inside <style> blocks
+      `style="${s
+        .replace(nonNoneFill, 'fill:currentColor ')
+        .replace(/\bstroke\s*:\s*(?!none\b)[^;"]*/g, 'stroke:currentColor')}"`)
+    // 4. fill + stroke inside <style> blocks
     .replace(/(<style[^>]*>)([\s\S]*?)(<\/style>)/g, (_, open, css: string, close) =>
-      `${open}${css.replace(nonNoneFill, 'fill:currentColor ')}${close}`)
+      `${open}${css
+        .replace(nonNoneFill, 'fill:currentColor ')
+        .replace(/\bstroke\s*:\s*(?!none\b)[^;}\n]*/g, 'stroke:currentColor')}${close}`)
 })
 
 // ── Display value ──────────────────────────────────────────────────────────────
