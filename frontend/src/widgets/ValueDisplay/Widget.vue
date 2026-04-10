@@ -90,18 +90,31 @@ watch(
   { immediate: true },
 )
 
-// Tint the SVG with CSS `color` by replacing all fill references with currentColor.
-// Three cases:
-//   1. Root <svg> has no fill attr → add fill="currentColor" so paths inherit it
-//   2. Child elements have explicit fill="..." → replace (except fill="none")
-//   3. Inline style="...fill:...;" → replace (except fill:none)
+// Tint the SVG with CSS `color` by funnelling all fill references through currentColor.
+// Handles four cases:
+//   1. Root <svg> fill attr (replace or add)
+//   2. Explicit fill="..." on child elements (except fill="none")
+//   3. fill:... inside inline style="" attrs (except fill:none)
+//   4. fill:... inside embedded <style> blocks (except fill:none)
 const coloredSvg = computed(() => {
   if (!svgContent.value) return ''
+  const nonNoneFill = /\bfill\s*:\s*(?!none\b)/g
   return svgContent.value
-    .replace(/<svg\b([^>]*)>/, (_, attrs: string) =>
-      /\bfill=/.test(attrs) ? `<svg${attrs}>` : `<svg${attrs} fill="currentColor">`)
+    // 1. Root <svg>: replace existing non-none fill or add one
+    .replace(/<svg\b([^>]*)>/, (_, attrs: string) => {
+      const updated = /\bfill=/.test(attrs)
+        ? attrs.replace(/\bfill="(?!none\b)[^"]*"/, 'fill="currentColor"')
+        : `${attrs} fill="currentColor"`
+      return `<svg${updated}>`
+    })
+    // 2. Explicit fill attributes on child elements
     .replace(/\bfill="(?!none\b)[^"]*"/g, 'fill="currentColor"')
-    .replace(/(\bstyle="[^"]*\bfill\s*:\s*)(?!none)[^;"]*/g, '$1currentColor')
+    // 3. fill inside inline style="" attributes
+    .replace(/\bstyle="([^"]*)"/g, (_, s: string) =>
+      `style="${s.replace(nonNoneFill, 'fill:currentColor ')}"`)
+    // 4. fill inside <style> blocks
+    .replace(/(<style[^>]*>)([\s\S]*?)(<\/style>)/g, (_, open, css: string, close) =>
+      `${open}${css.replace(nonNoneFill, 'fill:currentColor ')}${close}`)
 })
 
 // ── Display value ──────────────────────────────────────────────────────────────
