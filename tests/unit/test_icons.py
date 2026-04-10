@@ -52,9 +52,10 @@ class TestIsSvg:
         assert _is_svg(b'') is False
 
     def test_svg_detected_within_first_2kb(self):
-        prefix = b'X' * 2000
+        # Prefix muss exakt >= 2048 Bytes sein, damit <svg> ausserhalb des
+        # [:2048]-Fensters liegt. 2000 < 2048 → würde fälschlicherweise True liefern.
+        prefix = b'X' * 2048
         content = prefix + b'<svg>'
-        # Over 2048 bytes of prefix → not detected
         assert _is_svg(content) is False
 
     def test_svg_detected_just_before_limit(self):
@@ -110,12 +111,13 @@ class TestSafeName:
     def test_no_extension(self):
         assert _safe_name("justname") == "justname"
 
-    def test_nested_path_in_zip(self):
-        # Path from a ZIP member like "icons/home.svg"
-        assert _safe_name("icons/home.svg") is None  # slash → rejected
+    def test_nested_path_in_zip_direct(self):
+        # Slash im Dateinamen → direkt abgelehnt
+        assert _safe_name("icons/home.svg") is None
 
     def test_zip_member_basename(self):
         from pathlib import Path
+        # Der ZIP-Handler ruft _safe_name(Path(member).name) auf, nicht
+        # _safe_name(member) — dadurch wird der Slash vorher entfernt.
         member = "folder/home.svg"
-        # We expect callers to pass Path(member).name before calling _safe_name
         assert _safe_name(Path(member).name) == "home"

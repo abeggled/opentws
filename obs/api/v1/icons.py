@@ -97,9 +97,16 @@ def _safe_name(filename: str) -> str | None:
     """
     Return a sanitised icon name (stem only, alphanumeric + hyphen/underscore,
     lowercase). Returns None if the name cannot be made safe.
+
+    Path-traversal characters ("..", "/", "\\") are checked on the ORIGINAL
+    filename before Path().stem is extracted — so _safe_name("../evil.svg")
+    returns None instead of "evil".
     """
+    if not filename or ".." in filename or "/" in filename or "\\" in filename:
+        return None
     stem = Path(filename).stem
-    if not stem or ".." in stem or "/" in stem or "\\" in stem:
+    # Reject hidden files (".svg" → stem ".svg") and empty stems
+    if not stem or stem.startswith("."):
         return None
     clean = re.sub(r"[^\w\-]", "_", stem, flags=re.ASCII).lower().strip("_")
     return clean if clean else None
