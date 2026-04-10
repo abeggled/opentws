@@ -104,17 +104,6 @@ function stateLabel(s: WinState): string {
   }
 }
 
-const stateText = computed(() => {
-  if (mode.value === 'fenster_2') {
-    return `L: ${stateLabel(stateLeft.value)} / R: ${stateLabel(stateRight.value)}`
-  }
-  if (mode.value === 'dachfenster') {
-    const pos = position.value
-    if (pos !== null && pos > 0 && pos < 100) return `${Math.round(pos)} % offen`
-    return stateLabel(roofState.value)
-  }
-  return stateLabel(stateMain.value)
-})
 
 function stateColorClass(s: WinState): string {
   switch (s) {
