@@ -367,6 +367,12 @@ async def get_icon(
     _user: str = Depends(get_current_user),
 ) -> Response:
     """Return the raw SVG content of a single icon."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", name):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Ungültiger Icon-Name",
+        )
+
     icons_dir = _icons_dir()
     svg_file = icons_dir / f"{name}.svg"
     if not svg_file.exists():
