@@ -310,7 +310,13 @@ async def delete_icons(
                 status.HTTP_400_BAD_REQUEST,
                 f"Ungültiger Icon-Name: {name!r}",
             )
-        svg_file = (icons_dir / f"{name}.svg").resolve()
+        safe_name = secure_filename(name)
+        if not safe_name or safe_name != name:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"Ungültiger Icon-Name: {name!r}",
+            )
+        svg_file = (icons_dir / f"{safe_name}.svg").resolve()
         if not svg_file.is_relative_to(icons_dir_resolved):
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
