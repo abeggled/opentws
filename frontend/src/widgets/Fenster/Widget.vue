@@ -95,14 +95,6 @@ const roofState = computed<WinState>(() => {
   return deriveState(dpContact.value, invContact.value, dpTilt.value, invTilt.value)
 })
 
-function stateLabel(s: WinState): string {
-  switch (s) {
-    case 'closed':  return 'Geschlossen'
-    case 'tilted':  return 'Gekippt'
-    case 'open':    return 'Offen'
-    default:        return '—'
-  }
-}
 
 
 function stateColorClass(s: WinState): string {
