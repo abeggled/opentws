@@ -26,6 +26,7 @@ import '@/widgets/Rolladen/index'
 import '@/widgets/Licht/index'
 import '@/widgets/Fenster/index'
 import '@/widgets/Energiefluss/index'
+import '@/widgets/Kamera/index'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
