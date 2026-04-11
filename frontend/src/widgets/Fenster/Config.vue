@@ -21,6 +21,8 @@ const cfg = reactive({
   dp_tilt_right:        (props.modelValue.dp_tilt_right        as string)  ?? '',
   invert_tilt_right:    (props.modelValue.invert_tilt_right    as boolean) ?? false,
   dp_position:          (props.modelValue.dp_position          as string)  ?? '',
+  handle_left:          (props.modelValue.handle_left          as boolean) ?? true,
+  handle_right:         (props.modelValue.handle_right         as boolean) ?? true,
 })
 
 const isSingleWing  = computed(() => cfg.mode === 'fenster' || cfg.mode === 'fenster_r')
@@ -103,6 +105,20 @@ watch(cfg, () => emit('update:modelValue', { ...cfg }), { deep: true })
 
     <!-- Double-wing contacts -->
     <template v-if="showWings">
+      <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Darstellung</p>
+      <div class="flex items-center gap-2 pl-1">
+        <input id="handle-left" v-model="cfg.handle_left" type="checkbox" class="rounded accent-blue-500" />
+        <label for="handle-left" class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+          Griff linker Flügel anzeigen
+        </label>
+      </div>
+      <div class="flex items-center gap-2 pl-1">
+        <input id="handle-right" v-model="cfg.handle_right" type="checkbox" class="rounded accent-blue-500" />
+        <label for="handle-right" class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+          Griff rechter Flügel anzeigen
+        </label>
+      </div>
+
       <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Linker Flügel</p>
       <DataPointPicker
         v-model="cfg.dp_contact_left"

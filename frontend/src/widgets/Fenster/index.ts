@@ -26,6 +26,8 @@ WidgetRegistry.register({
     dp_tilt_right: '',
     invert_tilt_right: false,
     dp_position: '',
+    handle_left:  true,
+    handle_right: true,
   },
   compatibleTypes: ['*'],
   noDatapoint: true,

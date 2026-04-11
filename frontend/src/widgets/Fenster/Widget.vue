@@ -118,6 +118,10 @@ const summaryState = computed<WinState>(() => {
 
 const colorClass = computed(() => stateColorClass(summaryState.value))
 
+// Handle visibility (fenster_2 only)
+const showHandleLeft  = computed(() => (props.config.handle_left  as boolean) ?? true)
+const showHandleRight = computed(() => (props.config.handle_right as boolean) ?? true)
+
 // Opening percentage (0-100) for roof window gap rendering
 const openPct = computed(() => {
   if (mode.value !== 'dachfenster') return 0
@@ -259,7 +263,7 @@ const openPct = computed(() => {
         <template v-if="stateLeft === 'closed'">
           <rect x="5" y="5" width="50" height="50" stroke-width="1.5"
                 class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
-          <g class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
+          <g v-if="showHandleLeft" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="53" cy="30" r="1.5"/>
             <line x1="53" y1="30" x2="53" y2="45" stroke-width="2" stroke-linecap="round"/>
           </g>
@@ -267,7 +271,7 @@ const openPct = computed(() => {
         <template v-else-if="stateLeft === 'tilted'">
           <polygon points="-3,5 47,5 55,55 5,55" stroke-width="1.5"
                    class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
-          <g class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
+          <g v-if="showHandleLeft" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="51" cy="30" r="1.5"/>
             <line x1="51" y1="30" x2="51" y2="15" stroke-width="2" stroke-linecap="round"/>
           </g>
@@ -275,7 +279,7 @@ const openPct = computed(() => {
         <template v-else-if="stateLeft === 'open'">
           <polygon points="5,5 45,11 45,61 5,55" stroke-width="1.5" stroke-linejoin="round"
                    class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
-          <g class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
+          <g v-if="showHandleLeft" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="43" cy="36" r="1.5"/>
             <line x1="43" y1="36" x2="28" y2="36" stroke-width="2" stroke-linecap="round"/>
           </g>
@@ -289,7 +293,7 @@ const openPct = computed(() => {
           <rect x="65" y="5" width="50" height="50" stroke-width="1.5"
                 class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
           <!-- handle on free (left) edge, arm DOWN -->
-          <g class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
+          <g v-if="showHandleRight" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="67" cy="30" r="1.5"/>
             <line x1="67" y1="30" x2="67" y2="45" stroke-width="2" stroke-linecap="round"/>
           </g>
@@ -298,7 +302,7 @@ const openPct = computed(() => {
           <polygon points="57,5 107,5 115,55 65,55" stroke-width="1.5"
                    class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
           <!-- arm UP = kipp -->
-          <g class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
+          <g v-if="showHandleRight" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="69" cy="30" r="1.5"/>
             <line x1="69" y1="30" x2="69" y2="15" stroke-width="2" stroke-linecap="round"/>
           </g>
@@ -307,7 +311,7 @@ const openPct = computed(() => {
           <polygon points="115,5 75,11 75,61 115,55" stroke-width="1.5" stroke-linejoin="round"
                    class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
           <!-- arm RIGHT toward hinge (Anschlag rechts) = open -->
-          <g class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
+          <g v-if="showHandleRight" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="77" cy="36" r="1.5"/>
             <line x1="77" y1="36" x2="92" y2="36" stroke-width="2" stroke-linecap="round"/>
           </g>
