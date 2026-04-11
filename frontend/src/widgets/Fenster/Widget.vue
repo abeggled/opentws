@@ -158,29 +158,28 @@ const openPct = computed(() => {
         <!-- Outer frame -->
         <rect x="2" y="2" width="52" height="60" rx="1" stroke-width="2.5" stroke="currentColor"/>
 
-        <!-- Closed: inner pane + handle dot right-centre -->
+        <!-- Closed: inner pane (gray wing, colored frame) + handle dot -->
         <template v-if="stateMain === 'closed'">
-          <rect x="7" y="7" width="42" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.6"/>
-          <circle cx="47" cy="32" r="2" fill="currentColor" opacity="0.8"/>
+          <rect x="7" y="7" width="42" height="50" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <circle cx="47" cy="32" r="2"
+                  class="fill-gray-500 dark:fill-gray-400"/>
         </template>
 
-        <!-- Tilted (Kipp): parallelogram — bottom fixed, top shifted left ~7px (≈17% of 42)
-             top-left reaches outer frame edge (x=0), matching KNX reference where top exits frame -->
+        <!-- Tilted (Kipp): gray parallelogram — bottom fixed, top shifted left ~7px -->
         <template v-else-if="stateMain === 'tilted'">
-          <polygon points="0,7 42,7 49,57 7,57" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
-          <!-- handle on right side of kipp panel, midpoint of (42,7)→(49,57) -->
-          <circle cx="44" cy="32" r="2" fill="currentColor" opacity="0.8"/>
+          <polygon points="0,7 42,7 49,57 7,57" stroke-width="1.5"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <circle cx="44" cy="32" r="2"
+                  class="fill-gray-500 dark:fill-gray-400"/>
         </template>
 
-        <!-- Open: perspective parallelogram — hinge left x=7, free side x=40 (79% of 42)
-             free side falls 5px lower than hinge (perspective); bottom-right at y=62 = outer frame edge -->
+        <!-- Open: gray perspective parallelogram as polygon (fills over frame edge) -->
         <template v-else-if="stateMain === 'open'">
-          <line x1="7"  y1="7"  x2="7"  y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="7"  y1="7"  x2="40" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="7"  y1="57" x2="40" y2="62" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="40" y1="12" x2="40" y2="62" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <!-- handle near free edge, vertical centre -->
-          <circle cx="38" cy="37" r="2" fill="currentColor" opacity="0.8"/>
+          <polygon points="7,7 40,12 40,62 7,57" stroke-width="1.5" stroke-linejoin="round"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <circle cx="38" cy="37" r="2"
+                  class="fill-gray-500 dark:fill-gray-400"/>
         </template>
 
         <!-- Unknown -->
@@ -205,25 +204,28 @@ const openPct = computed(() => {
         <!-- Outer frame -->
         <rect x="2" y="2" width="52" height="60" rx="1" stroke-width="2.5" stroke="currentColor"/>
 
-        <!-- Closed: inner pane + handle dot left-centre -->
+        <!-- Closed: inner pane (gray wing) + handle dot left-centre -->
         <template v-if="stateMain === 'closed'">
-          <rect x="7" y="7" width="42" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.6"/>
-          <circle cx="9" cy="32" r="2" fill="currentColor" opacity="0.8"/>
+          <rect x="7" y="7" width="42" height="50" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <circle cx="9" cy="32" r="2"
+                  class="fill-gray-500 dark:fill-gray-400"/>
         </template>
 
-        <!-- Tilted (Kipp): same parallelogram as left-hinged (KNX kipp convention is symmetric) -->
+        <!-- Tilted (Kipp): gray parallelogram -->
         <template v-else-if="stateMain === 'tilted'">
-          <polygon points="0,7 42,7 49,57 7,57" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
-          <circle cx="12" cy="32" r="2" fill="currentColor" opacity="0.8"/>
+          <polygon points="0,7 42,7 49,57 7,57" stroke-width="1.5"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <circle cx="12" cy="32" r="2"
+                  class="fill-gray-500 dark:fill-gray-400"/>
         </template>
 
-        <!-- Open: hinge right x=49, free side x=16, free side falls 5px lower -->
+        <!-- Open: gray perspective parallelogram, hinge right x=49, free side x=16 -->
         <template v-else-if="stateMain === 'open'">
-          <line x1="49" y1="7"  x2="49" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="49" y1="7"  x2="16" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="49" y1="57" x2="16" y2="62" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="16" y1="12" x2="16" y2="62" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="18" cy="37" r="2" fill="currentColor" opacity="0.8"/>
+          <polygon points="49,7 16,12 16,62 49,57" stroke-width="1.5" stroke-linejoin="round"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <circle cx="18" cy="37" r="2"
+                  class="fill-gray-500 dark:fill-gray-400"/>
         </template>
 
         <!-- Unknown -->
@@ -245,38 +247,42 @@ const openPct = computed(() => {
         <!-- Center divider -->
         <line x1="36" y1="2" x2="36" y2="62" stroke-width="2.5" stroke="currentColor"/>
 
-        <!-- Left wing (hinge at left outer frame x=7, free side at center x=31) -->
+        <!-- Left wing: gray fill + per-wing state color as stroke (pane border = status indicator) -->
         <g :class="stateColorClass(stateLeft)">
           <template v-if="stateLeft === 'closed'">
-            <rect x="7" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.5"/>
+            <rect x="7" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor"
+                  class="fill-gray-300 dark:fill-gray-600"/>
           </template>
           <template v-else-if="stateLeft === 'tilted'">
-            <polygon points="4,7 28,7 31,57 7,57" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+            <!-- kipp: bottom fixed (7→31,y=57), top shifted left ~4px (17% of 24) -->
+            <polygon points="3,7 27,7 31,57 7,57" stroke-width="1.5" stroke="currentColor"
+                     class="fill-gray-300 dark:fill-gray-600"/>
           </template>
           <template v-else-if="stateLeft === 'open'">
-            <line x1="7" y1="8" x2="7" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="7" y1="8" x2="21" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="7" y1="57" x2="21" y2="55" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="21" y1="10" x2="21" y2="55" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- open: hinge x=7, free side x=26 (79% of 24), falls +3px -->
+            <polygon points="7,7 26,10 26,60 7,57" stroke-width="1.5" stroke="currentColor" stroke-linejoin="round"
+                     class="fill-gray-300 dark:fill-gray-600"/>
           </template>
           <template v-else>
             <text x="19" y="37" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="currentColor" opacity="0.4">?</text>
           </template>
         </g>
 
-        <!-- Right wing (hinge at right outer frame x=65, free side at center x=41) -->
+        <!-- Right wing: same approach, mirrored -->
         <g :class="stateColorClass(stateRight)">
           <template v-if="stateRight === 'closed'">
-            <rect x="41" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.5"/>
+            <rect x="41" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor"
+                  class="fill-gray-300 dark:fill-gray-600"/>
           </template>
           <template v-else-if="stateRight === 'tilted'">
-            <polygon points="38,7 62,7 65,57 41,57" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+            <!-- kipp: bottom fixed (41→65,y=57), top shifted left ~4px -->
+            <polygon points="37,7 61,7 65,57 41,57" stroke-width="1.5" stroke="currentColor"
+                     class="fill-gray-300 dark:fill-gray-600"/>
           </template>
           <template v-else-if="stateRight === 'open'">
-            <line x1="65" y1="8" x2="65" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="65" y1="8" x2="51" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="65" y1="57" x2="51" y2="55" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="51" y1="10" x2="51" y2="55" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- open: hinge x=65, free side x=46 (79% of 24 from right), falls +3px -->
+            <polygon points="65,7 46,10 46,60 65,57" stroke-width="1.5" stroke="currentColor" stroke-linejoin="round"
+                     class="fill-gray-300 dark:fill-gray-600"/>
           </template>
           <template v-else>
             <text x="53" y="37" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="currentColor" opacity="0.4">?</text>
@@ -299,17 +305,16 @@ const openPct = computed(() => {
         <!-- Floor line -->
         <line x1="2"  y1="70" x2="54" y2="70" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
 
-        <!-- Closed: door panel -->
+        <!-- Closed: gray door panel -->
         <template v-if="stateMain === 'closed'">
-          <rect x="6" y="5" width="44" height="64" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
+          <rect x="6" y="5" width="44" height="64" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
         </template>
 
-        <!-- Open: foreshortened panel, hinge left x=6, free side at x=28 -->
+        <!-- Open: gray perspective parallelogram, hinge left x=6, free side x=28 -->
         <template v-else-if="stateMain === 'open'">
-          <line x1="6"  y1="5"  x2="6"  y2="69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="6"  y1="5"  x2="28" y2="8"  stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="6"  y1="69" x2="28" y2="66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="28" y1="8"  x2="28" y2="66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <polygon points="6,5 28,8 28,70 6,69" stroke-width="1.5" stroke-linejoin="round"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
         </template>
 
         <!-- Unknown -->
@@ -333,17 +338,16 @@ const openPct = computed(() => {
         <!-- Floor line -->
         <line x1="2"  y1="70" x2="54" y2="70" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
 
-        <!-- Closed: door panel -->
+        <!-- Closed: gray door panel -->
         <template v-if="stateMain === 'closed'">
-          <rect x="6" y="5" width="44" height="64" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
+          <rect x="6" y="5" width="44" height="64" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
         </template>
 
-        <!-- Open: foreshortened panel, hinge right x=50, free side at x=28 -->
+        <!-- Open: gray perspective parallelogram, hinge right x=50, free side x=28 -->
         <template v-else-if="stateMain === 'open'">
-          <line x1="50" y1="5"  x2="50" y2="69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="50" y1="5"  x2="28" y2="8"  stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="50" y1="69" x2="28" y2="66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="28" y1="8"  x2="28" y2="66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <polygon points="50,5 28,8 28,70 50,69" stroke-width="1.5" stroke-linejoin="round"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
         </template>
 
         <!-- Unknown -->
@@ -366,21 +370,26 @@ const openPct = computed(() => {
         <line x1="2"  y1="4"  x2="70" y2="4"  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
         <line x1="2"  y1="60" x2="70" y2="60" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
 
-        <!-- Closed: full panel (same for both variants) -->
+        <!-- Closed: full gray panel -->
         <template v-if="stateMain === 'closed'">
-          <rect x="6" y="8" width="60" height="48" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
+          <rect x="6" y="8" width="60" height="48" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
         </template>
 
-        <!-- Open, fixer Teil LINKS: panel slides left, gap on right -->
+        <!-- Open, fixer Teil LINKS: moving panel (gray) slid left, ghost outline for gap -->
         <template v-else-if="stateMain === 'open' && mode === 'schiebetuer'">
-          <rect x="6"  y="8" width="28" height="48" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
-          <rect x="38" y="8" width="28" height="48" stroke="currentColor" stroke-width="1" stroke-dasharray="3,3" fill="none" opacity="0.3"/>
+          <rect x="6"  y="8" width="28" height="48" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <rect x="38" y="8" width="28" height="48" stroke-width="1" stroke-dasharray="3,3"
+                class="fill-gray-200 dark:fill-gray-700 stroke-gray-300 dark:stroke-gray-600" opacity="0.5"/>
         </template>
 
-        <!-- Open, fixer Teil RECHTS: gap on left, panel slides right -->
+        <!-- Open, fixer Teil RECHTS: ghost on left, moving panel (gray) on right -->
         <template v-else-if="stateMain === 'open' && mode === 'schiebetuer_r'">
-          <rect x="6"  y="8" width="28" height="48" stroke="currentColor" stroke-width="1" stroke-dasharray="3,3" fill="none" opacity="0.3"/>
-          <rect x="38" y="8" width="28" height="48" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
+          <rect x="6"  y="8" width="28" height="48" stroke-width="1" stroke-dasharray="3,3"
+                class="fill-gray-200 dark:fill-gray-700 stroke-gray-300 dark:stroke-gray-600" opacity="0.5"/>
+          <rect x="38" y="8" width="28" height="48" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
         </template>
 
         <!-- Unknown -->
@@ -400,14 +409,16 @@ const openPct = computed(() => {
         <!-- Outer frame (landscape orientation) -->
         <rect x="2" y="2" width="68" height="52" rx="1" stroke="currentColor" stroke-width="2.5"/>
 
-        <!-- Closed: pane fills the frame -->
+        <!-- Closed: gray pane fills the frame -->
         <template v-if="roofState === 'closed'">
-          <rect x="7" y="7" width="58" height="42" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
+          <rect x="7" y="7" width="58" height="42" stroke-width="1.5"
+                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
         </template>
 
-        <!-- Open / partial: pane hinged at bottom, top gap -->
+        <!-- Open / partial: gray pane outline + moving bar showing open amount -->
         <template v-else>
-          <rect x="7" y="7" width="58" height="42" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.2"/>
+          <rect x="7" y="7" width="58" height="42" stroke-width="1.5"
+                class="fill-gray-200 dark:fill-gray-700 stroke-gray-300 dark:stroke-gray-600" opacity="0.4"/>
           <line
             x1="7"
             :y1="7 + (42 * (1 - openPct / 100))"
