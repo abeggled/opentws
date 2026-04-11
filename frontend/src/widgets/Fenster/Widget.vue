@@ -265,7 +265,7 @@ const openPct = computed(() => {
                 class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
           <g v-if="showHandleLeft" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="53" cy="30" r="1.5"/>
-            <line x1="53" y1="30" x2="53" y2="45" stroke-width="2" stroke-linecap="round"/>
+            <line x1="53" y1="30" x2="53" y2="40" stroke-width="2" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else-if="stateLeft === 'tilted'">
@@ -273,7 +273,7 @@ const openPct = computed(() => {
                    class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
           <g v-if="showHandleLeft" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="51" cy="30" r="1.5"/>
-            <line x1="51" y1="30" x2="51" y2="15" stroke-width="2" stroke-linecap="round"/>
+            <line x1="51" y1="30" x2="51" y2="20" stroke-width="2" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else-if="stateLeft === 'open'">
@@ -281,7 +281,7 @@ const openPct = computed(() => {
                    class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
           <g v-if="showHandleLeft" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="43" cy="36" r="1.5"/>
-            <line x1="43" y1="36" x2="28" y2="36" stroke-width="2" stroke-linecap="round"/>
+            <line x1="43" y1="36" x2="33" y2="36" stroke-width="2" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else>
@@ -295,7 +295,7 @@ const openPct = computed(() => {
           <!-- handle on free (left) edge, arm DOWN -->
           <g v-if="showHandleRight" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="67" cy="30" r="1.5"/>
-            <line x1="67" y1="30" x2="67" y2="45" stroke-width="2" stroke-linecap="round"/>
+            <line x1="67" y1="30" x2="67" y2="40" stroke-width="2" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else-if="stateRight === 'tilted'">
@@ -304,7 +304,7 @@ const openPct = computed(() => {
           <!-- arm UP = kipp -->
           <g v-if="showHandleRight" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="69" cy="30" r="1.5"/>
-            <line x1="69" y1="30" x2="69" y2="15" stroke-width="2" stroke-linecap="round"/>
+            <line x1="69" y1="30" x2="69" y2="20" stroke-width="2" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else-if="stateRight === 'open'">
@@ -313,7 +313,7 @@ const openPct = computed(() => {
           <!-- arm RIGHT toward hinge (Anschlag rechts) = open -->
           <g v-if="showHandleRight" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
             <circle cx="77" cy="36" r="1.5"/>
-            <line x1="77" y1="36" x2="92" y2="36" stroke-width="2" stroke-linecap="round"/>
+            <line x1="77" y1="36" x2="87" y2="36" stroke-width="2" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else>
