@@ -62,37 +62,44 @@ async def proxy_camera(
 
     auth = (username, password) if username else None
 
-    # Content-Type via HEAD ermitteln (Fallback: application/octet-stream)
+    # ── HEAD-Request: Erreichbarkeit prüfen + Content-Type holen ────────────
     content_type = "application/octet-stream"
     try:
-        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
-            head = await client.head(target, auth=auth)
-            ct = head.headers.get("content-type", "")
-            if ct:
-                content_type = ct.split("\n")[0].split("\r")[0]
-    except Exception:
-        pass
+        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as hc:
+            head = await hc.head(target, auth=auth)
 
+        if head.status_code == 401:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Kamera: Authentifizierung fehlgeschlagen (401)",
+            )
+        # 405 = HEAD nicht unterstützt → optimistisch weiterfahren
+        if head.status_code != 405 and head.status_code >= 400:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Kamera antwortet mit {head.status_code}",
+            )
+        ct = head.headers.get("content-type", "")
+        if ct:
+            # Header-Injection verhindern
+            content_type = ct.split("\n")[0].split("\r")[0]
+
+    except HTTPException:
+        raise
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Kamera nicht erreichbar: {exc}",
+        ) from exc
+
+    # ── Streaming-Generator ─────────────────────────────────────────────────
     async def _stream() -> AsyncGenerator[bytes, None]:
-        async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=None, follow_redirects=True) as hc:
             try:
-                async with client.stream("GET", target, auth=auth) as resp:
-                    if resp.status_code == 401:
-                        raise HTTPException(
-                            status_code=status.HTTP_502_BAD_GATEWAY,
-                            detail="Kamera: Authentifizierung fehlgeschlagen (401)",
-                        )
-                    if resp.status_code >= 400:
-                        raise HTTPException(
-                            status_code=status.HTTP_502_BAD_GATEWAY,
-                            detail=f"Kamera antwortet mit {resp.status_code}",
-                        )
+                async with hc.stream("GET", target, auth=auth) as resp:
                     async for chunk in resp.aiter_bytes(chunk_size=8192):
                         yield chunk
-            except httpx.RequestError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=f"Kamera nicht erreichbar: {exc}",
-                ) from exc
+            except httpx.RequestError:
+                return  # Verbindung unterbrochen — Stream still beenden
 
     return StreamingResponse(_stream(), media_type=content_type)
