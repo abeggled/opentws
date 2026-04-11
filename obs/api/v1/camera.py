@@ -8,12 +8,32 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 
-from obs.api.auth import get_current_user
+from obs.api.auth import decode_token
 
 router = APIRouter(tags=["camera"])
+
+
+async def _camera_auth(
+    request: Request,
+    _token: str = Query("", alias="_token", description="JWT als Query-Parameter"),
+) -> str:
+    """
+    Akzeptiert JWT entweder als 'Authorization: Bearer …'-Header
+    oder als URL-Query-Parameter '?_token=…' (nötig für <img>/<video>-Tags).
+    """
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        return decode_token(auth_header[7:])
+    if _token:
+        return decode_token(_token)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Provide Authorization: Bearer {token} or ?_token=",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 @router.get("/proxy")
@@ -23,7 +43,7 @@ async def proxy_camera(
     password: str = Query("", description="Basic-Auth Passwort"),
     apikey_param: str = Query("", description="API-Key Query-Parameter-Name"),
     apikey_value: str = Query("", description="API-Key Wert"),
-    _user: str = Depends(get_current_user),
+    _user: str = Depends(_camera_auth),
 ) -> StreamingResponse:
     """
     Proxyt den Kamera-Stream vom Backend aus.
@@ -35,7 +55,6 @@ async def proxy_camera(
             detail="Nur HTTP/HTTPS-URLs erlaubt",
         )
 
-    # API-Key in URL einbauen
     target = url
     if apikey_param and apikey_value:
         sep = "&" if "?" in target else "?"
@@ -50,10 +69,9 @@ async def proxy_camera(
             head = await client.head(target, auth=auth)
             ct = head.headers.get("content-type", "")
             if ct:
-                # Header-Injection verhindern
                 content_type = ct.split("\n")[0].split("\r")[0]
     except Exception:
-        pass  # Fallback bleibt
+        pass
 
     async def _stream() -> AsyncGenerator[bytes, None]:
         async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:

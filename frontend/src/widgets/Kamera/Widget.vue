@@ -29,8 +29,10 @@ const streamUrl = computed(() => {
   const base = url.value.trim()
 
   if (useProxy.value) {
-    // Proxy-URL: /api/v1/camera/proxy?url=...&username=...&password=...
+    // Proxy-URL: /api/v1/camera/proxy?url=...&_token=...
+    const jwt = localStorage.getItem('visu_jwt') ?? ''
     const p = new URLSearchParams({ url: base })
+    if (jwt) p.set('_token', jwt)
     if (authType.value === 'basic' && username.value) {
       p.set('username', username.value)
       p.set('password', password.value)
