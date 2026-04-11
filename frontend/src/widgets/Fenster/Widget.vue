@@ -88,20 +88,19 @@ const roofState = computed<WinState>(() => {
   if (props.editorMode) return 'closed'
   const pos = position.value
   if (pos !== null) {
-    if (pos <= 0)  return 'closed'
+    if (pos <= 0)   return 'closed'
     if (pos >= 100) return 'open'
-    return 'tilted' // partially open
+    return 'tilted'
   }
   return deriveState(dpContact.value, invContact.value, dpTilt.value, invTilt.value)
 })
 
-
-
+// Green = closed, Orange = tilted, Red = open
 function stateColorClass(s: WinState): string {
   switch (s) {
     case 'closed':  return 'text-green-600 dark:text-green-400'
-    case 'tilted':  return 'text-amber-500 dark:text-amber-400'
-    case 'open':    return 'text-blue-500 dark:text-blue-400'
+    case 'tilted':  return 'text-orange-500 dark:text-orange-400'
+    case 'open':    return 'text-red-500 dark:text-red-400'
     default:        return 'text-gray-400 dark:text-gray-500'
   }
 }
@@ -124,7 +123,7 @@ const openPct = computed(() => {
   if (mode.value !== 'dachfenster') return 0
   const pos = position.value
   if (pos === null) {
-    if (roofState.value === 'open') return 100
+    if (roofState.value === 'open')   return 100
     if (roofState.value === 'tilted') return 40
     return 0
   }
@@ -140,7 +139,7 @@ const openPct = computed(() => {
     <!-- SVG area -->
     <div class="flex-1 flex items-center justify-center min-h-0 min-w-0">
 
-      <!-- ── Single-wing window (fenster) ────────────────────────── -->
+      <!-- ── Single-wing window LEFT-hinged (fenster) ──────────────────── -->
       <svg
         v-if="mode === 'fenster'"
         viewBox="0 0 56 64"
@@ -156,22 +155,21 @@ const openPct = computed(() => {
           <rect x="7" y="7" width="42" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.5"/>
         </template>
 
-        <!-- Tilted (Kipp): V from top-center to bottom corners -->
+        <!-- Tilted (Kipp): V-shape, bottom edge fixed, apex at bottom-center -->
         <template v-else-if="stateMain === 'tilted'">
           <rect x="7" y="7" width="42" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.3"/>
-          <line x1="28" y1="8" x2="8" y2="56" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <line x1="28" y1="8" x2="48" y2="56" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <line x1="8" y1="56" x2="48" y2="56" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="8"  y1="8" x2="28" y2="57" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="8" x2="28" y2="57" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="8"  y1="8" x2="48" y2="8"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </template>
 
-        <!-- Open: wing swung to the right -->
+        <!-- Open: inward, left hinge -->
+        <!-- Diagonal from free top-right to hinge bottom-left, arc shows sweep -->
         <template v-else-if="stateMain === 'open'">
-          <!-- hinge side (left vertical) -->
-          <line x1="8" y1="7" x2="8" y2="57" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <!-- open pane as parallelogram -->
-          <line x1="8" y1="7"  x2="38" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <line x1="8" y1="57" x2="38" y2="50" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <line x1="38" y1="14" x2="38" y2="50" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="8"  y1="7" x2="8"  y2="57" stroke="currentColor" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+          <line x1="49" y1="7" x2="8"  y2="57" stroke="currentColor" stroke-width="2"   stroke-linecap="round"/>
+          <!-- Quarter-circle arc: center=(8,7), r=41, CW from (49,7) to (8,48) -->
+          <path d="M 49 7 A 41 41 0 0 1 8 48" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
         </template>
 
         <!-- Unknown -->
@@ -180,7 +178,46 @@ const openPct = computed(() => {
         </template>
       </svg>
 
-      <!-- ── Double-wing window (fenster_2) ──────────────────────── -->
+      <!-- ── Single-wing window RIGHT-hinged (fenster_r) ──────────────── -->
+      <svg
+        v-else-if="mode === 'fenster_r'"
+        viewBox="0 0 56 64"
+        class="w-full h-full max-h-full"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <!-- Outer frame -->
+        <rect x="2" y="2" width="52" height="60" rx="1" stroke-width="2.5" stroke="currentColor"/>
+
+        <!-- Closed: inner pane -->
+        <template v-if="stateMain === 'closed'">
+          <rect x="7" y="7" width="42" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.5"/>
+        </template>
+
+        <!-- Tilted (Kipp): V-shape, bottom edge fixed, apex at bottom-center -->
+        <template v-else-if="stateMain === 'tilted'">
+          <rect x="7" y="7" width="42" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.3"/>
+          <line x1="8"  y1="8" x2="28" y2="57" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="8" x2="28" y2="57" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="8"  y1="8" x2="48" y2="8"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </template>
+
+        <!-- Open: inward, right hinge -->
+        <!-- Diagonal from free top-left to hinge bottom-right, arc shows sweep -->
+        <template v-else-if="stateMain === 'open'">
+          <line x1="48" y1="7" x2="48" y2="57" stroke="currentColor" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+          <line x1="7"  y1="7" x2="48" y2="57" stroke="currentColor" stroke-width="2"   stroke-linecap="round"/>
+          <!-- Quarter-circle arc: center=(48,7), r=41, CCW from (7,7) to (48,48) -->
+          <path d="M 7 7 A 41 41 0 0 0 48 48" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
+        </template>
+
+        <!-- Unknown -->
+        <template v-else>
+          <text x="28" y="37" text-anchor="middle" dominant-baseline="middle" font-size="20" fill="currentColor" opacity="0.4">?</text>
+        </template>
+      </svg>
+
+      <!-- ── Double-wing window (fenster_2) ──────────────────────────── -->
       <svg
         v-else-if="mode === 'fenster_2'"
         viewBox="0 0 72 64"
@@ -193,44 +230,46 @@ const openPct = computed(() => {
         <!-- Center divider -->
         <line x1="36" y1="2" x2="36" y2="62" stroke-width="2.5" stroke="currentColor"/>
 
-        <!-- Left wing -->
+        <!-- Left wing (hinged at center-right, free side at outer left) -->
         <g :class="stateColorClass(stateLeft)">
           <template v-if="stateLeft === 'closed'">
             <rect x="7" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.5"/>
           </template>
           <template v-else-if="stateLeft === 'tilted'">
+            <!-- V apex at bottom-center of left wing (x≈19) -->
             <rect x="7" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.3"/>
-            <line x1="19" y1="8" x2="8" y2="56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="19" y1="8" x2="30" y2="56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="8"  y1="56" x2="30" y2="56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="8"  y1="8" x2="19" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="30" y1="8" x2="19" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="8"  y1="8" x2="30" y2="8"  stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </template>
           <template v-else-if="stateLeft === 'open'">
-            <line x1="34" y1="8"  x2="34" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="34" y1="8"  x2="10" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="34" y1="57" x2="10" y2="50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="10" y1="14" x2="10" y2="50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Inward: diagonal from free top-left (8,8) to hinge bottom-right (34,57) -->
+            <line x1="8" y1="8" x2="34" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Arc: center=(34,8), r=26, CCW from (8,8) to (34,34) -->
+            <path d="M 8 8 A 26 26 0 0 0 34 34" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
           </template>
           <template v-else>
             <text x="19" y="37" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="currentColor" opacity="0.4">?</text>
           </template>
         </g>
 
-        <!-- Right wing -->
+        <!-- Right wing (hinged at center-left, free side at outer right) -->
         <g :class="stateColorClass(stateRight)">
           <template v-if="stateRight === 'closed'">
             <rect x="41" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.5"/>
           </template>
           <template v-else-if="stateRight === 'tilted'">
+            <!-- V apex at bottom-center of right wing (x≈53) -->
             <rect x="41" y="7" width="24" height="50" stroke-width="1.5" stroke="currentColor" fill="none" opacity="0.3"/>
-            <line x1="53" y1="8" x2="42" y2="56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="53" y1="8" x2="64" y2="56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="42" y1="56" x2="64" y2="56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="42" y1="8" x2="53" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="64" y1="8" x2="53" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="42" y1="8" x2="64" y2="8"  stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </template>
           <template v-else-if="stateRight === 'open'">
-            <line x1="38" y1="8"  x2="38" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="38" y1="8"  x2="62" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="38" y1="57" x2="62" y2="50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="62" y1="14" x2="62" y2="50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Inward: diagonal from free top-right (64,8) to hinge bottom-left (38,57) -->
+            <line x1="64" y1="8" x2="38" y2="57" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Arc: center=(38,8), r=26, CW from (64,8) to (38,34) -->
+            <path d="M 64 8 A 26 26 0 0 1 38 34" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
           </template>
           <template v-else>
             <text x="53" y="37" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="currentColor" opacity="0.4">?</text>
@@ -238,7 +277,7 @@ const openPct = computed(() => {
         </g>
       </svg>
 
-      <!-- ── Door (tuere) ─────────────────────────────────────────── -->
+      <!-- ── Door LEFT-hinged (tuere) ──────────────────────────────────── -->
       <svg
         v-else-if="mode === 'tuere'"
         viewBox="0 0 56 72"
@@ -258,19 +297,13 @@ const openPct = computed(() => {
           <rect x="6" y="5" width="44" height="64" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
         </template>
 
-        <!-- Open: door swung open (arc + panel line) -->
+        <!-- Open: inward, left hinge -->
+        <!-- Diagonal from free top-right to hinge bottom-left, arc shows sweep -->
         <template v-else-if="stateMain === 'open'">
-          <!-- Door panel shown at ~70° open (from left hinge) -->
-          <line x1="6" y1="5" x2="6" y2="69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-          <line x1="6" y1="5" x2="46" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <!-- Arc showing swing path -->
-          <path
-            d="M 6 69 A 64 64 0 0 0 46 18"
-            stroke="currentColor"
-            stroke-width="1"
-            stroke-dasharray="3,3"
-            opacity="0.5"
-          />
+          <line x1="6"  y1="5" x2="6"  y2="69" stroke="currentColor" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+          <line x1="50" y1="5" x2="6"  y2="69" stroke="currentColor" stroke-width="2"   stroke-linecap="round"/>
+          <!-- Quarter-circle arc: center=(6,5), r=44, CW from (50,5) to (6,49) -->
+          <path d="M 50 5 A 44 44 0 0 1 6 49" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
         </template>
 
         <!-- Unknown -->
@@ -279,7 +312,42 @@ const openPct = computed(() => {
         </template>
       </svg>
 
-      <!-- ── Sliding door, fixed part LEFT (schiebetuer) ──────────── -->
+      <!-- ── Door RIGHT-hinged (tuere_r) ──────────────────────────────── -->
+      <svg
+        v-else-if="mode === 'tuere_r'"
+        viewBox="0 0 56 72"
+        class="w-full h-full max-h-full"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <!-- Door frame -->
+        <line x1="2"  y1="2"  x2="2"  y2="70" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <line x1="54" y1="2"  x2="54" y2="70" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <line x1="2"  y1="2"  x2="54" y2="2"  stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <!-- Floor line -->
+        <line x1="2"  y1="70" x2="54" y2="70" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+
+        <!-- Closed: door panel -->
+        <template v-if="stateMain === 'closed'">
+          <rect x="6" y="5" width="44" height="64" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
+        </template>
+
+        <!-- Open: inward, right hinge -->
+        <!-- Diagonal from free top-left to hinge bottom-right, arc shows sweep -->
+        <template v-else-if="stateMain === 'open'">
+          <line x1="50" y1="5" x2="50" y2="69" stroke="currentColor" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+          <line x1="6"  y1="5" x2="50" y2="69" stroke="currentColor" stroke-width="2"   stroke-linecap="round"/>
+          <!-- Quarter-circle arc: center=(50,5), r=44, CCW from (6,5) to (50,49) -->
+          <path d="M 6 5 A 44 44 0 0 0 50 49" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
+        </template>
+
+        <!-- Unknown -->
+        <template v-else>
+          <text x="28" y="40" text-anchor="middle" dominant-baseline="middle" font-size="20" fill="currentColor" opacity="0.4">?</text>
+        </template>
+      </svg>
+
+      <!-- ── Sliding door, fixed part LEFT (schiebetuer) ──────────────── -->
       <svg
         v-else-if="mode === 'schiebetuer' || mode === 'schiebetuer_r'"
         viewBox="0 0 72 64"
@@ -298,13 +366,13 @@ const openPct = computed(() => {
           <rect x="6" y="8" width="60" height="48" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
         </template>
 
-        <!-- Open, fixer Teil LINKS: panel left, gap right -->
+        <!-- Open, fixer Teil LINKS: panel slides left, gap on right -->
         <template v-else-if="stateMain === 'open' && mode === 'schiebetuer'">
           <rect x="6"  y="8" width="28" height="48" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
           <rect x="38" y="8" width="28" height="48" stroke="currentColor" stroke-width="1" stroke-dasharray="3,3" fill="none" opacity="0.3"/>
         </template>
 
-        <!-- Open, fixer Teil RECHTS: gap left, panel right -->
+        <!-- Open, fixer Teil RECHTS: gap on left, panel slides right -->
         <template v-else-if="stateMain === 'open' && mode === 'schiebetuer_r'">
           <rect x="6"  y="8" width="28" height="48" stroke="currentColor" stroke-width="1" stroke-dasharray="3,3" fill="none" opacity="0.3"/>
           <rect x="38" y="8" width="28" height="48" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
@@ -316,7 +384,7 @@ const openPct = computed(() => {
         </template>
       </svg>
 
-      <!-- ── Roof window (dachfenster) ────────────────────────────── -->
+      <!-- ── Roof window (dachfenster) ──────────────────────────────── -->
       <svg
         v-else-if="mode === 'dachfenster'"
         viewBox="0 0 72 56"
@@ -334,10 +402,7 @@ const openPct = computed(() => {
 
         <!-- Open / partial: pane hinged at bottom, top gap -->
         <template v-else>
-          <!-- Gap at top based on openPct -->
           <rect x="7" y="7" width="58" height="42" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.2"/>
-          <!-- Open pane: lower part stays, upper opens outward -->
-          <!-- Gap indicator: lines at top showing open amount -->
           <line
             x1="7"
             :y1="7 + (42 * (1 - openPct / 100))"
@@ -347,7 +412,6 @@ const openPct = computed(() => {
             stroke-width="2"
             stroke-linecap="round"
           />
-          <!-- Top opening gap (dashed outline) -->
           <rect
             x="7"
             y="7"
@@ -359,7 +423,6 @@ const openPct = computed(() => {
             fill="none"
             opacity="0.5"
           />
-          <!-- Percentage text -->
           <text
             v-if="position !== null && roofState === 'tilted'"
             x="36" y="44"
@@ -373,6 +436,5 @@ const openPct = computed(() => {
       </svg>
 
     </div>
-
   </div>
 </template>
