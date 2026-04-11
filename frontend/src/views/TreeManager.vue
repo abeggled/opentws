@@ -16,6 +16,8 @@ import { useRouter } from 'vue-router'
 import { useVisuStore } from '@/stores/visu'
 import { useThemeStore } from '@/stores/theme'
 import AuthButton from '@/components/AuthButton.vue'
+import IconPicker from '@/components/IconPicker.vue'
+import VisuIcon from '@/components/VisuIcon.vue'
 import { visu as visuApi, users as usersApi } from '@/api/client'
 import type { VisuNode, NodeType, AccessLevel, UserResponse } from '@/types'
 
@@ -331,10 +333,6 @@ function toggleNodeUser(username: string) {
   nodeUsersDirty.value = true
 }
 
-// ── Quick-Icons ───────────────────────────────────────────────────────────────
-const QUICK_ICONS = ['🏠','🏡','📁','📄','⚡','💡','🌡️','🔒','🚿','🛁','🛋️','🍳','🛏️',
-  '🪟','🚪','🌿','🔆','🔅','💧','🌬️','🎵','📹','🔔','🌞','🌙','🎛️','🎚️','🔌','🌐','⚙️']
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
   try {
@@ -406,7 +404,9 @@ onMounted(async () => {
             </button>
 
             <!-- Icon + Name -->
-            <span class="flex-shrink-0 leading-none">{{ node.icon ?? (node.type === 'PAGE' ? '📄' : '📁') }}</span>
+            <span class="flex-shrink-0 leading-none">
+              <VisuIcon :icon="node.icon ?? (node.type === 'PAGE' ? '📄' : '📁')" />
+            </span>
             <span class="flex-1 text-sm whitespace-nowrap">{{ node.name }}</span>
 
             <!-- Type-Badge -->
@@ -458,7 +458,9 @@ onMounted(async () => {
 
           <!-- Titel -->
           <div class="flex items-center gap-3">
-            <span class="text-4xl leading-none">{{ selectedNode.icon ?? (selectedNode.type === 'PAGE' ? '📄' : '📁') }}</span>
+            <span class="text-4xl leading-none">
+              <VisuIcon :icon="selectedNode.icon ?? (selectedNode.type === 'PAGE' ? '📄' : '📁')" />
+            </span>
             <div>
               <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ selectedNode.name }}</h1>
               <span class="text-xs px-2 py-0.5 rounded font-medium"
@@ -502,25 +504,7 @@ onMounted(async () => {
             <!-- Icon -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon</label>
-              <div class="flex items-center gap-2">
-                <input
-                  v-model="editIcon"
-                  type="text"
-                  placeholder="Emoji …"
-                  class="w-24 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-center text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500"
-                  maxlength="4"
-                />
-                <!-- Schnellauswahl -->
-                <div class="flex flex-wrap gap-1">
-                  <button
-                    v-for="ic in QUICK_ICONS"
-                    :key="ic"
-                    class="text-base w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    :class="editIcon === ic ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-500/10' : ''"
-                    @click="editIcon = ic"
-                  >{{ ic }}</button>
-                </div>
-              </div>
+              <IconPicker v-model="editIcon" />
             </div>
           </section>
 
@@ -689,24 +673,7 @@ onMounted(async () => {
           <!-- Icon -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon (optional)</label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model="addIcon"
-                type="text"
-                placeholder="Emoji"
-                maxlength="4"
-                class="w-20 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-center text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500"
-              />
-              <div class="flex flex-wrap gap-1">
-                <button
-                  v-for="ic in QUICK_ICONS.slice(0, 16)"
-                  :key="ic"
-                  class="text-base w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  :class="addIcon === ic ? 'ring-2 ring-blue-500' : ''"
-                  @click="addIcon = ic"
-                >{{ ic }}</button>
-              </div>
-            </div>
+            <IconPicker v-model="addIcon" />
           </div>
 
           <p v-if="addParentId" class="text-xs text-gray-500 dark:text-gray-400">

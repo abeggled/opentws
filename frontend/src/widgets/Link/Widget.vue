@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { DataPointValue } from '@/types'
+import VisuIcon from '@/components/VisuIcon.vue'
 
 const props = defineProps<{
   config: Record<string, unknown>
@@ -30,7 +31,7 @@ function navigate() {
       : 'cursor-pointer hover:bg-gray-200/60 dark:hover:bg-white/5 active:bg-gray-300/60 dark:active:bg-white/10'"
     @click="navigate"
   >
-    <span class="text-4xl leading-none">{{ icon }}</span>
+    <span class="text-4xl leading-none" data-testid="link-icon"><VisuIcon :icon="icon" /></span>
     <span class="text-sm font-medium text-gray-800 dark:text-gray-200 text-center leading-tight">{{ label }}</span>
     <span v-if="!editorMode && targetId" class="text-xs text-gray-400 dark:text-gray-500">→</span>
     <span v-else-if="!targetId" class="text-xs text-gray-400 dark:text-gray-600">Kein Ziel</span>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useDatapointsStore } from '@/stores/datapoints'
+import { useIcons } from '@/composables/useIcons'
 
 type FlowDirection = 'to_house' | 'from_house' | 'bidirectional'
 
@@ -30,9 +31,10 @@ const dpStore = useDatapointsStore()
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const widgetLabel  = computed(() => (props.config.label    as string | undefined) ?? '')
-const houseDpId    = computed(() => (props.config.house_dp as string | undefined) ?? '')
-const houseUnit    = computed(() => (props.config.house_unit as string | undefined) ?? 'W')
+const widgetLabel  = computed(() => (props.config.label      as string | undefined) ?? '')
+const houseIcon    = computed(() => (props.config.house_icon  as string | undefined) ?? '🏠')
+const houseDpId    = computed(() => (props.config.house_dp    as string | undefined) ?? '')
+const houseUnit    = computed(() => (props.config.house_unit  as string | undefined) ?? 'W')
 const houseDec     = computed(() => (props.config.house_decimals as number | undefined) ?? 1)
 
 const entities = computed<EntityConfig[]>(() => {
@@ -48,6 +50,29 @@ const entities = computed<EntityConfig[]>(() => {
     invert: e.invert ?? false,
   }))
 })
+
+// ── SVG icon data URLs (for rendering SVG icons inside the <svg> canvas) ──────
+
+const { getSvg, isSvgIcon, svgIconName } = useIcons()
+const svgDataUrls = ref<Record<string, string>>({})
+
+async function loadSvgDataUrl(iconValue: string) {
+  if (!isSvgIcon(iconValue)) return
+  const name = svgIconName(iconValue)
+  if (svgDataUrls.value[name]) return
+  const svg = await getSvg(name)
+  if (svg) {
+    svgDataUrls.value[name] = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  }
+}
+
+watch(
+  entities,
+  async (ents) => { for (const e of ents) await loadSvgDataUrl(e.icon) },
+  { immediate: true },
+)
+
+watch(houseIcon, loadSvgDataUrl, { immediate: true })
 
 // ── Values ────────────────────────────────────────────────────────────────────
 
@@ -264,19 +289,26 @@ function animDur(power: number): string {
         stroke-width="1.5"
         stroke-opacity="0.6"
       />
-      <!-- Icon: mittig wenn kein Hausverbrauch, sonst leicht nach oben -->
+      <!-- Icon: immer zentriert im Kreis -->
       <text
-        :x="CX"
-        :y="houseDisplay ? CY - 5 : CY"
+        v-if="!isSvgIcon(houseIcon)"
+        :x="CX" :y="CY"
         text-anchor="middle"
         dominant-baseline="central"
-        :font-size="houseDisplay ? 20 : 26"
+        font-size="20"
         style="user-select: none;"
-      >🏠</text>
-      <!-- Hausverbrauch unter dem Icon -->
+      >{{ houseIcon }}</text>
+      <image
+        v-else-if="svgDataUrls[svgIconName(houseIcon)]"
+        :href="svgDataUrls[svgIconName(houseIcon)]"
+        :x="CX - 10" :y="CY - 10"
+        width="20" height="20"
+        class="brightness-0 dark:invert"
+      />
+      <!-- Hausverbrauch unterhalb des Kreises -->
       <text
         v-if="houseDisplay"
-        :x="CX" :y="CY + 12"
+        :x="CX" :y="CY + 28"
         text-anchor="middle"
         dominant-baseline="central"
         font-size="7"
@@ -296,8 +328,9 @@ function animDur(power: number): string {
           :stroke="d.color"
           :stroke-opacity="d.active ? 0.85 : 0.35"
         />
-        <!-- Entity icon -->
+        <!-- Entity icon: emoji -->
         <text
+          v-if="!isSvgIcon(d.icon)"
           :x="positions[i].x"
           :y="positions[i].y"
           text-anchor="middle"
@@ -305,6 +338,17 @@ function animDur(power: number): string {
           font-size="17"
           style="user-select: none;"
         >{{ d.icon }}</text>
+        <!-- Entity icon: imported SVG — black in light mode, white in dark mode -->
+        <image
+          v-else-if="svgDataUrls[svgIconName(d.icon)]"
+          :href="svgDataUrls[svgIconName(d.icon)]"
+          :x="positions[i].x - 8"
+          :y="positions[i].y - 8"
+          width="16"
+          height="16"
+          class="brightness-0 dark:invert"
+          :data-testid="`ef-svgicon-${i}`"
+        />
 
         <!-- Entity label -->
         <text

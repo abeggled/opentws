@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 import DataPointPicker from '@/components/DataPointPicker.vue'
+import IconPicker from '@/components/IconPicker.vue'
 
 type FlowDirection = 'to_house' | 'from_house' | 'bidirectional'
 
@@ -25,17 +26,6 @@ const emit = defineEmits<{
 
 const MAX_ENTITIES = 8
 
-const ICON_PRESETS = [
-  { icon: '☀️', label: 'PV / Solar' },
-  { icon: '🏭', label: 'Verbrauch' },
-  { icon: '🔋', label: 'Batterie' },
-  { icon: '⚡', label: 'Netz' },
-  { icon: '🚗', label: 'Wallbox / E-Auto' },
-  { icon: '🌬️', label: 'Wind' },
-  { icon: '🔌', label: 'Steckdose' },
-  { icon: '💧', label: 'Wasser / Wärmepumpe' },
-]
-
 const DIRECTION_OPTIONS: { value: FlowDirection; label: string; title: string }[] = [
   { value: 'to_house',      label: '→ 🏠',  title: 'Nur vom Knoten zum Haus' },
   { value: 'bidirectional', label: '⇄',      title: 'Bidirektional (Vorzeichen entscheidet)' },
@@ -59,6 +49,7 @@ const existingEntities = (props.modelValue.entities as EntityConfig[] | undefine
 
 const cfg = reactive({
   label:           (props.modelValue.label           as string) ?? '',
+  house_icon:      (props.modelValue.house_icon      as string) ?? '🏠',
   house_dp:        (props.modelValue.house_dp        as string) ?? '',
   house_unit:      (props.modelValue.house_unit      as string) ?? '',
   house_decimals:  (props.modelValue.house_decimals  as number) ?? 1,
@@ -70,6 +61,7 @@ watch(
   () => {
     emit('update:modelValue', {
       label:          cfg.label,
+      house_icon:     cfg.house_icon     || undefined,
       house_dp:       cfg.house_dp       || undefined,
       house_unit:     cfg.house_unit     || undefined,
       house_decimals: cfg.house_decimals,
@@ -103,8 +95,13 @@ watch(
     <!-- Hausverbrauch (Zentrum) -->
     <div class="border border-gray-700 rounded p-2 space-y-2">
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-        🏠 Hausverbrauch (Zentrum, optional)
+        Hausverbrauch (Zentrum, optional)
       </p>
+      <!-- Haus-Icon -->
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Icon</label>
+        <IconPicker v-model="cfg.house_icon" :dark="true" />
+      </div>
       <DataPointPicker
         :model-value="cfg.house_dp || null"
         :compatible-types="['FLOAT', 'INTEGER']"
@@ -198,27 +195,7 @@ watch(
           <!-- Icon-Auswahl -->
           <div>
             <label class="block text-xs text-gray-400 mb-1">Icon</label>
-            <div class="flex flex-wrap gap-1 mb-1">
-              <button
-                v-for="preset in ICON_PRESETS"
-                :key="preset.icon"
-                type="button"
-                :title="preset.label"
-                :class="[
-                  'px-1.5 py-0.5 rounded text-base leading-none border',
-                  entity.icon === preset.icon
-                    ? 'border-blue-500 bg-blue-500/20'
-                    : 'border-gray-700 hover:border-gray-500',
-                ]"
-                @click="entity.icon = preset.icon"
-              >{{ preset.icon }}</button>
-            </div>
-            <input
-              v-model="entity.icon"
-              type="text"
-              placeholder="Emoji (z.B. ☀️)"
-              class="w-24 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100 focus:outline-none focus:border-blue-500"
-            />
+            <IconPicker v-model="entity.icon" :dark="true" />
           </div>
 
           <!-- Bezeichnung -->

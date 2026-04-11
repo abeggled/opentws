@@ -298,6 +298,23 @@ export const adapters = {
     request<InstanceBindingEntry[]>(`/adapters/instances/${instanceId}/bindings`),
 }
 
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+export interface IconOut {
+  name: string
+  size: number
+  content: string  // inline SVG UTF-8
+}
+
+export interface IconListOut {
+  total: number
+  icons: IconOut[]
+}
+
+export const icons = {
+  list: () => request<IconListOut>('/icons/'),
+}
+
 // ── History ───────────────────────────────────────────────────────────────────
 
 export const history = {

@@ -12,7 +12,7 @@ WidgetRegistry.register({
   configComponent: Config,
   defaultConfig: {
     label: '',
-    mode: 'fenster',        // 'fenster' | 'fenster_2' | 'tuere' | 'schiebetuer' | 'dachfenster'
+    mode: 'fenster',        // 'fenster' | 'fenster_r' | 'fenster_2' | 'tuere' | 'tuere_r' | 'schiebetuer' | 'schiebetuer_r' | 'zweituerer' | 'dachfenster'
     dp_contact: '',
     invert_contact: false,
     dp_tilt: '',
@@ -26,6 +26,11 @@ WidgetRegistry.register({
     dp_tilt_right: '',
     invert_tilt_right: false,
     dp_position: '',
+    handle_left:   true,
+    handle_right:  true,
+    color_closed: '#16a34a',
+    color_tilted: '#f97316',
+    color_open:   '#ef4444',
   },
   compatibleTypes: ['*'],
   noDatapoint: true,

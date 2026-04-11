@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
-import { apiPost, apiPut, apiDelete } from '../helpers'
+import { apiPost, apiPut, apiDelete, apiUploadIcon, apiDeleteIcons, getToken } from '../helpers'
 
 /**
  * E2E-Tests für das Energiefluss-Widget.
@@ -231,5 +231,53 @@ test('Energiefluss: bidirektional → keyPoints folgt dem Vorzeichen', async ({ 
   } finally {
     await apiDelete(`/api/v1/visu/nodes/${pageId}`)
     await apiDelete(`/api/v1/datapoints/${dp.id}`)
+  }
+})
+
+// ─── Test 6: SVG-Icon wird als <image> gerendert ─────────────────────────────
+
+test('Energiefluss: importiertes SVG-Icon wird als <image> im SVG-Canvas gerendert', async ({ page }) => {
+  const iconName = `e2e-ef-icon-${Date.now()}`
+  const minimalSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/></svg>'
+
+  await apiUploadIcon(iconName, minimalSvg)
+
+  const dp = await createDataPoint('svgicon')
+  const visuNode = await createVisuPage()
+  const pageId = visuNode.id
+  const widgetId = randomUUID()
+
+  await buildPage(pageId, widgetId, [
+    {
+      id: dp.id, label: 'SVG-Test', icon: `svg:${iconName}`,
+      color: '#60a5fa', direction: 'to_house', unit: 'W', decimals: 1, invert: false,
+    },
+  ])
+
+  try {
+    // The visu frontend uses 'visu_jwt' for icon API calls; inject the admin token
+    // so the icon fetch succeeds (the storageState only sets 'access_token').
+    const token = await getToken()
+    await page.goto(`/visu/${pageId}`)
+    await page.evaluate((t) => localStorage.setItem('visu_jwt', t), token)
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+
+    await pushValue(dp.id, 1000)
+
+    const widget = page.locator(`[data-widget-id="${widgetId}"]`)
+    await expect(widget).toBeVisible()
+
+    // Animated dot appears once value is pushed (triggers active state)
+    await expect(widget.locator('[data-testid="ef-dot-0"]')).toBeVisible({ timeout: 3_000 })
+
+    // SVG icon must be rendered as an <image> element, not a <text>
+    const svgImage = widget.locator('[data-testid="ef-svgicon-0"]')
+    await expect(svgImage).toBeVisible({ timeout: 3_000 })
+    await expect(svgImage).toHaveAttribute('href', /^data:image\/svg\+xml;charset=utf-8,/)
+  } finally {
+    await apiDelete(`/api/v1/visu/nodes/${pageId}`)
+    await apiDelete(`/api/v1/datapoints/${dp.id}`)
+    await apiDeleteIcons([iconName])
   }
 })

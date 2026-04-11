@@ -113,6 +113,31 @@ export async function apiDelete(path: string): Promise<void> {
   }
 }
 
+/** Upload a single SVG file to the icon library. `name` is the filename without extension. */
+export async function apiUploadIcon(name: string, svgContent: string): Promise<void> {
+  const token = await getToken()
+  const formData = new FormData()
+  formData.append(
+    'files',
+    new Blob([svgContent], { type: 'image/svg+xml' }),
+    `${name}.svg`,
+  )
+  const res = await fetch(`${BASE_URL}/api/v1/icons/import`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Icon upload failed: ${res.status} — ${text}`)
+  }
+}
+
+/** Delete one or more icons from the icon library by name (without .svg extension). */
+export async function apiDeleteIcons(names: string[]): Promise<void> {
+  await apiDeleteWithBody('/api/v1/icons/', { names })
+}
+
 export async function apiDeleteWithBody(path: string, body: unknown): Promise<unknown> {
   const token = await getToken()
   const res = await fetch(`${BASE_URL}${path}`, {

@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVisuStore } from '@/stores/visu'
 import type { VisuNode, AccessLevel } from '@/types'
+import VisuIcon from '@/components/VisuIcon.vue'
 
 const props = defineProps<{ nodeId: string }>()
 const router = useRouter()
@@ -58,7 +59,7 @@ function accessBadge(node: VisuNode): { icon: string; label: string; cls: string
     <button
       v-for="child in children"
       :key="child.id"
-      class="relative flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:bg-gray-200 dark:hover:bg-gray-750 transition-all group"
+      class="relative flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-all group"
       @click="navigate(child)"
     >
       <!-- Access-Badge (oben rechts) -->
@@ -69,7 +70,7 @@ function accessBadge(node: VisuNode): { icon: string; label: string; cls: string
         :title="accessBadge(child)!.label"
       >{{ accessBadge(child)!.icon }}</span>
 
-      <span class="text-4xl">{{ child.icon ?? (child.type === 'PAGE' ? '📄' : '📁') }}</span>
+      <span class="text-4xl"><VisuIcon :icon="child.icon ?? (child.type === 'PAGE' ? '📄' : '📁')" /></span>
       <span class="text-sm font-medium text-gray-700 dark:text-gray-200 text-center leading-tight group-hover:text-gray-900 dark:group-hover:text-white">
         {{ child.name }}
       </span>

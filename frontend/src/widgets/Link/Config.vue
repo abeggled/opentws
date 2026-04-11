@@ -2,6 +2,8 @@
 import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useVisuStore } from '@/stores/visu'
 import type { VisuNode } from '@/types'
+import IconPicker from '@/components/IconPicker.vue'
+import VisuIcon from '@/components/VisuIcon.vue'
 
 const props = defineProps<{ modelValue: Record<string, unknown> }>()
 const emit  = defineEmits<{ (e: 'update:modelValue', val: Record<string, unknown>): void }>()
@@ -81,12 +83,6 @@ function onDocClick(e: MouseEvent) {
 onMounted(() => document.addEventListener('mousedown', onDocClick))
 onUnmounted(() => document.removeEventListener('mousedown', onDocClick))
 
-// ── Icon-Picker ───────────────────────────────────────────────────────────────
-const QUICK_ICONS = [
-  '🔗','🏠','🏡','📁','📄','⚡','💡','🌡️','🔒','🚿','🛁','🛋️',
-  '🍳','🛏️','🪟','🚪','🌿','🔆','🔅','💧','🌬️','🎵','📹','🔔',
-  '🌞','🌙','🎛️','🎚️','🔌','🌐','⚙️','🏊','🌳','🚗','🔑','📊',
-]
 </script>
 
 <template>
@@ -106,28 +102,7 @@ const QUICK_ICONS = [
     <!-- Icon-Auswahl -->
     <div>
       <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Icon</label>
-      <div class="flex items-start gap-2">
-        <!-- Textfeld für freie Eingabe -->
-        <input
-          v-model="cfg.icon"
-          type="text"
-          maxlength="4"
-          placeholder="🔗"
-          class="w-14 text-center bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-lg focus:outline-none focus:border-blue-500"
-        />
-        <!-- Schnellauswahl -->
-        <div class="flex flex-wrap gap-1">
-          <button
-            v-for="ic in QUICK_ICONS"
-            :key="ic"
-            type="button"
-            class="w-7 h-7 text-base flex items-center justify-center rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-            :class="cfg.icon === ic ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-500/20' : ''"
-            :title="ic"
-            @click="cfg.icon = ic"
-          >{{ ic }}</button>
-        </div>
-      </div>
+      <IconPicker v-model="cfg.icon" />
     </div>
 
     <!-- Ziel-Seite (suchbarer Picker) -->
@@ -142,7 +117,7 @@ const QUICK_ICONS = [
           @click="openPicker"
         >
           <span v-if="selectedNode" class="text-base leading-none flex-shrink-0">
-            {{ selectedNode.icon ?? (selectedNode.type === 'PAGE' ? '📄' : '📁') }}
+            <VisuIcon :icon="selectedNode.icon ?? (selectedNode.type === 'PAGE' ? '📄' : '📁')" />
           </span>
           <span
             class="flex-1 text-sm truncate"
@@ -183,7 +158,7 @@ const QUICK_ICONS = [
               @click="selectNode(node.id)"
             >
               <span class="text-base leading-none flex-shrink-0">
-                {{ node.icon ?? (node.type === 'PAGE' ? '📄' : '📁') }}
+                <VisuIcon :icon="node.icon ?? (node.type === 'PAGE' ? '📄' : '📁')" />
               </span>
               <span class="flex-1 min-w-0">
                 <span class="block text-sm text-gray-900 dark:text-gray-100 truncate">{{ node.name }}</span>

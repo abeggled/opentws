@@ -21,12 +21,17 @@ const cfg = reactive({
   dp_tilt_right:        (props.modelValue.dp_tilt_right        as string)  ?? '',
   invert_tilt_right:    (props.modelValue.invert_tilt_right    as boolean) ?? false,
   dp_position:          (props.modelValue.dp_position          as string)  ?? '',
+  handle_left:          (props.modelValue.handle_left          as boolean) ?? true,
+  handle_right:         (props.modelValue.handle_right         as boolean) ?? true,
+  color_closed:         (props.modelValue.color_closed         as string)  ?? '#16a34a',
+  color_tilted:         (props.modelValue.color_tilted         as string)  ?? '#f97316',
+  color_open:           (props.modelValue.color_open           as string)  ?? '#ef4444',
 })
 
-const isSingleWing  = computed(() => cfg.mode === 'fenster')
-const isDoubleWing  = computed(() => cfg.mode === 'fenster_2')
-const isDoor        = computed(() => cfg.mode === 'tuere')
-const isSlidingDoor = computed(() => cfg.mode === 'schiebetuer')
+const isSingleWing  = computed(() => cfg.mode === 'fenster' || cfg.mode === 'fenster_r')
+const isDoubleWing  = computed(() => cfg.mode === 'fenster_2' || cfg.mode === 'zweituerer')
+const isDoor        = computed(() => cfg.mode === 'tuere' || cfg.mode === 'tuere_r')
+const isSlidingDoor = computed(() => cfg.mode === 'schiebetuer' || cfg.mode === 'schiebetuer_r')
 const isRoof        = computed(() => cfg.mode === 'dachfenster')
 
 const showContact  = computed(() => isSingleWing.value || isDoor.value || isSlidingDoor.value || isRoof.value)
@@ -50,6 +55,28 @@ watch(cfg, () => emit('update:modelValue', { ...cfg }), { deep: true })
       />
     </div>
 
+    <!-- Statusfarben -->
+    <div>
+      <label class="block text-xs text-gray-500 dark:text-gray-400 mb-2">Statusfarben</label>
+      <div class="flex gap-4">
+        <div class="flex flex-col items-center gap-1">
+          <input type="color" v-model="cfg.color_closed"
+                 class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600 bg-transparent p-0.5" />
+          <span class="text-xs text-gray-500 dark:text-gray-400">Geschlossen</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <input type="color" v-model="cfg.color_tilted"
+                 class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600 bg-transparent p-0.5" />
+          <span class="text-xs text-gray-500 dark:text-gray-400">Kipp</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <input type="color" v-model="cfg.color_open"
+                 class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600 bg-transparent p-0.5" />
+          <span class="text-xs text-gray-500 dark:text-gray-400">Offen</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Typ -->
     <div>
       <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Typ</label>
@@ -57,10 +84,14 @@ watch(cfg, () => emit('update:modelValue', { ...cfg }), { deep: true })
         v-model="cfg.mode"
         class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500"
       >
-        <option value="fenster">Einflügelfenster</option>
+        <option value="fenster">Einflügelfenster (links angeschlagen)</option>
+        <option value="fenster_r">Einflügelfenster (rechts angeschlagen)</option>
         <option value="fenster_2">Zweiflügelfenster</option>
-        <option value="tuere">Türe</option>
-        <option value="schiebetuer">Schiebetüre</option>
+        <option value="zweituerer">Zweitürer</option>
+        <option value="tuere">Türe (links angeschlagen)</option>
+        <option value="tuere_r">Türe (rechts angeschlagen)</option>
+        <option value="schiebetuer">Schiebetüre (fixer Teil links)</option>
+        <option value="schiebetuer_r">Schiebetüre (fixer Teil rechts)</option>
         <option value="dachfenster">Dachfenster</option>
       </select>
     </div>
@@ -100,6 +131,20 @@ watch(cfg, () => emit('update:modelValue', { ...cfg }), { deep: true })
 
     <!-- Double-wing contacts -->
     <template v-if="showWings">
+      <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Darstellung</p>
+      <div class="flex items-center gap-2 pl-1">
+        <input id="handle-left" v-model="cfg.handle_left" type="checkbox" class="rounded accent-blue-500" />
+        <label for="handle-left" class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+          Griff linker Flügel anzeigen
+        </label>
+      </div>
+      <div class="flex items-center gap-2 pl-1">
+        <input id="handle-right" v-model="cfg.handle_right" type="checkbox" class="rounded accent-blue-500" />
+        <label for="handle-right" class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+          Griff rechter Flügel anzeigen
+        </label>
+      </div>
+
       <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Linker Flügel</p>
       <DataPointPicker
         v-model="cfg.dp_contact_left"
