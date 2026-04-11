@@ -355,6 +355,63 @@
         </div>
       </template>
 
+      <!-- Home Assistant -->
+      <template v-if="selectedAdapterType === 'HOME_ASSISTANT'">
+        <div class="section-header">Home Assistant Binding</div>
+        <div class="form-group">
+          <label class="label">Entity ID *</label>
+          <input
+            v-model="cfg.entity_id"
+            class="input"
+            placeholder="z.B. light.living_room, sensor.temperature"
+            data-testid="config-field-entity_id"
+            required
+          />
+          <p class="hint">Die Home Assistant Entity-ID (Domain.Name)</p>
+        </div>
+        <div class="form-group">
+          <label class="label">Attribut <span class="optional">(leer = state-Feld)</span></label>
+          <input
+            v-model="cfg.attribute"
+            class="input"
+            placeholder="z.B. brightness, color_temp"
+            data-testid="config-field-attribute"
+          />
+          <p class="hint">Nur für SOURCE/BOTH: Attribut statt state-Feld lesen</p>
+        </div>
+        <div class="optional-divider">Write (DEST/BOTH)</div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="label">Service Domain <span class="optional">(leer = aus Entity ID)</span></label>
+            <input
+              v-model="cfg.service_domain"
+              class="input"
+              placeholder="z.B. homeassistant, light"
+              data-testid="config-field-service_domain"
+            />
+          </div>
+          <div class="form-group">
+            <label class="label">Service Name <span class="optional">(leer = turn_on/turn_off)</span></label>
+            <input
+              v-model="cfg.service_name"
+              class="input"
+              placeholder="z.B. set_value, toggle"
+              data-testid="config-field-service_name"
+            />
+          </div>
+        </div>
+        <div class="form-group" style="max-width:280px">
+          <label class="label">Service Data Key <span class="optional">(für numerische Werte)</span></label>
+          <input
+            v-model="cfg.service_data_key"
+            class="input"
+            placeholder="z.B. value, brightness, position"
+            data-testid="config-field-service_data_key"
+          />
+          <p class="hint">Schlüssel für den Wert im Service-Call (z.B. <code class="text-blue-400">value</code> für input_number)</p>
+        </div>
+      </template>
+
       <!-- Zeitschaltuhr -->
       <template v-if="selectedAdapterType === 'ZEITSCHALTUHR'">
         <div class="section-header">Zeitschaltuhr Binding</div>
@@ -731,6 +788,8 @@ const cfg = reactive({
   topic: '', publish_topic: '', retain: false, payload_template: '',
   source_data_type: '', json_key: '', xml_path: '',
   sensor_id: '', sensor_type: 'DS18B20',
+  // HOME_ASSISTANT
+  entity_id: '', attribute: '', service_domain: '', service_name: '', service_data_key: '',
   // ZEITSCHALTUHR
   timer_type: 'daily', meta_type: 'none',
   weekdays: [0,1,2,3,4,5,6], months: [], day_of_month: 0,
@@ -877,6 +936,12 @@ watch(() => props.initial, val => {
   if (cfg.source_data_type   == null) cfg.source_data_type = ''
   if (cfg.json_key           == null) cfg.json_key = ''
   if (cfg.xml_path           == null) cfg.xml_path = ''
+  // HOME_ASSISTANT defaults when loading
+  if (cfg.entity_id        == null) cfg.entity_id        = ''
+  if (cfg.attribute        == null) cfg.attribute        = ''
+  if (cfg.service_domain   == null) cfg.service_domain   = ''
+  if (cfg.service_name     == null) cfg.service_name     = ''
+  if (cfg.service_data_key == null) cfg.service_data_key = ''
   // ZEITSCHALTUHR defaults when loading
   if (cfg.timer_type    == null) cfg.timer_type    = 'daily'
   if (cfg.meta_type     == null) cfg.meta_type     = 'none'
@@ -1123,6 +1188,14 @@ function buildConfig() {
   }
   if (type === 'ONEWIRE') {
     return { sensor_id: cfg.sensor_id, sensor_type: cfg.sensor_type || 'DS18B20' }
+  }
+  if (type === 'HOME_ASSISTANT') {
+    const c = { entity_id: cfg.entity_id }
+    if (cfg.attribute?.trim())        c.attribute        = cfg.attribute.trim()
+    if (cfg.service_domain?.trim())   c.service_domain   = cfg.service_domain.trim()
+    if (cfg.service_name?.trim())     c.service_name     = cfg.service_name.trim()
+    if (cfg.service_data_key?.trim()) c.service_data_key = cfg.service_data_key.trim()
+    return c
   }
   if (type === 'ZEITSCHALTUHR') {
     const c = {
