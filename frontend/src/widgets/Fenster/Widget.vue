@@ -360,12 +360,13 @@ const openPct = computed(() => {
           </g>
         </template>
         <template v-else-if="stateLeft === 'tilted'">
-          <rect x="7" y="7" width="76" height="183" stroke-width="2"
-                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
-          <!-- handle: kipp → UP -->
+          <!-- kipp: bottom fixed, top shifts left 13 units (17% of 76) -->
+          <polygon points="-6,7 70,7 83,190 7,190" stroke-width="2"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <!-- handle: kipp → UP, pivot on free (right) edge -->
           <g v-if="showHandleLeft" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
-            <circle cx="81" cy="100" r="2"/>
-            <line x1="81" y1="100" x2="81" y2="85" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="75" cy="100" r="2"/>
+            <line x1="75" y1="100" x2="75" y2="85" stroke-width="3" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else-if="stateLeft === 'open'">
@@ -392,12 +393,13 @@ const openPct = computed(() => {
           </g>
         </template>
         <template v-else-if="stateRight === 'tilted'">
-          <rect x="97" y="7" width="76" height="183" stroke-width="2"
-                class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
-          <!-- handle: kipp → UP -->
+          <!-- kipp: bottom fixed, top shifts right 13 units (mirror of left wing) -->
+          <polygon points="110,7 186,7 173,190 97,190" stroke-width="2"
+                   class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
+          <!-- handle: kipp → UP, pivot on free (left) edge -->
           <g v-if="showHandleRight" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
-            <circle cx="99" cy="100" r="2"/>
-            <line x1="99" y1="100" x2="99" y2="85" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="105" cy="100" r="2"/>
+            <line x1="105" y1="100" x2="105" y2="85" stroke-width="3" stroke-linecap="round"/>
           </g>
         </template>
         <template v-else-if="stateRight === 'open'">
