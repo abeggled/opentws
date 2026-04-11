@@ -23,6 +23,9 @@ const cfg = reactive({
   dp_position:          (props.modelValue.dp_position          as string)  ?? '',
   handle_left:          (props.modelValue.handle_left          as boolean) ?? true,
   handle_right:         (props.modelValue.handle_right         as boolean) ?? true,
+  color_closed:         (props.modelValue.color_closed         as string)  ?? '#16a34a',
+  color_tilted:         (props.modelValue.color_tilted         as string)  ?? '#f97316',
+  color_open:           (props.modelValue.color_open           as string)  ?? '#ef4444',
 })
 
 const isSingleWing  = computed(() => cfg.mode === 'fenster' || cfg.mode === 'fenster_r')
@@ -50,6 +53,28 @@ watch(cfg, () => emit('update:modelValue', { ...cfg }), { deep: true })
         placeholder="z.B. Wohnzimmer Süd"
         class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500"
       />
+    </div>
+
+    <!-- Statusfarben -->
+    <div>
+      <label class="block text-xs text-gray-500 dark:text-gray-400 mb-2">Statusfarben</label>
+      <div class="flex gap-4">
+        <div class="flex flex-col items-center gap-1">
+          <input type="color" v-model="cfg.color_closed"
+                 class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600 bg-transparent p-0.5" />
+          <span class="text-xs text-gray-500 dark:text-gray-400">Geschlossen</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <input type="color" v-model="cfg.color_tilted"
+                 class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600 bg-transparent p-0.5" />
+          <span class="text-xs text-gray-500 dark:text-gray-400">Kipp</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <input type="color" v-model="cfg.color_open"
+                 class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600 bg-transparent p-0.5" />
+          <span class="text-xs text-gray-500 dark:text-gray-400">Offen</span>
+        </div>
+      </div>
     </div>
 
     <!-- Typ -->

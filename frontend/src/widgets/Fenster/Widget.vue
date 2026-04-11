@@ -95,14 +95,22 @@ const roofState = computed<WinState>(() => {
   return deriveState(dpContact.value, invContact.value, dpTilt.value, invTilt.value)
 })
 
-// Green = closed, Orange = tilted, Red = open
-function stateColorClass(s: WinState): string {
+// Custom state colors from config (hex), fallback to green/orange/red
+const colorClosed = computed(() => (props.config.color_closed as string) || '#16a34a')
+const colorTilted = computed(() => (props.config.color_tilted as string) || '#f97316')
+const colorOpen   = computed(() => (props.config.color_open   as string) || '#ef4444')
+
+function stateColor(s: WinState): string {
   switch (s) {
-    case 'closed':  return 'text-green-600 dark:text-green-400'
-    case 'tilted':  return 'text-orange-500 dark:text-orange-400'
-    case 'open':    return 'text-red-500 dark:text-red-400'
-    default:        return 'text-gray-400 dark:text-gray-500'
+    case 'closed': return colorClosed.value
+    case 'tilted': return colorTilted.value
+    case 'open':   return colorOpen.value
+    default:       return '#9ca3af'
   }
+}
+
+function stateColorStyle(s: WinState): { color: string } {
+  return { color: stateColor(s) }
 }
 
 const summaryState = computed<WinState>(() => {
@@ -116,7 +124,7 @@ const summaryState = computed<WinState>(() => {
   return stateMain.value
 })
 
-const colorClass = computed(() => stateColorClass(summaryState.value))
+const colorStyle = computed(() => stateColorStyle(summaryState.value))
 
 // Handle visibility (fenster_2 only)
 const showHandleLeft  = computed(() => (props.config.handle_left  as boolean) ?? true)
@@ -136,7 +144,7 @@ const openPct = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full p-2 select-none gap-1" :class="colorClass">
+  <div class="flex flex-col h-full p-2 select-none gap-1" :style="colorStyle">
     <!-- Label -->
     <span class="text-xs text-gray-500 dark:text-gray-400 truncate leading-none">{{ label }}</span>
 
@@ -245,13 +253,13 @@ const openPct = computed(() => {
         xmlns="http://www.w3.org/2000/svg"
       >
         <!-- Left half-frame (stateLeft color) -->
-        <g :class="stateColorClass(stateLeft)">
+        <g :style="stateColorStyle(stateLeft)">
           <line x1="1.5" y1="1.5" x2="1.5"  y2="58.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
           <line x1="1.5" y1="1.5" x2="60"   y2="1.5"  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
           <line x1="1.5" y1="58.5" x2="60"  y2="58.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
         </g>
         <!-- Right half-frame (stateRight color) -->
-        <g :class="stateColorClass(stateRight)">
+        <g :style="stateColorStyle(stateRight)">
           <line x1="118.5" y1="1.5" x2="118.5" y2="58.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
           <line x1="60"    y1="1.5" x2="118.5" y2="1.5"  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
           <line x1="60"    y1="58.5" x2="118.5" y2="58.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
@@ -335,14 +343,14 @@ const openPct = computed(() => {
         xmlns="http://www.w3.org/2000/svg"
       >
         <!-- Left half-frame (stateLeft color) -->
-        <g :class="stateColorClass(stateLeft)">
+        <g :style="stateColorStyle(stateLeft)">
           <line x1="2"  y1="2"  x2="2"  y2="194" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
           <line x1="2"  y1="2"  x2="90" y2="2"   stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
         </g>
         <!-- Center divider (summaryState) -->
         <line x1="90" y1="2" x2="90" y2="194" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
         <!-- Right half-frame (stateRight color) -->
-        <g :class="stateColorClass(stateRight)">
+        <g :style="stateColorStyle(stateRight)">
           <line x1="178" y1="2"   x2="178" y2="194" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
           <line x1="90"  y1="2"   x2="178" y2="2"   stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
         </g>
