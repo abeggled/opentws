@@ -111,6 +111,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     import obs.adapters.onewire.adapter          # noqa: F401
     import obs.adapters.mqtt.adapter             # noqa: F401
     import obs.adapters.zeitschaltuhr.adapter    # noqa: F401
+    import obs.adapters.homeassistant.adapter    # noqa: F401
     await adapter_registry.start_all(bus, db, value_getter=registry.get_value)
 
     # 9. Logic Engine
