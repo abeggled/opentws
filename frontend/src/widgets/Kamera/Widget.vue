@@ -93,9 +93,10 @@ function onImgLoad()  { hasError.value = false }
 watch(streamUrl, () => { hasError.value = false })
 
 // ── Seitenverhältnis ────────────────────────────────────────────────────────
-const containerStyle = computed(() => {
-  if (aspectRatio.value === 'free') return {}
-  return { aspectRatio: aspectRatio.value }
+const containerStyle = computed((): Record<string, string> => {
+  const fit = objectFit.value
+  if (aspectRatio.value === 'free') return { objectFit: fit }
+  return { aspectRatio: aspectRatio.value, objectFit: fit }
 })
 </script>
 
@@ -134,7 +135,7 @@ const containerStyle = computed(() => {
     >
       <img
         :src="streamType === 'snapshot' ? snapshotUrl : streamUrl"
-        :style="{ objectFit: objectFit, ...containerStyle }"
+        :style="containerStyle"
         class="max-h-full max-w-full"
         alt="Kamera"
         @error="onImgError"
@@ -149,7 +150,7 @@ const containerStyle = computed(() => {
     >
       <video
         :src="streamUrl"
-        :style="{ objectFit: objectFit, ...containerStyle }"
+        :style="containerStyle"
         class="max-h-full max-w-full"
         autoplay
         muted
