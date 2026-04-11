@@ -11,11 +11,24 @@ WidgetRegistry.register({
   component: Widget,
   configComponent: Config,
   defaultConfig: {
-    content: '',
-    label: '',
+    qrType:          'url',
+    label:           '',
     errorCorrection: 'M',
-    darkColor: '#000000',
-    lightColor: '#ffffff',
+    darkColor:       '#000000',
+    lightColor:      '#ffffff',
+    // URL
+    url_url:         '',
+    // WiFi
+    wifi_ssid:       '',
+    wifi_password:   '',
+    wifi_encryption: 'WPA',
+    wifi_hidden:     false,
+    // vCard
+    vcard_firstname: '',
+    vcard_lastname:  '',
+    vcard_company:   '',
+    vcard_mobile:    '',
+    vcard_email:     '',
   },
   compatibleTypes: ['*'],
   noDatapoint: true,
