@@ -437,14 +437,14 @@ const openPct = computed(() => {
         <template v-if="stateMain === 'closed'">
           <rect x="7" y="7" width="186" height="82" stroke-width="2"
                 class="fill-gray-300 dark:fill-gray-600 stroke-gray-400 dark:stroke-gray-500"/>
-          <!-- handle at left edge of movable (right) panel → UP; schiebetuer_r: right edge of movable (left) panel → UP -->
+          <!-- handle at left edge of panel (grab to slide left to open); schiebetuer_r: right edge → UP -->
           <g v-if="mode === 'schiebetuer'" class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
-            <circle cx="103" cy="48" r="2"/>
-            <line x1="103" y1="48" x2="103" y2="25" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="12" cy="48" r="2"/>
+            <line x1="12" y1="48" x2="12" y2="25" stroke-width="3" stroke-linecap="round"/>
           </g>
           <g v-else class="stroke-gray-500 dark:stroke-gray-400 fill-gray-500 dark:fill-gray-400">
-            <circle cx="97" cy="48" r="2"/>
-            <line x1="97" y1="48" x2="97" y2="25" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="188" cy="48" r="2"/>
+            <line x1="188" y1="48" x2="188" y2="25" stroke-width="3" stroke-linecap="round"/>
           </g>
         </template>
         <!-- Open, fixer Teil LINKS: panel slid left (solid), gap right (ghost) -->
